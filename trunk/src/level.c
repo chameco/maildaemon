@@ -53,6 +53,11 @@ void initialize_levels()
 					case ' ':
 						LEVELS[c]->dimensions[x][y] = FLOOR;
 						break;
+					case 'S':
+						spawn_enemy(x*BLOCK_DIM, y*BLOCK_DIM,
+								32, 32, 0, 10, 8, 2);
+						LEVELS[c]->dimensions[x][y] = FLOOR;
+						break;
 					case '#':
 						LEVELS[c]->dimensions[x][y] = WALL;
 						break;

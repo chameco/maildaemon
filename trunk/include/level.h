@@ -9,6 +9,7 @@
 #include <string.h>
 #include "debug.h"
 #include "character.h"
+#include "enemy.h"
 #include "utils.h"
 
 typedef enum block {

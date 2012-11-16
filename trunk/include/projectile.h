@@ -9,19 +9,19 @@
 #include "debug.h"
 #include "utils.h"
 #include "character.h"
+#include "enemy.h"
 #include "level.h"
 typedef struct projectile {
-	int x;
-	int y;
-	int w;
-	int h;
-	int xv;
-	int yv;
+	int r, g, b, a;
+	int x, y, w, h;
+	int xv, yv;
 	int sbp; //Spawned by player
 	int dmg;
 } projectile;
 void initialize_projectiles();
-void spawn_projectile(direction d, int x, int y, int w, int h, int sbp);
+void spawn_projectile(double r, double g, double b, double a,
+		direction d, int x, int y, int w, int h,
+		int sbp, int dmg, int speed);
 void check_projectile_collisions(projectile *p);
 void destroy_projectile(projectile *p);
 void draw_projectile(projectile *p);

@@ -1,5 +1,5 @@
-OBJECTS = main.o game.o level.o character.o enemy.o utils.o projectile.o
-CFILES = src/main.c src/game.c src/level.c src/character.c src/enemy.c src/utils.c src/projectile.c
+OBJECTS = main.o game.o level.o character.o enemy.o utils.o projectile.o gui.o
+CFILES = src/main.c src/game.c src/level.c src/character.c src/enemy.c src/utils.c src/projectile.c src/gui.c
 CFLAGS = -Iinclude -g -Wall
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)

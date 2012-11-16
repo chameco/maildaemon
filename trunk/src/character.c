@@ -69,7 +69,12 @@ void warp_player(int x, int y)
 void shoot_player_weapon(int pressed)
 {
 	if (pressed) {
-		spawn_projectile(PLAYER_FACING, PLAYER_X, PLAYER_Y, 8, 8, 1);
+		spawn_projectile(1.0, 0.0, 0.0, 1.0,
+				PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8, 8,
+				1, 2, 16);
+		spawn_projectile(0.0, 0.0, 1.0, 1.0,
+				PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8, 8,
+				1, 2, 16);
 	}
 }
 
@@ -124,9 +129,9 @@ void update_player()
 		PLAYER_HEIGHT
 	};
 	SDL_Rect b;
-	int x, y;
 	int shouldmovex = 1;
 	int shouldmovey = 1;
+
 	level *cur = get_current_level();
 	int blockdim = get_block_dim();
 	int xmin = (PLAYER_X/blockdim)-5;
@@ -137,6 +142,7 @@ void update_player()
 	xmax = (xmax >= cur->width) ? xmax : cur->width-1;
 	int ymax = (PLAYER_Y/blockdim)+5;
 	ymax = (ymax >= cur->height) ? ymax : cur->width-1;
+	int x, y;
 	for (x = xmin; x <= xmax; x++) {
 		for (y = ymin; y <= ymax; y++) {
 			if (is_solid_block(cur->dimensions[x][y])) {
@@ -155,6 +161,32 @@ void update_player()
 			}
 		}
 	}
+
+	list_node *enemies = get_enemies();
+	list_node *c;
+	for (c = enemies->next; c->next != NULL; c = c->next) {
+		if (((enemy *) c->data) != NULL) {
+			b.x = ((enemy *) c->data)->x;
+			b.y = ((enemy *) c->data)->y;
+			b.w = ((enemy *) c->data)->w;
+			b.h = ((enemy *) c->data)->h;
+			player.x = PLAYER_X+PLAYER_X_VELOCITY;
+			shouldmovex = check_collision(player, b);
+			player.x = PLAYER_X;
+			player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
+			shouldmovey = check_collision(player, b);
+			player.y = PLAYER_Y;
+			if (!shouldmovex || !shouldmovey) {
+				player.x = PLAYER_X;
+				player.y = PLAYER_Y;
+				if (!check_collision(player, b)) {
+					collide_enemy((enemy *) c->data);
+				}
+				goto end;
+			}
+		}
+	}
+
 end:
 	if (shouldmovex) {
 		PLAYER_X = tempx;

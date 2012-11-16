@@ -7,9 +7,15 @@ void initialize_projectiles()
 	PROJECTILES = make_list();
 }
 
-void spawn_projectile(direction d, int x, int y, int w, int h, int sbp)
+void spawn_projectile(double r, double g, double b, double a,
+		direction d, int x, int y, int w, int h,
+		int sbp, int dmg, int speed)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
+	p->r = r;
+	p->g = g;
+	p->b = b;
+	p->a = a;
 	p->x = x;
 	p->y = y;
 	p->w = w;
@@ -17,18 +23,19 @@ void spawn_projectile(direction d, int x, int y, int w, int h, int sbp)
 	p->xv = 0;
 	p->yv = 0;
 	p->sbp = sbp;
+	p->dmg = dmg;
 	switch (d) {
 		case NORTH:
-			p->yv = -16;
+			p->yv = -speed;
 			break;
 		case SOUTH:
-			p->yv = 16;
+			p->yv = speed;
 			break;
 		case WEST:
-			p->xv = -16;
+			p->xv = -speed;
 			break;
 		case EAST:
-			p->xv = 16;
+			p->xv = speed;
 			break;
 	}
 	insert_list(PROJECTILES, (void *) p);
@@ -36,7 +43,6 @@ void spawn_projectile(direction d, int x, int y, int w, int h, int sbp)
 
 void check_projectile_collisions(projectile *p)
 {
-	int x, y;
 	SDL_Rect a = {
 		p->x,
 		p->y,
@@ -44,16 +50,7 @@ void check_projectile_collisions(projectile *p)
 		p->h
 	};
 	SDL_Rect b;
-	level *cur = get_current_level();
-	int blockdim = get_block_dim();
-	int xmin = (p->x/blockdim)-5;
-	xmin = (xmin >= 0) ? xmin : 0;
-	int ymin = (p->y/blockdim)-5;
-	ymin = (ymin >= 0) ? ymin : 0;
-	int xmax = (p->x/blockdim)+5;
-	xmax = (xmax >= cur->width) ? xmax : cur->width-1;
-	int ymax = (p->y/blockdim)+5;
-	ymax = (ymax >= cur->height) ? ymax : cur->width-1;
+
 	if (!p->sbp) {
 		b.x = get_player_x();
 		b.y = get_player_y();
@@ -66,6 +63,18 @@ void check_projectile_collisions(projectile *p)
 		}
 
 	}
+
+	level *cur = get_current_level();
+	int blockdim = get_block_dim();
+	int xmin = (p->x/blockdim)-5;
+	xmin = (xmin >= 0) ? xmin : 0;
+	int ymin = (p->y/blockdim)-5;
+	ymin = (ymin >= 0) ? ymin : 0;
+	int xmax = (p->x/blockdim)+5;
+	xmax = (xmax >= cur->width) ? xmax : cur->width-1;
+	int ymax = (p->y/blockdim)+5;
+	ymax = (ymax >= cur->height) ? ymax : cur->width-1;
+	int x, y;
 	for (x = xmin; x <= xmax; x++) {
 		for (y = ymin; y <= ymax; y++) {
 			if (is_solid_block(cur->dimensions[x][y])) {
@@ -76,6 +85,22 @@ void check_projectile_collisions(projectile *p)
 					destroy_projectile(p);
 					return;
 				}
+			}
+		}
+	}
+
+	list_node *enemies = get_enemies();
+	list_node *c;
+	for (c = enemies->next; c->next != NULL; c = c->next) {
+		if (((enemy *) c->data) != NULL) {
+			b.x = ((enemy *) c->data)->x;
+			b.y = ((enemy *) c->data)->y;
+			b.w = ((enemy *) c->data)->w;
+			b.h = ((enemy *) c->data)->h;
+			if (!check_collision(a, b)) {
+				hit_enemy((enemy *) c->data, p->dmg);
+				destroy_projectile(p);
+				return;
 			}
 		}
 	}
@@ -92,7 +117,7 @@ void draw_projectile(projectile *p)
 	glPushMatrix();
 	glTranslatef(p->x, p->y, 0);
 	
-	glColor3f(1.0, 0.0, 0.0);
+	glColor4f(p->r, p->g, p->b, p->a);
 	glBegin(GL_QUADS);
 		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
 		glTexCoord2i(1, 0); glVertex3f(p->w, 0, 0);
@@ -117,6 +142,7 @@ void update_projectiles()
 
 void draw_projectiles()
 {
+	glBindTexture(GL_TEXTURE_2D, 0);
 	list_node *c;
 	for (c = PROJECTILES; c->next != NULL; c = c->next) {
 		if (((projectile *) c->data) != NULL) {

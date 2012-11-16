@@ -52,12 +52,10 @@ GLuint load_texture(char *file)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	if (format->Amask) {
-		debug("RGBA");
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 4,
 				surface->w, surface->h, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
 	}
 	else {
-		debug("RGB");
 		gluBuild2DMipmaps(GL_TEXTURE_2D, 3,
 				surface->w, surface->h, GL_RGB, GL_UNSIGNED_BYTE, surface->pixels);
 	}

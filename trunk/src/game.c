@@ -32,10 +32,10 @@ void initialize_game()
 
 	SDL_WM_SetCaption("Purge", NULL);
 
-	initialize_levels();
 	initialize_enemies();
 	initialize_player();
 	initialize_projectiles();
+	initialize_levels();
 }
 
 void initGL()
