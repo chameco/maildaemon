@@ -1,4 +1,5 @@
 Purge
 =====
 
-Space-Invaders style shoot-'em-up
+To build: cd trunk, make, ./purge
+make install isn't working just jet.
