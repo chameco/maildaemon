@@ -28,6 +28,7 @@ void initialize_game()
 	SCREEN_HEIGHT = screen->h;
 
 	IMG_Init(IMG_INIT_PNG);
+	TTF_Init();
 	initGL();
 
 	SDL_WM_SetCaption("Purge", NULL);
@@ -36,6 +37,7 @@ void initialize_game()
 	initialize_player();
 	initialize_projectiles();
 	initialize_levels();
+	initialize_gui();
 }
 
 void initGL()
@@ -80,8 +82,12 @@ void main_game_loop()
 						move_player_west(pressed);
 					} else if (event.key.keysym.sym == SDLK_d) {
 						move_player_east(pressed);
+					} else if (event.key.keysym.sym == SDLK_k) {
+						shoot_left_player_weapon(pressed);
+					} else if (event.key.keysym.sym == SDLK_l) {
+						shoot_right_player_weapon(pressed);
 					} else if (event.key.keysym.sym == SDLK_SPACE) {
-						shoot_player_weapon(pressed);
+						shoot_both_player_weapons(pressed);
 					}
 					break;
 				case SDL_QUIT:
@@ -94,6 +100,7 @@ void main_game_loop()
 			update_player();
 			update_enemies();
 			update_projectiles();
+			update_gui();
 			last_time = current_time;
 		}
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -113,6 +120,9 @@ void main_game_loop()
 
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
+
+		draw_gui();
+
 		SDL_GL_SwapBuffers();
 	}
 }

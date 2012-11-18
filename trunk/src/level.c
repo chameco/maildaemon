@@ -55,7 +55,7 @@ void initialize_levels()
 						break;
 					case 'S':
 						spawn_enemy(x*BLOCK_DIM, y*BLOCK_DIM,
-								32, 32, 0, 10, 8, 2);
+								32, 32, 0, 10, 8, 2, 10);
 						LEVELS[c]->dimensions[x][y] = FLOOR;
 						break;
 					case '#':

@@ -8,11 +8,21 @@ int PLAYER_MOVE_SPEED = 8;//Pixels per second
 int PLAYER_WIDTH = 32;
 int PLAYER_HEIGHT = 32;
 direction PLAYER_FACING = 0;
-int PLAYER_HEALTH = 100;
+double PLAYER_EXP = 0;
+double PLAYER_EXP_TO_NEXT = 100;
+int PLAYER_LEVEL = 0;
+double PLAYER_MAX_HEALTH = 100;
+double PLAYER_HEALTH;
+double PLAYER_MAX_MAGIC = 100;
+double PLAYER_MAGIC;
+double PLAYER_REGEN = 0.1;
+double PLAYER_MREGEN = 0.1;
 GLuint PLAYER_TEXTURES[4];
 
 void initialize_player()
 {
+	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
+	PLAYER_MAGIC = PLAYER_MAX_MAGIC;
 	PLAYER_TEXTURES[NORTH] = load_texture("textures/player/n.png");
 	PLAYER_TEXTURES[SOUTH] = load_texture("textures/player/s.png");
 	PLAYER_TEXTURES[WEST] = load_texture("textures/player/w.png");
@@ -55,9 +65,53 @@ int get_player_h()
 	return PLAYER_HEIGHT;
 }
 
+double get_player_health()
+{
+	return PLAYER_HEALTH;
+}
+
+double get_player_max_health()
+{
+	return PLAYER_MAX_HEALTH;
+}
+
+double get_player_magic()
+{
+	return PLAYER_MAGIC;
+}
+
+double get_player_max_magic()
+{
+	return PLAYER_MAX_MAGIC;
+}
+double get_player_exp()
+{
+	return PLAYER_EXP;
+}
+
+double get_player_exp_to_next()
+{
+	return PLAYER_EXP_TO_NEXT;
+}
+
+int get_player_level()
+{
+	return PLAYER_LEVEL;
+}
+
 void hit_player(int dmg)
 {
 	PLAYER_HEALTH -= dmg;
+}
+
+void give_player_exp(double exp)
+{
+	PLAYER_EXP += exp;
+	if (PLAYER_EXP >= PLAYER_EXP_TO_NEXT) {
+		PLAYER_EXP = 0;
+		PLAYER_EXP_TO_NEXT += 50;
+		PLAYER_LEVEL += 1;
+	}
 }
 
 void warp_player(int x, int y)
@@ -66,15 +120,35 @@ void warp_player(int x, int y)
 	PLAYER_Y = y;
 }
 
-void shoot_player_weapon(int pressed)
+void shoot_left_player_weapon(int pressed)
 {
 	if (pressed) {
-		spawn_projectile(1.0, 0.0, 0.0, 1.0,
-				PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8, 8,
-				1, 2, 16);
-		spawn_projectile(0.0, 0.0, 1.0, 1.0,
-				PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8, 8,
-				1, 2, 16);
+		if (PLAYER_MAGIC >= 4) {
+			spawn_projectile(1.0, 0.0, 0.0, 1.0,
+					PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8, 8,
+					NULL, 2, 16);
+			PLAYER_MAGIC -= 4;
+		}
+	}
+}
+
+void shoot_right_player_weapon(int pressed)
+{
+	if (pressed) {
+		if (PLAYER_MAGIC >= 4) {
+			spawn_projectile(0.0, 0.0, 1.0, 1.0,
+					PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8, 8,
+					NULL, 2, 16);
+			PLAYER_MAGIC -= 4;
+		}
+	}
+}
+
+void shoot_both_player_weapons(int pressed)
+{
+	if (pressed) {
+		shoot_left_player_weapon(pressed);
+		shoot_right_player_weapon(pressed);
 	}
 }
 
@@ -120,6 +194,18 @@ void move_player_east(int pressed)
 
 void update_player()
 {
+	if (PLAYER_HEALTH <= PLAYER_MAX_HEALTH-PLAYER_REGEN) {
+		PLAYER_HEALTH += PLAYER_REGEN;
+	} else if (PLAYER_HEALTH < PLAYER_MAX_HEALTH) {
+		PLAYER_HEALTH = PLAYER_MAX_HEALTH;
+	}
+
+	if (PLAYER_MAGIC <= PLAYER_MAX_MAGIC-PLAYER_MREGEN) {
+		PLAYER_MAGIC += PLAYER_MREGEN;
+	} else if (PLAYER_MAGIC < PLAYER_MAX_MAGIC) {
+		PLAYER_MAGIC = PLAYER_MAX_MAGIC;
+	}
+
 	int tempx = PLAYER_X + PLAYER_X_VELOCITY;
 	int tempy = PLAYER_Y + PLAYER_Y_VELOCITY;
 	SDL_Rect player = {
@@ -134,13 +220,13 @@ void update_player()
 
 	level *cur = get_current_level();
 	int blockdim = get_block_dim();
-	int xmin = (PLAYER_X/blockdim)-5;
+	int xmin = (PLAYER_X/blockdim)-2;
 	xmin = (xmin >= 0) ? xmin : 0;
-	int ymin = (PLAYER_Y/blockdim)-5;
+	int ymin = (PLAYER_Y/blockdim)-2;
 	ymin = (ymin >= 0) ? ymin : 0;
-	int xmax = (PLAYER_X/blockdim)+5;
+	int xmax = (PLAYER_X/blockdim)+2;
 	xmax = (xmax >= cur->width) ? xmax : cur->width-1;
-	int ymax = (PLAYER_Y/blockdim)+5;
+	int ymax = (PLAYER_Y/blockdim)+2;
 	ymax = (ymax >= cur->height) ? ymax : cur->width-1;
 	int x, y;
 	for (x = xmin; x <= xmax; x++) {

@@ -9,7 +9,7 @@ void initialize_projectiles()
 
 void spawn_projectile(double r, double g, double b, double a,
 		direction d, int x, int y, int w, int h,
-		int sbp, int dmg, int speed)
+		void *sb, int dmg, int speed)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
 	p->r = r;
@@ -22,7 +22,7 @@ void spawn_projectile(double r, double g, double b, double a,
 	p->h = h;
 	p->xv = 0;
 	p->yv = 0;
-	p->sbp = sbp;
+	p->sb = sb;
 	p->dmg = dmg;
 	switch (d) {
 		case NORTH:
@@ -51,7 +51,7 @@ void check_projectile_collisions(projectile *p)
 	};
 	SDL_Rect b;
 
-	if (!p->sbp) {
+	if (p->sb != NULL) {
 		b.x = get_player_x();
 		b.y = get_player_y();
 		b.w = get_player_w();
@@ -66,13 +66,13 @@ void check_projectile_collisions(projectile *p)
 
 	level *cur = get_current_level();
 	int blockdim = get_block_dim();
-	int xmin = (p->x/blockdim)-5;
+	int xmin = (p->x/blockdim)-2;
 	xmin = (xmin >= 0) ? xmin : 0;
-	int ymin = (p->y/blockdim)-5;
+	int ymin = (p->y/blockdim)-2;
 	ymin = (ymin >= 0) ? ymin : 0;
-	int xmax = (p->x/blockdim)+5;
+	int xmax = (p->x/blockdim)+2;
 	xmax = (xmax >= cur->width) ? xmax : cur->width-1;
-	int ymax = (p->y/blockdim)+5;
+	int ymax = (p->y/blockdim)+2;
 	ymax = (ymax >= cur->height) ? ymax : cur->width-1;
 	int x, y;
 	for (x = xmin; x <= xmax; x++) {
@@ -92,7 +92,8 @@ void check_projectile_collisions(projectile *p)
 	list_node *enemies = get_enemies();
 	list_node *c;
 	for (c = enemies->next; c->next != NULL; c = c->next) {
-		if (((enemy *) c->data) != NULL) {
+		if ((enemy *) c->data != p->sb &&
+				((enemy *) c->data) != NULL) {
 			b.x = ((enemy *) c->data)->x;
 			b.y = ((enemy *) c->data)->y;
 			b.w = ((enemy *) c->data)->w;

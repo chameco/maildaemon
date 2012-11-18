@@ -12,7 +12,7 @@ datadir = $(datarootdir)
 libdir = $(exec_prefix)/lib
 
 all : objects
-	gcc $(OBJECTS) -lSDL -lGL -lGLU -lSDL_image -o purge
+	gcc $(OBJECTS) -lSDL -lGL -lGLU -lSDL_image -lSDL_ttf -o purge
 objects : $(CFILES)
 	gcc $(CFILES) -Iinclude -g -Wall -c
 install:

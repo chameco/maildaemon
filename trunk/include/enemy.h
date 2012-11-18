@@ -9,7 +9,9 @@
 #include <string.h>
 #include "debug.h"
 #include "utils.h"
+#include "character.h"
 #include "level.h"
+#include "projectile.h"
 typedef struct enemy {
 	int x;
 	int y;
@@ -19,10 +21,11 @@ typedef struct enemy {
 	int health;
 	int speed;
 	int collidedmg;
+	double expval;
 } enemy;
 list_node *get_enemies();
 void initialize_enemies();
-void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int collidedmg);
+void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int collidedmg, double expval);
 void hit_enemy();
 void collide_enemy(enemy *e);
 void move_enemy_north(enemy *e);

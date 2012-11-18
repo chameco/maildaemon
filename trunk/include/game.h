@@ -2,6 +2,7 @@
 #define GAME_H
 #include <SDL/SDL.h>
 #include <SDL/SDL_opengl.h>
+#include <SDL/SDL_ttf.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -11,6 +12,7 @@
 #include "character.h"
 #include "enemy.h"
 #include "projectile.h"
+#include "gui.h"
 
 void initialize_game();
 void initGL();
