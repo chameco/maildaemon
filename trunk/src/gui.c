@@ -3,18 +3,25 @@
 GLuint HEALTHBAR;
 GLuint MAGICBAR;
 GLuint EXPBAR;
+GLuint CURRENT_LEVEL_TEX;
+int CURRENT_LEVEL_TEX_W;
+int CURRENT_LEVEL_TEX_H;
 TTF_Font *GAMEFONT;
+int BELIEVED_CURRENT_LEVEL = 0;
 
 void initialize_gui()
 {
-	HEALTHBAR = load_texture("textures/gui/health.png");
-	MAGICBAR = load_texture("textures/gui/magic.png");
-	EXPBAR = load_texture("textures/gui/exp.png");
-	GAMEFONT = TTF_OpenFont("fonts/courier.ttf", 16);
+	HEALTHBAR = load_texture(DATADIR "textures/gui/health.png");
+	MAGICBAR = load_texture(DATADIR "textures/gui/magic.png");
+	EXPBAR = load_texture(DATADIR "textures/gui/exp.png");
+	GAMEFONT = TTF_OpenFont(DATADIR "fonts/courier.ttf", 16);
 	if(!GAMEFONT) {
 		log_err("Failure to open font: %s", TTF_GetError());
 	}
-		
+	char sprintf_fodder[32];
+	sprintf(sprintf_fodder, "level %d", get_player_level());
+	CURRENT_LEVEL_TEX = load_text(GAMEFONT, sprintf_fodder,
+			&CURRENT_LEVEL_TEX_W, &CURRENT_LEVEL_TEX_H);
 }
 
 void update_gui()
@@ -36,6 +43,13 @@ void draw_gui()
 	mlength = (100 * m) / mm;
 	int elength;
 	elength = (100 * e) / me;
+	if (BELIEVED_CURRENT_LEVEL != get_player_level()) {
+		BELIEVED_CURRENT_LEVEL = get_player_level();
+		char sprintf_fodder[32];
+		sprintf(sprintf_fodder, "level %d", BELIEVED_CURRENT_LEVEL);
+		CURRENT_LEVEL_TEX = load_text(GAMEFONT, sprintf_fodder,
+				&CURRENT_LEVEL_TEX_W, &CURRENT_LEVEL_TEX_H);
+	}
 
 	glPushMatrix();
 	glTranslatef(0, 0, 0);
@@ -113,6 +127,20 @@ void draw_gui()
 		glTexCoord2i(1, 0); glVertex3f(elength, 0, 0);
 		glTexCoord2i(1, 1); glVertex3f(elength, 24, 0);
 		glTexCoord2i(0, 1); glVertex3f(0, 24, 0);
+	glEnd();
+
+	glPopMatrix();
+
+	glPushMatrix();
+
+	glTranslatef(140, 70, 0);
+	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, CURRENT_LEVEL_TEX);
+	glBegin(GL_QUADS);
+		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
+		glTexCoord2i(1, 0); glVertex3f(CURRENT_LEVEL_TEX_W, 0, 0);
+		glTexCoord2i(1, 1); glVertex3f(CURRENT_LEVEL_TEX_W, CURRENT_LEVEL_TEX_H, 0);
+		glTexCoord2i(0, 1); glVertex3f(0, CURRENT_LEVEL_TEX_H, 0);
 	glEnd();
 
 	glPopMatrix();

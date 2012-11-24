@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "character.h"
 #include "enemy.h"
+#include "projectile.h"
 #include "utils.h"
 
 typedef enum block {

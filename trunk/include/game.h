@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "debug.h"
+#include "utils.h"
 #include "level.h"
 #include "character.h"
 #include "enemy.h"
@@ -17,4 +18,6 @@
 void initialize_game();
 void initGL();
 void main_game_loop();
+void draw_title_loop();
+void draw_main_loop();
 #endif

@@ -8,13 +8,29 @@ list_node *get_enemies()
 	return ENEMIES;
 }
 
+void set_enemies(list_node *enemies) {
+	ENEMIES = enemies;
+}
+
 void initialize_enemies()
 {
 	ENEMIES = make_list();
 	ENEMY_TEXTURES[0] = load_texture("textures/enemies/slime.png");
+	ENEMY_TEXTURES[1] = load_texture("textures/enemies/wizard.png");
 }
 
-void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int collidedmg, double expval)
+void reset_enemies()
+{
+	list_node *c;
+	for (c = ENEMIES->next; c->next != NULL; c = c->next) {
+		if (((enemy *) c->data) != NULL) {
+			free((enemy *) c->data);
+		}
+	}
+	ENEMIES = make_list();
+}
+
+void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int attk, double expval)
 {
 	enemy *e = (enemy *) malloc(sizeof(enemy));
 	e->x = x;
@@ -24,7 +40,7 @@ void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int
 	e->tex = tex;
 	e->health = health;
 	e->speed = speed;
-	e->collidedmg = collidedmg;
+	e->attk = attk;
 	e->expval = expval;
 	insert_list(ENEMIES, (void *) e);
 }
@@ -40,7 +56,7 @@ void hit_enemy(enemy *e, int dmg)
 
 void collide_enemy(enemy *e)
 {
-	hit_player(e->collidedmg);
+	hit_player(e->attk);
 }
 
 void move_enemy_north(enemy *e)
@@ -148,7 +164,8 @@ void update_enemies()
 			if (!(random() % 11)) {
 				spawn_projectile(0.0, 0.0, 1.0, 1.0,
 						random() % 4, ((enemy *) c->data)->x,
-						((enemy *) c->data)->y, 8, 8, c->data, 10, 16);
+						((enemy *) c->data)->y, 8, 8, c->data,
+						((enemy *) c->data)->attk, 16);
 			}
 		}
 	}

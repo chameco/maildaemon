@@ -192,8 +192,12 @@ void move_player_east(int pressed)
 	}
 }
 
-void update_player()
+mode update_player()
 {
+	if (PLAYER_HEALTH <= 0.0) {
+		return GAME_OVER_MODE;
+	}
+
 	if (PLAYER_HEALTH <= PLAYER_MAX_HEALTH-PLAYER_REGEN) {
 		PLAYER_HEALTH += PLAYER_REGEN;
 	} else if (PLAYER_HEALTH < PLAYER_MAX_HEALTH) {
@@ -284,4 +288,5 @@ end:
 	} else {
 		PLAYER_Y_VELOCITY = 0;
 	}
+	return DRAW_MODE;
 }

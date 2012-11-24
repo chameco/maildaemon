@@ -20,12 +20,14 @@ typedef struct enemy {
 	int tex;
 	int health;
 	int speed;
-	int collidedmg;
+	int attk;
 	double expval;
 } enemy;
 list_node *get_enemies();
+void set_enemies(list_node *enemies);
 void initialize_enemies();
-void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int collidedmg, double expval);
+void reset_enemies();
+void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int attk, double expval);
 void hit_enemy();
 void collide_enemy(enemy *e);
 void move_enemy_north(enemy *e);

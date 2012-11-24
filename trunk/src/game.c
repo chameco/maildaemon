@@ -3,11 +3,15 @@
 SDL_Surface *screen;
 int SCREEN_WIDTH = 0;
 int SCREEN_HEIGHT = 0;
+int GAME_OVER = 0;
+mode CURRENT_MODE = TITLE_MODE;
+int LAST_TIME = 0;
+int CURRENT_TIME = 0;
 
 void initialize_game()
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		log_err("Failed to initialize SDL\n");    
+		log_err("Failed to initialize SDL");    
 	}
 
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 5);
@@ -22,7 +26,7 @@ void initialize_game()
 					info->vfmt->BitsPerPixel,
 					SDL_OPENGL))
 			== NULL ) {
-		log_err("Failed to set video mode\n");    
+		log_err("Failed to set video mode");    
 	}
 	SCREEN_WIDTH = screen->w;
 	SCREEN_HEIGHT = screen->h;
@@ -62,8 +66,6 @@ void initGL()
 void main_game_loop()
 {
 	int running = 1;
-	int last_time = 0;
-	int current_time = 0;
 	int pressed;
 	SDL_Event event;
 	while (running) {
@@ -95,34 +97,82 @@ void main_game_loop()
 					break;
 			}
 		}
-		current_time = SDL_GetTicks();
-		if (current_time - last_time > 50) {
-			update_player();
-			update_enemies();
-			update_projectiles();
-			update_gui();
-			last_time = current_time;
+
+		switch (CURRENT_MODE) {
+			case TITLE_MODE:
+				draw_title_loop();
+				break;
+			case DRAW_MODE:
+				draw_main_loop();
+				break;
+			case GAME_OVER_MODE:
+				debug("GAME OVER");
+				running = 0;
+				break;
 		}
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-
-		glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
-
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		
-		draw_current_level();
-		draw_enemies();
-		draw_player();
-		draw_projectiles();
-
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-
-		draw_gui();
-
-		SDL_GL_SwapBuffers();
 	}
+}
+
+void draw_title_loop()
+{
+	static int ticks = 0;
+	GLuint title_image = load_texture("textures/title.png");
+	CURRENT_TIME = SDL_GetTicks();
+	if (CURRENT_TIME - LAST_TIME > 50) {
+		if (ticks <= 20) {
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			glPushMatrix();
+			glTranslatef(SCREEN_WIDTH/2 - 200, SCREEN_HEIGHT/2 - 200, 0);
+			glBindTexture(GL_TEXTURE_2D, title_image);
+
+			glColor3f(1.0, 1.0, 1.0);
+			glBegin(GL_QUADS);
+			glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
+			glTexCoord2i(1, 0); glVertex3f(400, 0, 0);
+			glTexCoord2i(1, 1); glVertex3f(400, 400, 0);
+			glTexCoord2i(0, 1); glVertex3f(0, 400, 0);
+			glEnd();
+			glPopMatrix();
+
+			SDL_GL_SwapBuffers();
+			ticks++;
+		} else {
+			CURRENT_MODE = DRAW_MODE;
+		}
+	}
+
+}
+
+void draw_main_loop()
+{
+	CURRENT_TIME = SDL_GetTicks();
+	if (CURRENT_TIME - LAST_TIME > 50) {
+		CURRENT_MODE = update_player();
+		update_enemies();
+		update_projectiles();
+		update_gui();
+		LAST_TIME = CURRENT_TIME;
+	}
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+
+	glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	draw_current_level();
+	draw_enemies();
+	draw_player();
+	draw_projectiles();
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	draw_gui();
+
+	SDL_GL_SwapBuffers();
 }

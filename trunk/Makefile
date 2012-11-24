@@ -1,23 +1,26 @@
-OBJECTS = main.o game.o level.o character.o enemy.o utils.o projectile.o gui.o
-CFILES = src/main.c src/game.c src/level.c src/character.c src/enemy.c src/utils.c src/projectile.c src/gui.c
-CFLAGS = -Iinclude -g -Wall
+OBJECTS = src/main.o src/game.o src/level.o src/character.o src/enemy.o src/utils.o src/projectile.o src/gui.o
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
-INSTALL_DATA = $(INSTALL) -m 644
+INSTALL_DATA = cp -r
 prefix = /usr/local
 exec_prefix = $(prefix)
 bindir = $(prefix)/bin
 datarootdir = $(prefix)/share
 datadir = $(datarootdir)
 libdir = $(exec_prefix)/lib
+CFLAGS = -Iinclude -g -Wall -DDATADIR="\"$(DESTDIR)$(datadir)/purge/\""
 
-all : objects
-	gcc $(OBJECTS) -lSDL -lGL -lGLU -lSDL_image -lSDL_ttf -o purge
-objects : $(CFILES)
-	gcc $(CFILES) -Iinclude -g -Wall -c
+#ENABLE DEBUG MODE
+#CFLAGS = -Iinclude -g -Wall -DDATADIR="\"\""
+
+all : $(OBJECTS)
+	gcc $(OBJECTS) -lm -lSDL -lGL -lGLU -lSDL_image -lSDL_ttf -o purge
 install:
-	$(INSTALL_PROGRAM) purge $(DESTDIR)$(bindir)purge
+	$(INSTALL_PROGRAM) purge $(DESTDIR)$(bindir)/purge
+	mkdir -p $(DESTDIR)$(datadir)/purge
+	$(INSTALL_DATA) levels textures music fonts $(DESTDIR)$(datadir)/purge/
 uninstall:
 	rm $(DESTDIR)$(bindir)/purge
+	rm $(DESTDIR)$(datadir)/purge -r
 clean:
-	rm *.o
+	rm src/*.o

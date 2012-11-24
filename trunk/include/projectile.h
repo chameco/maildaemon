@@ -10,6 +10,7 @@
 #include "utils.h"
 #include "character.h"
 #include "level.h"
+#include "enemy.h"
 typedef struct projectile {
 	int r, g, b, a;
 	int x, y, w, h;
@@ -18,6 +19,7 @@ typedef struct projectile {
 	int dmg;
 } projectile;
 void initialize_projectiles();
+void reset_projectiles();
 void spawn_projectile(double r, double g, double b, double a,
 		direction d, int x, int y, int w, int h,
 		void *sbp, int dmg, int speed);

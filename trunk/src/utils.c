@@ -41,9 +41,8 @@ void remove_list(list_node *l, void *data)
 	}
 }
 
-GLuint load_texture(char *file)
+GLuint surface_to_texture(SDL_Surface *surface)
 {
-	SDL_Surface* surface = IMG_Load(file);
 	GLuint texture;
 	glPixelStorei(GL_UNPACK_ALIGNMENT,4);
 	glGenTextures(1, &texture);
@@ -63,6 +62,28 @@ GLuint load_texture(char *file)
 	return texture;
 }
 
+GLuint load_texture(char *file)
+{
+	SDL_Surface *surface = IMG_Load(file);
+	char buffer[100];
+	if (surface == NULL) {
+		strcpy(buffer, DATADIR);
+		strcat(buffer, file);
+		debug("%s", buffer);
+		surface = IMG_Load(buffer);
+	}
+	return surface_to_texture(surface);
+}
+
+GLuint load_text(TTF_Font *font, char *text, int *w, int *h)
+{
+	SDL_Color white = {255, 255, 255};
+	SDL_Surface *surface = TTF_RenderText_Blended(font, text, white);
+	(*w) = surface->w;
+	(*h) = surface->h;
+	return surface_to_texture(surface);
+}
+
 int check_collision(SDL_Rect A, SDL_Rect B)
 {
 
@@ -70,4 +91,9 @@ int check_collision(SDL_Rect A, SDL_Rect B)
 			(B.x >= A.x && B.x < A.x + A.w)) && 
 		((A.y >= B.y && A.y < B.y + B.h)   ||
 		 (B.y >= A.y && B.y < A.y + A.h)));
+}
+
+float calculate_distance(float x1, float y1, float x2, float y2)
+{
+	return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
 }

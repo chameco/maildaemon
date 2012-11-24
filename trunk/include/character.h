@@ -33,5 +33,5 @@ void move_player_north(int pressed);
 void move_player_south(int pressed);
 void move_player_west(int pressed);
 void move_player_east(int pressed);
-void update_player();
+mode update_player();
 #endif

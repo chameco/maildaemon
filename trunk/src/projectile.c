@@ -7,6 +7,17 @@ void initialize_projectiles()
 	PROJECTILES = make_list();
 }
 
+void reset_projectiles()
+{
+	list_node *c;
+	for (c = PROJECTILES->next; c->next != NULL; c = c->next) {
+		if (((projectile *) c->data) != NULL) {
+			free((projectile *) c->data);
+		}
+	}
+	PROJECTILES = make_list();
+}
+
 void spawn_projectile(double r, double g, double b, double a,
 		direction d, int x, int y, int w, int h,
 		void *sb, int dmg, int speed)
