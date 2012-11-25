@@ -1,4 +1,4 @@
-OBJECTS = src/main.o src/game.o src/level.o src/character.o src/enemy.o src/utils.o src/projectile.o src/gui.o
+OBJECTS = src/main.o src/game.o src/level.o src/character.o src/enemy.o src/utils.o src/projectile.o src/gui.o src/fx.o
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = cp -r
@@ -14,7 +14,7 @@ CFLAGS = -Iinclude -g -Wall -DDATADIR="\"$(DESTDIR)$(datadir)/purge/\""
 #CFLAGS = -Iinclude -g -Wall -DDATADIR="\"\""
 
 all : $(OBJECTS)
-	gcc $(OBJECTS) -lm -lSDL -lGL -lGLU -lSDL_image -lSDL_ttf -o purge
+	gcc $(OBJECTS) -lm -lGLEW -lSDL -lGL -lGLU -lSDL_image -lSDL_ttf -o purge
 install:
 	$(INSTALL_PROGRAM) purge $(DESTDIR)$(bindir)/purge
 	mkdir -p $(DESTDIR)$(datadir)/purge

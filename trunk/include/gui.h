@@ -1,7 +1,7 @@
 #ifndef GUI_H
 #define GUI_H
+#include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 #include <stdlib.h>

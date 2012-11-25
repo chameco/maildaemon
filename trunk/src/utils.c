@@ -1,5 +1,20 @@
 #include "utils.h"
 
+GLuint STANDARD_INDICES[4] = {0, 1, 2, 3};
+GLuint STANDARD_INDICES_HANDLER = 0;
+
+void initialize_utils()
+{
+	glGenBuffers(1, &STANDARD_INDICES_HANDLER);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, STANDARD_INDICES_HANDLER);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), STANDARD_INDICES, GL_STATIC_DRAW);
+}
+
+GLuint get_standard_indices_handler()
+{
+	return STANDARD_INDICES_HANDLER;
+}
+
 list_node *make_node(void *d)
 {
 	list_node *ret = (list_node *) malloc(sizeof(list_node));

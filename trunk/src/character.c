@@ -18,6 +18,8 @@ double PLAYER_MAGIC;
 double PLAYER_REGEN = 0.1;
 double PLAYER_MREGEN = 0.1;
 GLuint PLAYER_TEXTURES[4];
+vertex PLAYER_VERTICES[4];
+GLuint PLAYER_VERTEX_HANDLER = 0;
 
 void initialize_player()
 {
@@ -27,6 +29,34 @@ void initialize_player()
 	PLAYER_TEXTURES[SOUTH] = load_texture("textures/player/s.png");
 	PLAYER_TEXTURES[WEST] = load_texture("textures/player/w.png");
 	PLAYER_TEXTURES[EAST] = load_texture("textures/player/e.png");
+
+	PLAYER_VERTICES[0].x = 0;
+	PLAYER_VERTICES[0].y = 0;
+
+	PLAYER_VERTICES[1].x = PLAYER_WIDTH;
+	PLAYER_VERTICES[1].y = 0;
+
+	PLAYER_VERTICES[2].x = PLAYER_WIDTH;
+	PLAYER_VERTICES[2].y = PLAYER_HEIGHT;
+
+	PLAYER_VERTICES[3].x = 0;
+	PLAYER_VERTICES[3].y = PLAYER_HEIGHT;
+
+	PLAYER_VERTICES[0].s = 0;
+	PLAYER_VERTICES[0].t = 0;
+
+	PLAYER_VERTICES[1].s = 1;
+	PLAYER_VERTICES[1].t = 0;
+
+	PLAYER_VERTICES[2].s = 1;
+	PLAYER_VERTICES[2].t = 1;
+
+	PLAYER_VERTICES[3].s = 0;
+	PLAYER_VERTICES[3].t = 1;
+
+	glGenBuffers(1, &PLAYER_VERTEX_HANDLER);
+	glBindBuffer(GL_ARRAY_BUFFER, PLAYER_VERTEX_HANDLER);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), PLAYER_VERTICES, GL_STATIC_DRAW);
 }
 
 void draw_player()
@@ -36,12 +66,20 @@ void draw_player()
 	glBindTexture(GL_TEXTURE_2D, PLAYER_TEXTURES[PLAYER_FACING]);
 
 	glColor3f(1.0, 1.0, 1.0);
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(PLAYER_WIDTH, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(PLAYER_WIDTH, PLAYER_HEIGHT, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, PLAYER_HEIGHT, 0);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glBindBuffer(GL_ARRAY_BUFFER, PLAYER_VERTEX_HANDLER);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	glPopMatrix();
 }
 
@@ -126,7 +164,7 @@ void shoot_left_player_weapon(int pressed)
 		if (PLAYER_MAGIC >= 4) {
 			spawn_projectile(1.0, 0.0, 0.0, 1.0,
 					PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8, 8,
-					NULL, 2, 16);
+					NULL, 2, 16, 4);
 			PLAYER_MAGIC -= 4;
 		}
 	}
@@ -138,7 +176,7 @@ void shoot_right_player_weapon(int pressed)
 		if (PLAYER_MAGIC >= 4) {
 			spawn_projectile(0.0, 0.0, 1.0, 1.0,
 					PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8, 8,
-					NULL, 2, 16);
+					NULL, 2, 16, 4);
 			PLAYER_MAGIC -= 4;
 		}
 	}

@@ -4,6 +4,8 @@ level *CURRENT_LEVEL;
 GLuint BLOCK_TEXTURES[256];
 const int LEVEL_COUNT = 0;
 const int BLOCK_DIM = 32;
+vertex BLOCK_VERTICES[4];
+GLuint BLOCK_VERTEX_HANDLER = 0;
 
 level *get_current_level()
 {
@@ -24,6 +26,34 @@ void initialize_levels()
 {
 	BLOCK_TEXTURES[FLOOR] = load_texture("textures/floor.png");
 	BLOCK_TEXTURES[WALL] = load_texture("textures/wall.png");
+
+	BLOCK_VERTICES[0].x = 0;
+	BLOCK_VERTICES[0].y = 0;
+
+	BLOCK_VERTICES[1].x = BLOCK_DIM;
+	BLOCK_VERTICES[1].y = 0;
+
+	BLOCK_VERTICES[2].x = BLOCK_DIM;
+	BLOCK_VERTICES[2].y = BLOCK_DIM;
+
+	BLOCK_VERTICES[3].x = 0;
+	BLOCK_VERTICES[3].y = BLOCK_DIM;
+
+	BLOCK_VERTICES[0].s = 0;
+	BLOCK_VERTICES[0].t = 0;
+
+	BLOCK_VERTICES[1].s = 1;
+	BLOCK_VERTICES[1].t = 0;
+
+	BLOCK_VERTICES[2].s = 1;
+	BLOCK_VERTICES[2].t = 1;
+
+	BLOCK_VERTICES[3].s = 0;
+	BLOCK_VERTICES[3].t = 1;
+
+	glGenBuffers(1, &BLOCK_VERTEX_HANDLER);
+	glBindBuffer(GL_ARRAY_BUFFER, BLOCK_VERTEX_HANDLER);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), BLOCK_VERTICES, GL_STATIC_DRAW);
 }
 
 void load_level(int index)
@@ -87,12 +117,20 @@ void draw_block(block b, int x, int y)
 	glBindTexture(GL_TEXTURE_2D, BLOCK_TEXTURES[b]);
 
 	glColor3f(1.0, 1.0, 1.0);
-	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-	glTexCoord2i(1, 0); glVertex3f(BLOCK_DIM, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(BLOCK_DIM, BLOCK_DIM, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, BLOCK_DIM, 0);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glBindBuffer(GL_ARRAY_BUFFER, BLOCK_VERTEX_HANDLER);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	glPopMatrix();
 }
 

@@ -1,7 +1,7 @@
 #ifndef CHARACTER_H
 #define CHARACTER_H
+#include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>

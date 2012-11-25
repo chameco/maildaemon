@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
+#include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_ttf.h>
 #include <stdlib.h>
@@ -29,6 +29,12 @@ typedef struct list_node {
 	struct list_node *next;
 	void *data;
 } list_node;
+typedef struct vertex {
+	GLfloat x, y;
+	GLfloat s, t;
+} vertex;
+void initialize_utils();
+GLuint get_standard_indices_handler();
 list_node *make_node(void *d);
 list_node *make_list();
 void insert_list(list_node *l, void *data);

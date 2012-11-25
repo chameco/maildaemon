@@ -20,7 +20,7 @@ void reset_projectiles()
 
 void spawn_projectile(double r, double g, double b, double a,
 		direction d, int x, int y, int w, int h,
-		void *sb, int dmg, int speed)
+		void *sb, int dmg, int speed, int edim)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
 	p->r = r;
@@ -35,6 +35,7 @@ void spawn_projectile(double r, double g, double b, double a,
 	p->yv = 0;
 	p->sb = sb;
 	p->dmg = dmg;
+	p->edim = edim;
 	switch (d) {
 		case NORTH:
 			p->yv = -speed;
@@ -121,6 +122,8 @@ void check_projectile_collisions(projectile *p)
 void destroy_projectile(projectile *p)
 {
 	remove_list(PROJECTILES, p);
+	spawn_effect(p->r, p->g, p->b, p->a,
+			p->x, p->y, p->edim, 50, 10);
 }
 
 

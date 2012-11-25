@@ -2,21 +2,57 @@
 
 GLuint ENEMY_TEXTURES[256];
 list_node *ENEMIES;
+vertex ENEMY_VERTICES[256][4];
+GLuint ENEMY_VERTEX_HANDLERS[256];
 
 list_node *get_enemies()
 {
 	return ENEMIES;
 }
 
-void set_enemies(list_node *enemies) {
+void set_enemies(list_node *enemies)
+{
 	ENEMIES = enemies;
+}
+
+void initialize_enemy(int i, char *path, int w, int h)
+{
+	ENEMY_TEXTURES[i] = load_texture(path);
+
+	ENEMY_VERTICES[i][0].x = 0;
+	ENEMY_VERTICES[i][0].y = 0;
+
+	ENEMY_VERTICES[i][1].x = w;
+	ENEMY_VERTICES[i][1].y = 0;
+
+	ENEMY_VERTICES[i][2].x = w;
+	ENEMY_VERTICES[i][2].y = h;
+
+	ENEMY_VERTICES[i][3].x = 0;
+	ENEMY_VERTICES[i][3].y = h;
+
+	ENEMY_VERTICES[i][0].s = 0;
+	ENEMY_VERTICES[i][0].t = 0;
+
+	ENEMY_VERTICES[i][1].s = 1;
+	ENEMY_VERTICES[i][1].t = 0;
+
+	ENEMY_VERTICES[i][2].s = 1;
+	ENEMY_VERTICES[i][2].t = 1;
+
+	ENEMY_VERTICES[i][3].s = 0;
+	ENEMY_VERTICES[i][3].t = 1;
+
+	glGenBuffers(1, &ENEMY_VERTEX_HANDLERS[i]);
+	glBindBuffer(GL_ARRAY_BUFFER, ENEMY_VERTEX_HANDLERS[i]);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), ENEMY_VERTICES[i], GL_STATIC_DRAW);
 }
 
 void initialize_enemies()
 {
 	ENEMIES = make_list();
-	ENEMY_TEXTURES[0] = load_texture("textures/enemies/slime.png");
-	ENEMY_TEXTURES[1] = load_texture("textures/enemies/wizard.png");
+	initialize_enemy(0, "textures/enemies/slime.png", 32, 32);
+	initialize_enemy(1, "textures/enemies/wizard.png", 32, 32);
 }
 
 void reset_enemies()
@@ -165,7 +201,7 @@ void update_enemies()
 				spawn_projectile(0.0, 0.0, 1.0, 1.0,
 						random() % 4, ((enemy *) c->data)->x,
 						((enemy *) c->data)->y, 8, 8, c->data,
-						((enemy *) c->data)->attk, 16);
+						((enemy *) c->data)->attk, 16, 2);
 			}
 		}
 	}
@@ -178,12 +214,20 @@ void draw_enemy(enemy *e)
 	
 	glColor3f(1.0, 1.0, 1.0);
 	glBindTexture(GL_TEXTURE_2D, ENEMY_TEXTURES[e->tex]);
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(e->w, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(e->w, e->h, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, e->h, 0);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glBindBuffer(GL_ARRAY_BUFFER, ENEMY_VERTEX_HANDLERS[e->tex]);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	glPopMatrix();
 }
 

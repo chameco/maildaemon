@@ -1,7 +1,7 @@
 #ifndef ENEMY_H
 #define ENEMY_H
+#include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 #include <SDL/SDL_image.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -25,6 +25,7 @@ typedef struct enemy {
 } enemy;
 list_node *get_enemies();
 void set_enemies(list_node *enemies);
+void initialize_enemy(int i, char *path, int w, int h);
 void initialize_enemies();
 void reset_enemies();
 void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int attk, double expval);

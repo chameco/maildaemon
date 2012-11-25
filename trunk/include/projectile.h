@@ -1,7 +1,7 @@
 #ifndef PROJECTILE_H
 #define PROJECTILE_H
+#include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -11,18 +11,20 @@
 #include "character.h"
 #include "level.h"
 #include "enemy.h"
+#include "fx.h"
 typedef struct projectile {
 	int r, g, b, a;
 	int x, y, w, h;
 	int xv, yv;
 	void *sb; //Spawned by.
 	int dmg;
+	int edim; //Effect dimension.
 } projectile;
 void initialize_projectiles();
 void reset_projectiles();
 void spawn_projectile(double r, double g, double b, double a,
 		direction d, int x, int y, int w, int h,
-		void *sbp, int dmg, int speed);
+		void *sb, int dmg, int speed, int edim);
 void check_projectile_collisions(projectile *p);
 void destroy_projectile(projectile *p);
 void draw_projectile(projectile *p);

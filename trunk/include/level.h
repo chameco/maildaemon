@@ -1,7 +1,7 @@
 #ifndef LEVEL_H
 #define LEVEL_H
+#include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_opengl.h>
 #include <SDL/SDL_image.h>
 #include <stdlib.h>
 #include <stddef.h>

@@ -37,15 +37,30 @@ void initialize_game()
 
 	SDL_WM_SetCaption("Purge", NULL);
 
+	initialize_utils();
 	initialize_enemies();
 	initialize_player();
 	initialize_projectiles();
 	initialize_levels();
 	initialize_gui();
+	initialize_effects();
 }
 
 void initGL()
 {
+	//Initialize GLEW
+	GLenum glewError = glewInit();
+	if (glewError != GLEW_OK) {
+		printf("Error initializing GLEW! %s\n", glewGetErrorString(glewError));
+		exit(1);
+	}
+
+	//Make sure OpenGL 2.1 is supported
+	if (!GLEW_VERSION_2_1) {
+		printf("OpenGL 2.1 not supported!\n");
+		exit(1);
+	}
+
 	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	glMatrixMode(GL_PROJECTION);
@@ -151,6 +166,7 @@ void draw_main_loop()
 		CURRENT_MODE = update_player();
 		update_enemies();
 		update_projectiles();
+		update_effects();
 		update_gui();
 		LAST_TIME = CURRENT_TIME;
 	}
@@ -168,6 +184,7 @@ void draw_main_loop()
 	draw_enemies();
 	draw_player();
 	draw_projectiles();
+	draw_effects();
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
