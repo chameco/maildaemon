@@ -91,13 +91,11 @@ void load_level(int index)
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
 					break;
 				case 'S':
-					spawn_enemy(x*BLOCK_DIM, y*BLOCK_DIM,
-							32, 32, 0, 10, 8, 2, 10);
+					SPAWN_SLIME(x*BLOCK_DIM, y*BLOCK_DIM);
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
 					break;
 				case 'W':
-					spawn_enemy(x*BLOCK_DIM, y*BLOCK_DIM,
-							32, 32, 1, 100, 8, 10, 100);
+					SPAWN_WIZARD(x*BLOCK_DIM, y*BLOCK_DIM);
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
 					break;
 				case '#':

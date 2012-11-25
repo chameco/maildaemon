@@ -1,6 +1,8 @@
 #include "projectile.h"
 
 list_node *PROJECTILES;
+vertex PROJECTILE_VERTICES[256][4];
+GLuint PROJECTILE_VERTEX_HANDLERS[256] = {0};
 
 void initialize_projectiles()
 {
@@ -19,7 +21,7 @@ void reset_projectiles()
 }
 
 void spawn_projectile(double r, double g, double b, double a,
-		direction d, int x, int y, int w, int h,
+		direction d, int x, int y, int dim,
 		void *sb, int dmg, int speed, int edim)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
@@ -29,8 +31,7 @@ void spawn_projectile(double r, double g, double b, double a,
 	p->a = a;
 	p->x = x;
 	p->y = y;
-	p->w = w;
-	p->h = h;
+	p->dim = dim;
 	p->xv = 0;
 	p->yv = 0;
 	p->sb = sb;
@@ -50,6 +51,23 @@ void spawn_projectile(double r, double g, double b, double a,
 			p->xv = speed;
 			break;
 	}
+	if (PROJECTILE_VERTEX_HANDLERS[p->dim] == 0) {
+		PROJECTILE_VERTICES[p->dim][0].x = 0;
+		PROJECTILE_VERTICES[p->dim][0].y = 0;
+
+		PROJECTILE_VERTICES[p->dim][1].x = p->dim;
+		PROJECTILE_VERTICES[p->dim][1].y = 0;
+
+		PROJECTILE_VERTICES[p->dim][2].x = p->dim;
+		PROJECTILE_VERTICES[p->dim][2].y = p->dim;
+
+		PROJECTILE_VERTICES[p->dim][3].x = 0;
+		PROJECTILE_VERTICES[p->dim][3].y = p->dim;
+
+		glGenBuffers(1, &PROJECTILE_VERTEX_HANDLERS[p->dim]);
+		glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->dim]);
+		glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), PROJECTILE_VERTICES[p->dim], GL_STATIC_DRAW);
+	}
 	insert_list(PROJECTILES, (void *) p);
 }
 
@@ -58,8 +76,8 @@ void check_projectile_collisions(projectile *p)
 	SDL_Rect a = {
 		p->x,
 		p->y,
-		p->w,
-		p->h
+		p->dim,
+		p->dim
 	};
 	SDL_Rect b;
 
@@ -126,19 +144,24 @@ void destroy_projectile(projectile *p)
 			p->x, p->y, p->edim, 50, 10);
 }
 
-
 void draw_projectile(projectile *p)
 {
 	glPushMatrix();
+
 	glTranslatef(p->x, p->y, 0);
 	
 	glColor4f(p->r, p->g, p->b, p->a);
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(p->w, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(p->w, p->h, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, p->h, 0);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->dim]);
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	glPopMatrix();
 }
 

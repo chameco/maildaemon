@@ -163,7 +163,7 @@ void shoot_left_player_weapon(int pressed)
 	if (pressed) {
 		if (PLAYER_MAGIC >= 4) {
 			spawn_projectile(1.0, 0.0, 0.0, 1.0,
-					PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8, 8,
+					PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8,
 					NULL, 2, 16, 4);
 			PLAYER_MAGIC -= 4;
 		}
@@ -175,7 +175,7 @@ void shoot_right_player_weapon(int pressed)
 	if (pressed) {
 		if (PLAYER_MAGIC >= 4) {
 			spawn_projectile(0.0, 0.0, 1.0, 1.0,
-					PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8, 8,
+					PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8,
 					NULL, 2, 16, 4);
 			PLAYER_MAGIC -= 4;
 		}

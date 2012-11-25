@@ -66,7 +66,10 @@ void reset_enemies()
 	ENEMIES = make_list();
 }
 
-void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int attk, double expval)
+void spawn_enemy(int x, int y, int w, int h,
+		int tex,
+		int health, int speed, int attk, double expval, int pspeed, 
+		float pr, float pg, float pb, float pa, int pdim, int edim)
 {
 	enemy *e = (enemy *) malloc(sizeof(enemy));
 	e->x = x;
@@ -78,6 +81,13 @@ void spawn_enemy(int x, int y, int w, int h, int tex, int health, int speed, int
 	e->speed = speed;
 	e->attk = attk;
 	e->expval = expval;
+	e->pspeed = pspeed;
+	e->pr = pr;
+	e->pg = pg;
+	e->pb = pb;
+	e->pa = pa;
+	e->pdim = pdim;
+	e->edim = edim;
 	insert_list(ENEMIES, (void *) e);
 }
 
@@ -93,6 +103,13 @@ void hit_enemy(enemy *e, int dmg)
 void collide_enemy(enemy *e)
 {
 	hit_player(e->attk);
+}
+
+void shoot_enemy_weapon(enemy *e, direction d)
+{
+	spawn_projectile(e->pr, e->pg, e->pb, e->pa,
+			d, e->x, e->y, e->pdim, (void *)e,
+			e->attk, e->pspeed, e->edim);
 }
 
 void move_enemy_north(enemy *e)
@@ -198,10 +215,7 @@ void update_enemies()
 				}
 			}
 			if (!(random() % 11)) {
-				spawn_projectile(0.0, 0.0, 1.0, 1.0,
-						random() % 4, ((enemy *) c->data)->x,
-						((enemy *) c->data)->y, 8, 8, c->data,
-						((enemy *) c->data)->attk, 16, 2);
+				shoot_enemy_weapon((enemy *) c->data, random() % 4);
 			}
 		}
 	}

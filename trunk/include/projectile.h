@@ -14,7 +14,7 @@
 #include "fx.h"
 typedef struct projectile {
 	int r, g, b, a;
-	int x, y, w, h;
+	int x, y, dim;
 	int xv, yv;
 	void *sb; //Spawned by.
 	int dmg;
@@ -23,7 +23,7 @@ typedef struct projectile {
 void initialize_projectiles();
 void reset_projectiles();
 void spawn_projectile(double r, double g, double b, double a,
-		direction d, int x, int y, int w, int h,
+		direction d, int x, int y, int dim,
 		void *sb, int dmg, int speed, int edim);
 void check_projectile_collisions(projectile *p);
 void destroy_projectile(projectile *p);

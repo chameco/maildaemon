@@ -83,9 +83,13 @@ void draw_particle(effect *e, int xdiff, int ydiff)
 
 void draw_effect(effect *e)
 {
+	draw_particle(e, -(e->cur)/2, -(e->cur)/2);
 	draw_particle(e, 0, -(e->cur));
+	draw_particle(e, e->cur/2, -(e->cur)/2);
 	draw_particle(e, e->cur, 0);
+	draw_particle(e, e->cur/2, e->cur/2);
 	draw_particle(e, 0, e->cur);
+	draw_particle(e, -(e->cur)/2, e->cur/2);
 	draw_particle(e, -(e->cur), 0);
 }
 
