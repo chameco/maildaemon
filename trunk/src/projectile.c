@@ -22,7 +22,7 @@ void reset_projectiles()
 
 void spawn_projectile(double r, double g, double b, double a,
 		direction d, int x, int y, int dim,
-		void *sb, int dmg, int speed, int edim)
+		void *sb, int dmg, int speed, int edim, int eradius)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
 	p->r = r;
@@ -140,8 +140,13 @@ void check_projectile_collisions(projectile *p)
 void destroy_projectile(projectile *p)
 {
 	remove_list(PROJECTILES, p);
-	spawn_effect(p->r, p->g, p->b, p->a,
-			p->x, p->y, p->edim, 50, 10);
+	if (p->sb != NULL) {
+		spawn_effect(EXPLOSION, p->r, p->g, p->b, p->a,
+				p->x, p->y, p->edim, 50, 10);
+	} else {
+		spawn_effect(SMOKE, 0.1, 0.1, 0.1, 1.0, \
+				p->x, p->y, 8, 35, 1);
+	}
 }
 
 void draw_projectile(projectile *p)

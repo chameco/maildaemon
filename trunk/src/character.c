@@ -146,7 +146,7 @@ void give_player_exp(double exp)
 {
 	PLAYER_EXP += exp;
 	if (PLAYER_EXP >= PLAYER_EXP_TO_NEXT) {
-		PLAYER_EXP = 0;
+		PLAYER_EXP = PLAYER_EXP - PLAYER_EXP_TO_NEXT;
 		PLAYER_EXP_TO_NEXT += 50;
 		PLAYER_LEVEL += 1;
 	}
@@ -164,7 +164,7 @@ void shoot_left_player_weapon(int pressed)
 		if (PLAYER_MAGIC >= 4) {
 			spawn_projectile(1.0, 0.0, 0.0, 1.0,
 					PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8,
-					NULL, 2, 16, 4);
+					NULL, 2, 16, 4, 50);
 			PLAYER_MAGIC -= 4;
 		}
 	}
@@ -176,7 +176,7 @@ void shoot_right_player_weapon(int pressed)
 		if (PLAYER_MAGIC >= 4) {
 			spawn_projectile(0.0, 0.0, 1.0, 1.0,
 					PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8,
-					NULL, 2, 16, 4);
+					NULL, 2, 16, 4, 50);
 			PLAYER_MAGIC -= 4;
 		}
 	}

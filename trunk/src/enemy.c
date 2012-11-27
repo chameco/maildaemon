@@ -69,7 +69,7 @@ void reset_enemies()
 void spawn_enemy(int x, int y, int w, int h,
 		int tex,
 		int health, int speed, int attk, double expval, int pspeed, 
-		float pr, float pg, float pb, float pa, int pdim, int edim)
+		float pr, float pg, float pb, float pa, int pdim, int edim, int eradius)
 {
 	enemy *e = (enemy *) malloc(sizeof(enemy));
 	e->x = x;
@@ -88,6 +88,7 @@ void spawn_enemy(int x, int y, int w, int h,
 	e->pa = pa;
 	e->pdim = pdim;
 	e->edim = edim;
+	e->eradius = eradius;
 	insert_list(ENEMIES, (void *) e);
 }
 
@@ -109,7 +110,7 @@ void shoot_enemy_weapon(enemy *e, direction d)
 {
 	spawn_projectile(e->pr, e->pg, e->pb, e->pa,
 			d, e->x, e->y, e->pdim, (void *)e,
-			e->attk, e->pspeed, e->edim);
+			e->attk, e->pspeed, e->edim, e->eradius);
 }
 
 void move_enemy_north(enemy *e)

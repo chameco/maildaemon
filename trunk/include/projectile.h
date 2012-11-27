@@ -24,7 +24,7 @@ void initialize_projectiles();
 void reset_projectiles();
 void spawn_projectile(double r, double g, double b, double a,
 		direction d, int x, int y, int dim,
-		void *sb, int dmg, int speed, int edim);
+		void *sb, int dmg, int speed, int edim, int eradius);
 void check_projectile_collisions(projectile *p);
 void destroy_projectile(projectile *p);
 void draw_projectile(projectile *p);

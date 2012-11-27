@@ -11,11 +11,13 @@
 #include "character.h"
 #include "enemy.h"
 #include "projectile.h"
+#include "fx.h"
 #include "utils.h"
 
 typedef enum block {
 	FLOOR,
-	WALL
+	WALL,
+	TORCH
 } block;
 
 typedef struct level {

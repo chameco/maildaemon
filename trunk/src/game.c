@@ -38,12 +38,19 @@ void initialize_game()
 	SDL_WM_SetCaption("Purge", NULL);
 
 	initialize_utils();
+	debug("INITIALIZED UTILS");
 	initialize_enemies();
+	debug("INITIALIZED ENEMIES");
 	initialize_player();
+	debug("INITIALIZED PLAYER");
 	initialize_projectiles();
+	debug("INITIALIZED PROJECTILES");
 	initialize_levels();
+	debug("INITIALIZED LEVELS");
 	initialize_gui();
+	debug("INITIALIZED GUI");
 	initialize_effects();
+	debug("INITIALIZED EFFECTS");
 }
 
 void initGL()

@@ -24,6 +24,11 @@ typedef enum direction {
 	WEST,
 	EAST
 } direction;
+typedef enum etype {
+	EXPLOSION,
+	SMOKE_CONST,
+	SMOKE
+} etype;
 typedef struct list_node {
 	struct list_node *prev;
 	struct list_node *next;

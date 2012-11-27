@@ -19,13 +19,14 @@ int get_block_dim()
 
 int is_solid_block(block b)
 {
-	return b;
+	return b - FLOOR > 0;
 }
 
 void initialize_levels()
 {
 	BLOCK_TEXTURES[FLOOR] = load_texture("textures/floor.png");
 	BLOCK_TEXTURES[WALL] = load_texture("textures/wall.png");
+	BLOCK_TEXTURES[TORCH] = load_texture("textures/torch.png");
 
 	BLOCK_VERTICES[0].x = 0;
 	BLOCK_VERTICES[0].y = 0;
@@ -100,6 +101,11 @@ void load_level(int index)
 					break;
 				case '#':
 					CURRENT_LEVEL->dimensions[x][y] = WALL;
+					break;
+				case 'i':
+					CURRENT_LEVEL->dimensions[x][y] = TORCH;
+					spawn_smoke_const(x * BLOCK_DIM + BLOCK_DIM / 2,
+							y * BLOCK_DIM, 35);
 					break;
 				default:
 					log_err("Invalid syntax in level%d: %c", index, cur);
