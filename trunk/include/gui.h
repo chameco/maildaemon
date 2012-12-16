@@ -10,7 +10,7 @@
 #include <string.h>
 #include "debug.h"
 #include "utils.h"
-#include "character.h"
+#include "player.h"
 void initialize_gui();
 void update_gui();
 void draw_gui();

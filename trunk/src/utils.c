@@ -3,6 +3,13 @@
 GLuint STANDARD_INDICES[4] = {0, 1, 2, 3};
 GLuint STANDARD_INDICES_HANDLER = 0;
 
+color COLOR_RED = {1.0, 0.0, 0.0, 1.0};
+color COLOR_GREEN = {0.0, 1.0, 0.0, 1.0};
+color COLOR_BLUE = {0.0, 0.0, 1.0, 1.0};
+color COLOR_WHITE = {1.0, 1.0, 1.0, 1.0};
+color COLOR_BLACK = {0.0, 0.0, 0.0, 1.0};
+color COLOR_GRAY = {0.1, 0.1, 0.1, 1.0};
+
 void initialize_utils()
 {
 	glGenBuffers(1, &STANDARD_INDICES_HANDLER);

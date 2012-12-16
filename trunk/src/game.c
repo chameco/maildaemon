@@ -39,17 +39,17 @@ void initialize_game()
 
 	initialize_utils();
 	debug("INITIALIZED UTILS");
-	initialize_enemies();
-	debug("INITIALIZED ENEMIES");
+	initialize_enemy();
+	debug("INITIALIZED ENEMY");
 	initialize_player();
 	debug("INITIALIZED PLAYER");
-	initialize_projectiles();
-	debug("INITIALIZED PROJECTILES");
+	initialize_projectile();
+	debug("INITIALIZED PROJECTILE");
 	initialize_levels();
 	debug("INITIALIZED LEVELS");
 	initialize_gui();
 	debug("INITIALIZED GUI");
-	initialize_effects();
+	initialize_fx();
 	debug("INITIALIZED EFFECTS");
 }
 
@@ -106,12 +106,8 @@ void main_game_loop()
 						move_player_west(pressed);
 					} else if (event.key.keysym.sym == SDLK_d) {
 						move_player_east(pressed);
-					} else if (event.key.keysym.sym == SDLK_k) {
-						shoot_left_player_weapon(pressed);
 					} else if (event.key.keysym.sym == SDLK_l) {
-						shoot_right_player_weapon(pressed);
-					} else if (event.key.keysym.sym == SDLK_SPACE) {
-						shoot_both_player_weapons(pressed);
+						shoot_player_weapon(pressed);
 					}
 					break;
 				case SDL_QUIT:
@@ -171,9 +167,9 @@ void draw_main_loop()
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 50) {
 		CURRENT_MODE = update_player();
-		update_enemies();
-		update_projectiles();
-		update_effects();
+		update_enemy();
+		update_projectile();
+		update_fx();
 		update_gui();
 		LAST_TIME = CURRENT_TIME;
 	}
@@ -188,10 +184,10 @@ void draw_main_loop()
 	glLoadIdentity();
 
 	draw_current_level();
-	draw_enemies();
+	draw_enemy();
 	draw_player();
-	draw_projectiles();
-	draw_effects();
+	draw_projectile();
+	draw_fx();
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();

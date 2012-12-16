@@ -1,4 +1,4 @@
-#include "character.h"
+#include "player.h"
 
 int PLAYER_X = 0;
 int PLAYER_Y = 0;
@@ -18,6 +18,7 @@ double PLAYER_MAGIC;
 double PLAYER_REGEN = 0.1;
 double PLAYER_MREGEN = 0.1;
 GLuint PLAYER_TEXTURES[4];
+color PLAYER_COLOR;
 vertex PLAYER_VERTICES[4];
 GLuint PLAYER_VERTEX_HANDLER = 0;
 
@@ -25,6 +26,8 @@ void initialize_player()
 {
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 	PLAYER_MAGIC = PLAYER_MAX_MAGIC;
+	PLAYER_COLOR = COLOR_RED;
+
 	PLAYER_TEXTURES[NORTH] = load_texture("textures/player/n.png");
 	PLAYER_TEXTURES[SOUTH] = load_texture("textures/player/s.png");
 	PLAYER_TEXTURES[WEST] = load_texture("textures/player/w.png");
@@ -63,6 +66,7 @@ void draw_player()
 {
 	glPushMatrix();
 	glTranslatef(PLAYER_X, PLAYER_Y, 0);
+	
 	glBindTexture(GL_TEXTURE_2D, PLAYER_TEXTURES[PLAYER_FACING]);
 
 	glColor3f(1.0, 1.0, 1.0);
@@ -158,35 +162,15 @@ void warp_player(int x, int y)
 	PLAYER_Y = y;
 }
 
-void shoot_left_player_weapon(int pressed)
+void shoot_player_weapon(int pressed)
 {
 	if (pressed) {
 		if (PLAYER_MAGIC >= 4) {
-			spawn_projectile(1.0, 0.0, 0.0, 1.0,
-					PLAYER_FACING, PLAYER_X, PLAYER_Y+10, 8,
-					NULL, 2, 16, 4, 50);
+			spawn_projectile(PLAYER_COLOR, PLAYER_FACING,
+					PLAYER_X+(PLAYER_WIDTH/2)-4, PLAYER_Y+(PLAYER_HEIGHT/2)-4,
+					8, NULL, 2, 16, 4, 50);
 			PLAYER_MAGIC -= 4;
 		}
-	}
-}
-
-void shoot_right_player_weapon(int pressed)
-{
-	if (pressed) {
-		if (PLAYER_MAGIC >= 4) {
-			spawn_projectile(0.0, 0.0, 1.0, 1.0,
-					PLAYER_FACING, PLAYER_X+24, PLAYER_Y, 8,
-					NULL, 2, 16, 4, 50);
-			PLAYER_MAGIC -= 4;
-		}
-	}
-}
-
-void shoot_both_player_weapons(int pressed)
-{
-	if (pressed) {
-		shoot_left_player_weapon(pressed);
-		shoot_right_player_weapon(pressed);
 	}
 }
 

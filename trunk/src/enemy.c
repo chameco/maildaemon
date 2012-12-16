@@ -15,7 +15,7 @@ void set_enemies(list_node *enemies)
 	ENEMIES = enemies;
 }
 
-void initialize_enemy(int i, char *path, int w, int h)
+void initialize_one_enemy(int i, char *path, int w, int h)
 {
 	ENEMY_TEXTURES[i] = load_texture(path);
 
@@ -48,11 +48,11 @@ void initialize_enemy(int i, char *path, int w, int h)
 	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), ENEMY_VERTICES[i], GL_STATIC_DRAW);
 }
 
-void initialize_enemies()
+void initialize_enemy()
 {
 	ENEMIES = make_list();
-	initialize_enemy(0, "textures/enemies/slime.png", 32, 32);
-	initialize_enemy(1, "textures/enemies/wizard.png", 32, 32);
+	initialize_one_enemy(0, "textures/enemies/slime.png", 32, 32);
+	initialize_one_enemy(1, "textures/enemies/wizard.png", 32, 32);
 }
 
 void reset_enemies()
@@ -69,7 +69,7 @@ void reset_enemies()
 void spawn_enemy(int x, int y, int w, int h,
 		int tex,
 		int health, int speed, int attk, double expval, int pspeed, 
-		float pr, float pg, float pb, float pa, int pdim, int edim, int eradius)
+		color pc, int pdim, int edim, int eradius)
 {
 	enemy *e = (enemy *) malloc(sizeof(enemy));
 	e->x = x;
@@ -82,10 +82,7 @@ void spawn_enemy(int x, int y, int w, int h,
 	e->attk = attk;
 	e->expval = expval;
 	e->pspeed = pspeed;
-	e->pr = pr;
-	e->pg = pg;
-	e->pb = pb;
-	e->pa = pa;
+	e->pc = pc;
 	e->pdim = pdim;
 	e->edim = edim;
 	e->eradius = eradius;
@@ -108,7 +105,7 @@ void collide_enemy(enemy *e)
 
 void shoot_enemy_weapon(enemy *e, direction d)
 {
-	spawn_projectile(e->pr, e->pg, e->pb, e->pa,
+	spawn_projectile(e->pc,
 			d, e->x, e->y, e->pdim, (void *)e,
 			e->attk, e->pspeed, e->edim, e->eradius);
 }
@@ -197,7 +194,7 @@ void move_enemy_worker(enemy *e, SDL_Rect a)
 	e->y = a.y;
 }
 
-void update_enemies()
+void update_enemy()
 {
 	list_node *c;
 	for (c = ENEMIES->next; c->next != NULL; c = c->next) {
@@ -222,7 +219,7 @@ void update_enemies()
 	}
 }
 
-void draw_enemy(enemy *e)
+void draw_one_enemy(enemy *e)
 {
 	glPushMatrix();
 	glTranslatef(e->x, e->y, 0);
@@ -246,12 +243,12 @@ void draw_enemy(enemy *e)
 	glPopMatrix();
 }
 
-void draw_enemies()
+void draw_enemy()
 {
 	list_node *c;
 	for (c = ENEMIES; c->next != NULL; c = c->next) {
 		if (((enemy *) c->data) != NULL) {
-			draw_enemy((enemy *) c->data);
+			draw_one_enemy((enemy *) c->data);
 		}
 	}
 }

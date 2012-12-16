@@ -10,7 +10,7 @@
 #include "debug.h"
 #include "utils.h"
 #include "level.h"
-#include "character.h"
+#include "player.h"
 #include "enemy.h"
 #include "projectile.h"
 #include "gui.h"

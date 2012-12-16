@@ -66,7 +66,7 @@ void load_level(int index)
 	char cur;
 	char sprintf_fodder[100];
 	reset_enemies();
-	reset_projectiles();
+	reset_projectile();
 	CURRENT_LEVEL = (level *) malloc(sizeof(level));
 	x = y = w = h = 0;
 	sprintf(sprintf_fodder, "levels/level%d", index);
@@ -104,7 +104,7 @@ void load_level(int index)
 					break;
 				case 'i':
 					CURRENT_LEVEL->dimensions[x][y] = TORCH;
-					spawn_smoke_const(x * BLOCK_DIM + BLOCK_DIM / 2,
+					SPAWN_SMOKE_CONST(x * BLOCK_DIM + BLOCK_DIM / 2,
 							y * BLOCK_DIM, 35);
 					break;
 				default:

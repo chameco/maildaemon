@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "debug.h"
-#include "character.h"
+#include "player.h"
 #include "enemy.h"
 #include "projectile.h"
 #include "fx.h"

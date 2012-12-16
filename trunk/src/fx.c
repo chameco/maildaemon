@@ -6,21 +6,18 @@ int PARTICLE_HEIGHT = 2;
 vertex EFFECT_VERTICES[256][4];
 GLuint EFFECT_VERTEX_HANDLERS[256] = {0};
 
-void initialize_effects()
+void initialize_fx()
 {
 	EFFECTS = make_list();
 }
 
-void spawn_effect(etype type, float r, float g, float b, float a,
+void spawn_fx(etype type, color col,
 		int x, int y, int dim,
 		int radius, int speed)
 {
 	effect *e = (effect *) malloc(sizeof(effect));
 	e->type = type;
-	e->r = r;
-	e->g = g;
-	e->b = b;
-	e->a = a;
+	e->c = col;
 	e->x = x;
 	e->y = y;
 	e->dim = dim;
@@ -65,7 +62,7 @@ void spawn_effect(etype type, float r, float g, float b, float a,
 	insert_list(EFFECTS, (void *) e);
 }
 
-void update_effects()
+void update_fx()
 {
 	list_node *c;
 	effect *e;
@@ -131,7 +128,7 @@ void draw_particle(effect *e, int xdiff, int ydiff)
 
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
 
-	glColor4f(e->r, e->g, e->b, e->a);
+	glColor4f(e->c.r, e->c.g, e->c.b, e->c.a);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -151,15 +148,15 @@ void draw_smoke_particle(effect *e, int xdiff, int ydiff)
 	GLfloat r, g, b;
 	GLfloat factor;
 	factor = (GLfloat) drand48();
-	r = e->r * factor;
+	r = e->c.r * factor;
 	r = r > 1.0 ? 1.0 : r;
 	r = r < 0.0 ? 0.0 : r;
 
-	g = e->g * factor;
+	g = e->c.g * factor;
 	g = g > 1.0 ? 1.0 : g;
 	g = g < 0.0 ? 0.0 : g;
 	
-	b = e->b * factor;
+	b = e->c.b * factor;
 	b = b > 1.0 ? 1.0 : b;
 	b = b < 0.0 ? 0.0 : b;
 
@@ -167,7 +164,7 @@ void draw_smoke_particle(effect *e, int xdiff, int ydiff)
 
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
 
-	glColor4f(r, g, b, e->a);
+	glColor4f(r, g, b, e->c.a);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -182,7 +179,7 @@ void draw_smoke_particle(effect *e, int xdiff, int ydiff)
 	glPopMatrix();
 }
 
-void draw_effect(effect *e)
+void draw_one_fx(effect *e)
 {
 	int c;
 	switch (e->type) {
@@ -206,12 +203,12 @@ void draw_effect(effect *e)
 	}
 }
 
-void draw_effects()
+void draw_fx()
 {
 	list_node *c;
 	for (c = EFFECTS->next; c->next != NULL; c = c->next) {
 		if (((effect *) c->data) != NULL) {
-			draw_effect((effect *) c->data);
+			draw_one_fx((effect *) c->data);
 		}
 	}
 }

@@ -4,12 +4,12 @@ list_node *PROJECTILES;
 vertex PROJECTILE_VERTICES[256][4];
 GLuint PROJECTILE_VERTEX_HANDLERS[256] = {0};
 
-void initialize_projectiles()
+void initialize_projectile()
 {
 	PROJECTILES = make_list();
 }
 
-void reset_projectiles()
+void reset_projectile()
 {
 	list_node *c;
 	for (c = PROJECTILES->next; c->next != NULL; c = c->next) {
@@ -20,15 +20,12 @@ void reset_projectiles()
 	PROJECTILES = make_list();
 }
 
-void spawn_projectile(double r, double g, double b, double a,
+void spawn_projectile(color c,
 		direction d, int x, int y, int dim,
 		void *sb, int dmg, int speed, int edim, int eradius)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
-	p->r = r;
-	p->g = g;
-	p->b = b;
-	p->a = a;
+	p->c = c;
 	p->x = x;
 	p->y = y;
 	p->dim = dim;
@@ -140,22 +137,17 @@ void check_projectile_collisions(projectile *p)
 void destroy_projectile(projectile *p)
 {
 	remove_list(PROJECTILES, p);
-	if (p->sb != NULL) {
-		spawn_effect(EXPLOSION, p->r, p->g, p->b, p->a,
-				p->x, p->y, p->edim, 50, 10);
-	} else {
-		spawn_effect(SMOKE, 0.1, 0.1, 0.1, 1.0, \
-				p->x, p->y, 8, 35, 1);
-	}
+	spawn_fx(EXPLOSION, p->c,
+			p->x, p->y, p->edim, 50, 10);
 }
 
-void draw_projectile(projectile *p)
+void draw_one_projectile(projectile *p)
 {
 	glPushMatrix();
 
 	glTranslatef(p->x, p->y, 0);
 	
-	glColor4f(p->r, p->g, p->b, p->a);
+	glColor4f(p->c.r, p->c.g, p->c.b, p->c.a);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -171,7 +163,7 @@ void draw_projectile(projectile *p)
 }
 
 
-void update_projectiles()
+void update_projectile()
 {
 	list_node *c;
 	for (c = PROJECTILES->next; c->next != NULL; c = c->next) {
@@ -183,13 +175,13 @@ void update_projectiles()
 	}
 }
 
-void draw_projectiles()
+void draw_projectile()
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
 	list_node *c;
 	for (c = PROJECTILES; c->next != NULL; c = c->next) {
 		if (((projectile *) c->data) != NULL) {
-			draw_projectile((projectile *) c->data);
+			draw_one_projectile((projectile *) c->data);
 		}
 	}
 }

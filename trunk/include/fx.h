@@ -10,11 +10,11 @@
 #include <string.h>
 #include "debug.h"
 #include "utils.h"
-#define spawn_smoke_const(x, y, radius) \
-	spawn_effect(SMOKE_CONST, 0.1, 0.1, 0.1, 1.0, \
+#define SPAWN_SMOKE_CONST(x, y, radius) \
+	spawn_fx(SMOKE_CONST, COLOR_GRAY, \
 				x, y, 8, radius, 1)
 typedef struct effect {
-	float r, g, b, a;
+	color c;
 	int x, y, dim;
 	int radius;
 	int speed;
@@ -23,13 +23,13 @@ typedef struct effect {
 	int state[25][3];
 	etype type;
 } effect;
-void initialize_effects();
-void spawn_effect(etype type, float r, float g, float b, float a,
+void initialize_fx();
+void spawn_fx(etype type, color col,
 		int x, int y, int dim,
 		int radius, int speed);
-void update_effects();
+void update_fx();
 void draw_particle(effect *e, int xdiff, int ydiff);
 void draw_smoke_particle(effect *e, int xdiff, int ydiff);
-void draw_effect(effect *e);
-void draw_effects();
+void draw_one_fx(effect *e);
+void draw_fx();
 #endif
