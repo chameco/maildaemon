@@ -1,4 +1,4 @@
-OBJECTS = src/main.o src/game.o src/level.o src/player.o src/enemy.o src/utils.o src/projectile.o src/gui.o src/fx.o
+OBJECTS = src/main.o src/game.o src/level.o src/player.o src/enemy.o src/ai.o src/utils.o src/projectile.o src/gui.o src/fx.o
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = cp -r

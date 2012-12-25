@@ -12,6 +12,7 @@
 #include "level.h"
 #include "player.h"
 #include "enemy.h"
+#include "ai.h"
 #include "projectile.h"
 #include "gui.h"
 #include "fx.h"

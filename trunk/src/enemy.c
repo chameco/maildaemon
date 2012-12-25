@@ -66,21 +66,29 @@ void reset_enemies()
 	ENEMIES = make_list();
 }
 
-void spawn_enemy(int x, int y, int w, int h,
+void spawn_enemy(int id, int x, int y, int w, int h,
 		int tex,
-		int health, int speed, int attk, double expval, int pspeed, 
-		color pc, int pdim, int edim, int eradius)
+		int health, int speed, int attk, double expval, int pcount, int pspeed, 
+		int cooldown, color pc, int pdim, int edim, int eradius)
 {
 	enemy *e = (enemy *) malloc(sizeof(enemy));
+	e->id = id;
 	e->x = x;
 	e->y = y;
 	e->w = w;
 	e->h = h;
+	e->xv = 0;
+	e->yv = 0;
 	e->tex = tex;
 	e->health = health;
 	e->speed = speed;
 	e->attk = attk;
 	e->expval = expval;
+	e->firing = 0;
+	e->firingdirec = 0;
+	e->cooldown = cooldown;
+	e->cooldowncounter = 0;
+	e->pcount = pcount;
 	e->pspeed = pspeed;
 	e->pc = pc;
 	e->pdim = pdim;
@@ -105,9 +113,11 @@ void collide_enemy(enemy *e)
 
 void shoot_enemy_weapon(enemy *e, direction d)
 {
-	spawn_projectile(e->pc,
-			d, e->x, e->y, e->pdim, (void *)e,
-			e->attk, e->pspeed, e->edim, e->eradius);
+	if (e->firing == 0 && e->cooldowncounter == 0) {
+		e->firing = e->pcount;
+		e->firingdirec = d;
+		e->cooldowncounter = e->cooldown;
+	}
 }
 
 void move_enemy_north(enemy *e)
@@ -196,24 +206,19 @@ void move_enemy_worker(enemy *e, SDL_Rect a)
 
 void update_enemy()
 {
+	list_node *enemies = get_enemies();
 	list_node *c;
-	for (c = ENEMIES->next; c->next != NULL; c = c->next) {
-		if (((enemy *) c->data) != NULL) {
-			if ((random() % 11) > 5) {
-				if ((random() % 11) > 5) {
-					move_enemy_north((enemy *) c->data);
-				} else {
-					move_enemy_south((enemy *) c->data);
-				}
-			} else {
-				if ((random() % 11) > 5) {
-					move_enemy_west((enemy *) c->data);
-				} else {
-					move_enemy_east((enemy *) c->data);
-				}
-			}
-			if (!(random() % 11)) {
-				shoot_enemy_weapon((enemy *) c->data, random() % 4);
+	enemy *e;
+	for (c = enemies->next; c->next != NULL; c = c->next) {
+		if ((enemy *) c->data != NULL) {
+			e = (enemy *) c->data;
+			if (e->firing > 0) {
+				spawn_projectile(e->pc,
+						e->firingdirec, e->x, e->y, e->pdim, c->data,
+						e->attk, e->pspeed, e->edim, e->eradius);
+				e->firing--;
+			} else if (e->cooldowncounter > 0) {
+				e->cooldowncounter--;
 			}
 		}
 	}

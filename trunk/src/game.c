@@ -41,6 +41,8 @@ void initialize_game()
 	debug("INITIALIZED UTILS");
 	initialize_enemy();
 	debug("INITIALIZED ENEMY");
+	initialize_ai();
+	debug("INITIALIZED AI");
 	initialize_player();
 	debug("INITIALIZED PLAYER");
 	initialize_projectile();
@@ -167,6 +169,7 @@ void draw_main_loop()
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 50) {
 		CURRENT_MODE = update_player();
+		update_ai();
 		update_enemy();
 		update_projectile();
 		update_fx();

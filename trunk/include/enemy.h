@@ -13,35 +13,43 @@
 #include "level.h"
 #include "projectile.h"
 
-#define SPAWN_SLIME(x, y) spawn_enemy(x, y, 32, 32, \
+#define SPAWN_SLIME(x, y) spawn_enemy(0, x, y, 32, 32, \
 		0, \
-		10, 8, 2, 10, 16, \
-		COLOR_GREEN, 8, 4, 50)
+		10, 8, 2, 10, 1, 16, \
+		10, COLOR_GREEN, 8, 4, 50)
 
-#define SPAWN_WIZARD(x, y) spawn_enemy(x, y, 32, 32, \
+#define SPAWN_WIZARD(x, y) spawn_enemy(1, x, y, 32, 32, \
 		1, \
-		100, 8, 10, 100, 16, \
-		COLOR_WHITE, 8, 4, 50)
+		100, 8, 10, 100, 4, 16, \
+		15, COLOR_WHITE, 8, 4, 50)
 
 typedef struct enemy {
+	int id;
 	int x, y, w, h;
+	int xv, yv;
 	int tex;
 	int health, speed, attk;
+	int firing;
+	direction firingdirec;
+	int cooldown;
+	int cooldowncounter;
+	int pcount;
 	int pspeed;
 	color pc;
 	int pdim, edim;
 	int eradius;
 	double expval;
 } enemy;
+
 list_node *get_enemies();
 void set_enemies(list_node *enemies);
 void initialize_one_enemy(int i, char *path, int w, int h);
 void initialize_enemy();
 void reset_enemies();
-void spawn_enemy(int x, int y, int w, int h,
+void spawn_enemy(int id, int x, int y, int w, int h,
 		int tex,
-		int health, int speed, int attk, double expval, int pspeed, 
-		color pc, int pdim, int edim, int eradius);
+		int health, int speed, int attk, double expval, int pcount, int pspeed, 
+		int cooldown, color pc, int pdim, int edim, int eradius);
 void hit_enemy();
 void collide_enemy(enemy *e);
 void shoot_enemy_weapon(enemy *e, direction d);
