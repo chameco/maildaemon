@@ -115,7 +115,36 @@ int check_collision(SDL_Rect A, SDL_Rect B)
 		 (B.y >= A.y && B.y < A.y + A.h)));
 }
 
-float calculate_distance(float x1, float y1, float x2, float y2)
+double calculate_distance(double x1, double y1, double x2, double y2)
 {
 	return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
+
+void mouse_coords(int x, int y, GLdouble *ox, GLdouble *oy)
+{
+	GLdouble oz;
+	GLint viewport[4];
+	GLdouble modelview[16], projection[16];
+	GLfloat wx = x, wy, wz;
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	y=viewport[3]-y;
+	wy=y;
+	glGetDoublev(GL_MODELVIEW_MATRIX, modelview);
+	glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &wz);
+	gluUnProject(wx,wy,wz,modelview,projection,viewport, ox, oy, &oz);
+}
+
+int gcd(int ak, int am) {
+	int k = ak;   
+	int m = am;
+	while (k != m) {
+		if (k > m) {
+			k = k-m;
+		}
+		else { 
+			m = m-k;
+		}
+	}
+	return k;
 }

@@ -24,6 +24,7 @@ typedef struct effect {
 	etype type;
 } effect;
 void initialize_fx();
+void reset_fx();
 void spawn_fx(etype type, color col,
 		int x, int y, int dim,
 		int radius, int speed);

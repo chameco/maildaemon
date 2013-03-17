@@ -1,6 +1,7 @@
 #include "level.h"
 
 level *CURRENT_LEVEL;
+int CURRENT_LEVEL_INDEX;
 GLuint BLOCK_TEXTURES[256];
 const int LEVEL_COUNT = 0;
 const int BLOCK_DIM = 32;
@@ -10,6 +11,11 @@ GLuint BLOCK_VERTEX_HANDLER = 0;
 level *get_current_level()
 {
 	return CURRENT_LEVEL;
+}
+
+int get_current_level_index()
+{
+	return CURRENT_LEVEL_INDEX;
 }
 
 int get_block_dim()
@@ -65,9 +71,12 @@ void load_level(int index)
 	size_t len = 0;
 	char cur;
 	char sprintf_fodder[100];
+	reset_entities();
 	reset_enemies();
 	reset_projectile();
+	reset_fx();
 	CURRENT_LEVEL = (level *) malloc(sizeof(level));
+	CURRENT_LEVEL_INDEX = index;
 	x = y = w = h = 0;
 	sprintf(sprintf_fodder, "levels/level%d", index);
 	curlevel = fopen(sprintf_fodder, "r");
@@ -101,6 +110,14 @@ void load_level(int index)
 					break;
 				case '#':
 					CURRENT_LEVEL->dimensions[x][y] = WALL;
+					break;
+				case '<':
+					spawn_entity(0, x*BLOCK_DIM, y*BLOCK_DIM, 32, 32);
+					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
+					break;
+				case '>':
+					spawn_entity(1, x*BLOCK_DIM, y*BLOCK_DIM, 32, 32);
+					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
 					break;
 				case 'i':
 					CURRENT_LEVEL->dimensions[x][y] = TORCH;

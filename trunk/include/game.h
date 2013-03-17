@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "utils.h"
 #include "level.h"
+#include "entity.h"
 #include "player.h"
 #include "enemy.h"
 #include "ai.h"
@@ -21,5 +22,6 @@ void initialize_game();
 void initGL();
 void main_game_loop();
 void draw_title_loop();
-void draw_main_loop();
+int draw_main_menu_loop();
+int draw_main_loop();
 #endif

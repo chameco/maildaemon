@@ -9,13 +9,15 @@
 #include "debug.h"
 #include "utils.h"
 #include "projectile.h"
+#include "enemy.h"
+#include "entity.h"
 #include "level.h"
 void initialize_player();
-void draw_player();
 int get_player_x();
 int get_player_y();
 int get_player_w();
 int get_player_h();
+int get_player_facing();
 double get_player_health();
 double get_player_max_health();
 double get_player_magic();
@@ -26,10 +28,12 @@ int get_player_level();
 void hit_player(int dmg);
 void give_player_exp(double exp);
 void warp_player(int x, int y);
-void shoot_player_weapon(int pressed);
+void melee_player_weapon(int pressed, direction d);
+void shoot_player_weapon(int pressed, direction d);
 void move_player_north(int pressed);
 void move_player_south(int pressed);
 void move_player_west(int pressed);
 void move_player_east(int pressed);
 mode update_player();
+void draw_player();
 #endif

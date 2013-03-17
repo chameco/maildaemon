@@ -9,6 +9,7 @@
 #include "debug.h"
 #include "utils.h"
 #include "player.h"
+#include "entity.h"
 #include "level.h"
 #include "enemy.h"
 #include "fx.h"
@@ -16,15 +17,15 @@ typedef struct projectile {
 	color c;
 	int x, y, dim;
 	int xv, yv;
+	int longevity;
 	void *sb; //Spawned by.
 	int dmg;
 	int edim; //Effect dimension.
 } projectile;
 void initialize_projectile();
 void reset_projectile();
-void spawn_projectile(color c,
-		direction d, int x, int y, int dim,
-		void *sb, int dmg, int speed, int edim, int eradius);
+void spawn_projectile(color c, int x, int y, int xv, int yv, int dim,
+		int longevity, void *sb, int dmg, int edim, int eradius);
 void check_projectile_collisions(projectile *p);
 void destroy_projectile(projectile *p);
 void update_projectile();

@@ -67,7 +67,6 @@ void reset_enemies()
 }
 
 void spawn_enemy(int id, int x, int y, int w, int h,
-		int tex,
 		int health, int speed, int attk, double expval, int pcount, int pspeed, 
 		int cooldown, color pc, int pdim, int edim, int eradius)
 {
@@ -77,15 +76,13 @@ void spawn_enemy(int id, int x, int y, int w, int h,
 	e->y = y;
 	e->w = w;
 	e->h = h;
-	e->xv = 0;
-	e->yv = 0;
-	e->tex = tex;
 	e->health = health;
 	e->speed = speed;
 	e->attk = attk;
 	e->expval = expval;
 	e->firing = 0;
-	e->firingdirec = 0;
+	e->firingdirecx = 0;
+	e->firingdirecy = 0;
 	e->cooldown = cooldown;
 	e->cooldowncounter = 0;
 	e->pcount = pcount;
@@ -111,11 +108,12 @@ void collide_enemy(enemy *e)
 	hit_player(e->attk);
 }
 
-void shoot_enemy_weapon(enemy *e, direction d)
+void shoot_enemy_weapon(enemy *e, int xv, int yv)
 {
 	if (e->firing == 0 && e->cooldowncounter == 0) {
 		e->firing = e->pcount;
-		e->firingdirec = d;
+		e->firingdirecx = xv;
+		e->firingdirecy = yv;
 		e->cooldowncounter = e->cooldown;
 	}
 }
@@ -213,9 +211,9 @@ void update_enemy()
 		if ((enemy *) c->data != NULL) {
 			e = (enemy *) c->data;
 			if (e->firing > 0) {
-				spawn_projectile(e->pc,
-						e->firingdirec, e->x, e->y, e->pdim, c->data,
-						e->attk, e->pspeed, e->edim, e->eradius);
+				spawn_projectile(e->pc, e->x, e->y, e->firingdirecx * e->pspeed, e->firingdirecy * e->pspeed,
+						e->pdim, 100, c->data,
+						e->attk, e->edim, e->eradius);
 				e->firing--;
 			} else if (e->cooldowncounter > 0) {
 				e->cooldowncounter--;
@@ -230,12 +228,12 @@ void draw_one_enemy(enemy *e)
 	glTranslatef(e->x, e->y, 0);
 	
 	glColor3f(1.0, 1.0, 1.0);
-	glBindTexture(GL_TEXTURE_2D, ENEMY_TEXTURES[e->tex]);
+	glBindTexture(GL_TEXTURE_2D, ENEMY_TEXTURES[e->id]);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-		glBindBuffer(GL_ARRAY_BUFFER, ENEMY_VERTEX_HANDLERS[e->tex]);
+		glBindBuffer(GL_ARRAY_BUFFER, ENEMY_VERTEX_HANDLERS[e->id]);
 		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
 		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
 

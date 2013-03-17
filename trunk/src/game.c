@@ -47,6 +47,8 @@ void initialize_game()
 	debug("INITIALIZED PLAYER");
 	initialize_projectile();
 	debug("INITIALIZED PROJECTILE");
+	initialize_entity();
+	debug("INITIALIZED ENTITY");
 	initialize_levels();
 	debug("INITIALIZED LEVELS");
 	initialize_gui();
@@ -90,40 +92,16 @@ void initGL()
 void main_game_loop()
 {
 	int running = 1;
-	int pressed;
-	SDL_Event event;
 	while (running) {
-		while (SDL_PollEvent(&event)) {
-			pressed = 0;
-			switch (event.type) {
-				case SDL_KEYDOWN:
-					pressed = 1; //Intentional lack of break
-				case SDL_KEYUP:
-					pressed = pressed ? pressed : 0;
-					if (event.key.keysym.sym == SDLK_w) {
-						move_player_north(pressed);
-					} else if (event.key.keysym.sym == SDLK_s) {
-						move_player_south(pressed);
-					} else if (event.key.keysym.sym == SDLK_a) {
-						move_player_west(pressed);
-					} else if (event.key.keysym.sym == SDLK_d) {
-						move_player_east(pressed);
-					} else if (event.key.keysym.sym == SDLK_l) {
-						shoot_player_weapon(pressed);
-					}
-					break;
-				case SDL_QUIT:
-					running = 0;
-					break;
-			}
-		}
-
 		switch (CURRENT_MODE) {
 			case TITLE_MODE:
 				draw_title_loop();
 				break;
+			case MAIN_MENU_MODE:
+				running = draw_main_menu_loop();
+				break;
 			case DRAW_MODE:
-				draw_main_loop();
+				running = draw_main_loop();
 				break;
 			case GAME_OVER_MODE:
 				debug("GAME OVER");
@@ -136,10 +114,13 @@ void main_game_loop()
 void draw_title_loop()
 {
 	static int ticks = 0;
-	GLuint title_image = load_texture("textures/title.png");
+	static GLuint title_image = 0;
+	if (!title_image) {
+		title_image = load_texture("textures/title.png");
+	}
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 50) {
-		if (ticks <= 20) {
+		if (ticks <= 100) {
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			glPushMatrix();
@@ -158,20 +139,98 @@ void draw_title_loop()
 			SDL_GL_SwapBuffers();
 			ticks++;
 		} else {
-			CURRENT_MODE = DRAW_MODE;
+			CURRENT_MODE = MAIN_MENU_MODE;
 		}
 	}
 
 }
 
-void draw_main_loop()
+int draw_main_menu_loop()
 {
+	static GLuint menu_background = 0;
+	if (!menu_background) {
+		menu_background = load_texture("textures/menu.png");
+	}
+	SDL_Event event;
+	while(SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					CURRENT_MODE = DRAW_MODE;
+				}
+				break;
+			case SDL_QUIT:
+				return 0;
+				break;
+		}
+	}
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	//Draw Background
+	glPushMatrix();
+	glTranslatef(0, 0, 0);
+	glBindTexture(GL_TEXTURE_2D, menu_background);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_QUADS);
+	glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
+	glTexCoord2i(1, 0); glVertex3f(SCREEN_WIDTH, 0, 0);
+	glTexCoord2i(1, 1); glVertex3f(SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	glTexCoord2i(0, 1); glVertex3f(0, SCREEN_HEIGHT, 0);
+	glEnd();
+	glPopMatrix();
+
+	//Draw Buttons
+	glPushMatrix();
+	glTranslatef(SCREEN_WIDTH/2 - 100, SCREEN_HEIGHT/2 - 100, 0);
+
+	SDL_GL_SwapBuffers();
+	return 1;
+}
+
+int draw_main_loop()
+{
+	int pressed;
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		pressed = 0;
+		switch (event.type) {
+			case SDL_KEYDOWN:
+				pressed = 1; //Intentional lack of break
+			case SDL_KEYUP:
+				pressed = pressed ? pressed : 0;
+				if (event.key.keysym.sym == SDLK_w) {
+					move_player_north(pressed);
+				} else if (event.key.keysym.sym == SDLK_s) {
+					move_player_south(pressed);
+				} else if (event.key.keysym.sym == SDLK_a) {
+					move_player_west(pressed);
+				} else if (event.key.keysym.sym == SDLK_d) {
+					move_player_east(pressed);
+				} else if (event.key.keysym.sym == SDLK_UP) {
+					shoot_player_weapon(pressed, NORTH);
+				} else if (event.key.keysym.sym == SDLK_DOWN) {
+					shoot_player_weapon(pressed, SOUTH);
+				} else if (event.key.keysym.sym == SDLK_LEFT) {
+					shoot_player_weapon(pressed, WEST);
+				} else if (event.key.keysym.sym == SDLK_RIGHT) {
+					shoot_player_weapon(pressed, EAST);
+				} else if (event.key.keysym.sym == SDLK_SPACE) {
+					melee_player_weapon(pressed, get_player_facing());
+				}
+				break;
+			case SDL_QUIT:
+				return 0;
+				break;
+		}
+	}
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 50) {
 		CURRENT_MODE = update_player();
 		update_ai();
 		update_enemy();
 		update_projectile();
+		update_entity();
 		update_fx();
 		update_gui();
 		LAST_TIME = CURRENT_TIME;
@@ -191,6 +250,7 @@ void draw_main_loop()
 	draw_player();
 	draw_projectile();
 	draw_fx();
+	draw_entity();
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -198,4 +258,5 @@ void draw_main_loop()
 	draw_gui();
 
 	SDL_GL_SwapBuffers();
+	return 1;
 }

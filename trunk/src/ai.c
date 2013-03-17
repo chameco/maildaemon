@@ -40,55 +40,35 @@ void ai_cb_jitter(enemy *e)
 		}
 	}
 	if (!(random() % 11)) {
-		shoot_enemy_weapon(e, random() % 4);
+		shoot_enemy_weapon(e, random() % 2, random() % 2);
 	}
 }
 
 void ai_cb_amble(enemy *e)
 {
-	if (!e->xv && !e->yv) {
-		direction d = random() % 8;
-		switch (d) {
-			case NORTH:
-				e->yv = -e->speed;
-				break;
-			case SOUTH:
-				e->yv = e->speed;
-				break;
-			case WEST:
-				e->xv = -e->speed;
-				break;
-			case EAST:
-				e->xv = e->speed;
-				break;
-			default:
-				break;
-		}
-	} else {
-		if (e->yv < 0) {
-			e->yv += 1;
-		} else {
-			e->yv -= 1;
-		}
-		if (e->xv < 0) {
-			e->xv += 1;
-		} else {
-			e->xv -= 1;
-		}
-	}
-	ai_cb_sentry(e);
-	SDL_Rect a = {
-		e->x + e->xv,
-		e->y + e->yv,
-		e->w,
-		e->h
-	};
-	move_enemy_worker(e, a);
+	;
 }
 
 void ai_cb_track(enemy *e)
 {
-	;
+	int px = get_player_x();
+	int py = get_player_y();
+	int xdiff = px - e->x;
+	int ydiff = py - e->y;
+	if (abs(xdiff) > abs(ydiff)) {
+		if (xdiff < 0) {
+			move_enemy_west(e);
+		} else {
+			move_enemy_east(e);
+		}
+	} else {
+		if (ydiff < 0) {
+			move_enemy_north(e);
+		} else {
+			move_enemy_south(e);
+		}
+	}
+	ai_cb_sentry(e);
 }
 
 void ai_cb_sentry(enemy *e)
@@ -96,13 +76,13 @@ void ai_cb_sentry(enemy *e)
 	int px = get_player_x();
 	int py = get_player_y();
 	if (py <= e->y && px <= e->x + 50 && px >= e->x - 50) {
-		shoot_enemy_weapon(e, NORTH);
+		shoot_enemy_weapon(e, 0, -1);
 	} else if (py >= e->y && px <= e->x + 50 && px >= e->x - 50) {
-		shoot_enemy_weapon(e, SOUTH);
+		shoot_enemy_weapon(e, 0, 1);
 	} else if (px <= e->x && py <= e->y + 50 && py >= e->y - 50) {
-		shoot_enemy_weapon(e, WEST);
+		shoot_enemy_weapon(e, -1, 0);
 	} else if (px >= e->x && py <= e->y + 50 && py >= e->y - 50) {
-		shoot_enemy_weapon(e, EAST);
+		shoot_enemy_weapon(e, 1, 0);
 	}
 }
 
@@ -115,7 +95,7 @@ void initialize_ai()
 	AI_TRACK = make_ai_handler(ai_cb_track);
 	AI_SENTRY = make_ai_handler(ai_cb_sentry);
 	set_ai_handler(0, AI_SENTRY);
-	set_ai_handler(1, AI_AMBLE);
+	set_ai_handler(1, AI_TRACK);
 }
 
 void update_ai()

@@ -16,6 +16,7 @@
 
 typedef enum mode {
 	TITLE_MODE,
+	MAIN_MENU_MODE,
 	DRAW_MODE,
 	GAME_OVER_MODE
 } mode;
@@ -65,5 +66,7 @@ GLuint surface_to_texture(SDL_Surface *s);
 GLuint load_texture(char *file);
 GLuint load_text(TTF_Font *font, char *text, int *w, int *h);
 int check_collision(SDL_Rect A, SDL_Rect B);
-float calculate_distance(float x1, float y1, float x2, float y2);
+double calculate_distance(double x1, double y1, double x2, double y2);
+void mouse_coords(int x, int y, GLdouble *ox, GLdouble *oy);
+int gcd(int ak, int am);
 #endif

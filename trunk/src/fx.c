@@ -11,6 +11,17 @@ void initialize_fx()
 	EFFECTS = make_list();
 }
 
+void reset_fx()
+{
+	list_node *c;
+	for (c = EFFECTS->next; c->next != NULL; c = c->next) {
+		if (((effect *) c->data) != NULL) {
+			free((effect *) c->data);
+		}
+	}
+	EFFECTS = make_list();
+}
+
 void spawn_fx(etype type, color col,
 		int x, int y, int dim,
 		int radius, int speed)

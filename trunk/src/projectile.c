@@ -20,34 +20,20 @@ void reset_projectile()
 	PROJECTILES = make_list();
 }
 
-void spawn_projectile(color c,
-		direction d, int x, int y, int dim,
-		void *sb, int dmg, int speed, int edim, int eradius)
+void spawn_projectile(color c, int x, int y, int xv, int yv, int dim,
+		int longevity, void *sb, int dmg, int edim, int eradius)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
 	p->c = c;
 	p->x = x;
 	p->y = y;
+	p->xv = xv;
+	p->yv = yv;
 	p->dim = dim;
-	p->xv = 0;
-	p->yv = 0;
+	p->longevity = longevity;
 	p->sb = sb;
 	p->dmg = dmg;
 	p->edim = edim;
-	switch (d) {
-		case NORTH:
-			p->yv = -speed;
-			break;
-		case SOUTH:
-			p->yv = speed;
-			break;
-		case WEST:
-			p->xv = -speed;
-			break;
-		case EAST:
-			p->xv = speed;
-			break;
-	}
 	if (PROJECTILE_VERTEX_HANDLERS[p->dim] == 0) {
 		PROJECTILE_VERTICES[p->dim][0].x = 0;
 		PROJECTILE_VERTICES[p->dim][0].y = 0;
@@ -132,6 +118,22 @@ void check_projectile_collisions(projectile *p)
 			}
 		}
 	}
+
+	list_node *entities = get_entities();
+	for (c = entities->next; c->next != NULL; c = c->next) {
+		if ((entity *) c->data != p->sb &&
+				((entity *) c->data) != NULL) {
+			b.x = ((entity *) c->data)->x;
+			b.y = ((entity *) c->data)->y;
+			b.w = ((entity *) c->data)->w;
+			b.h = ((entity *) c->data)->h;
+			if (!check_collision(a, b)) {
+				hit_entity((entity *) c->data, p->dmg);
+				destroy_projectile(p);
+				return;
+			}
+		}
+	}
 }
 
 void destroy_projectile(projectile *p)
@@ -166,11 +168,16 @@ void draw_one_projectile(projectile *p)
 void update_projectile()
 {
 	list_node *c;
+	projectile *p;
 	for (c = PROJECTILES->next; c->next != NULL; c = c->next) {
 		if (((projectile *) c->data) != NULL) {
-			((projectile *) c->data)->x += ((projectile *) c->data)->xv;
-			((projectile *) c->data)->y += ((projectile *) c->data)->yv;
-			check_projectile_collisions((projectile *) c->data);
+			p = (projectile *) c->data;
+			p->x += p->xv;
+			p->y += p->yv;
+			if (--p->longevity <= 0) {
+				destroy_projectile(p);
+			}
+			check_projectile_collisions(p);
 		}
 	}
 }

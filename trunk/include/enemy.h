@@ -14,23 +14,19 @@
 #include "projectile.h"
 
 #define SPAWN_SLIME(x, y) spawn_enemy(0, x, y, 32, 32, \
-		0, \
 		10, 8, 2, 10, 1, 16, \
 		10, COLOR_GREEN, 8, 4, 50)
 
 #define SPAWN_WIZARD(x, y) spawn_enemy(1, x, y, 32, 32, \
-		1, \
-		100, 8, 10, 100, 4, 16, \
+		100, 8, 10, 100, 4, 8, \
 		15, COLOR_WHITE, 8, 4, 50)
 
 typedef struct enemy {
 	int id;
 	int x, y, w, h;
-	int xv, yv;
-	int tex;
 	int health, speed, attk;
 	int firing;
-	direction firingdirec;
+	int firingdirecx, firingdirecy;
 	int cooldown;
 	int cooldowncounter;
 	int pcount;
@@ -47,12 +43,11 @@ void initialize_one_enemy(int i, char *path, int w, int h);
 void initialize_enemy();
 void reset_enemies();
 void spawn_enemy(int id, int x, int y, int w, int h,
-		int tex,
 		int health, int speed, int attk, double expval, int pcount, int pspeed, 
 		int cooldown, color pc, int pdim, int edim, int eradius);
 void hit_enemy();
 void collide_enemy(enemy *e);
-void shoot_enemy_weapon(enemy *e, direction d);
+void shoot_enemy_weapon(enemy *e, int xv, int yv);
 void move_enemy_north(enemy *e);
 void move_enemy_south(enemy *e);
 void move_enemy_west(enemy *e);

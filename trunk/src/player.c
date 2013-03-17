@@ -4,19 +4,19 @@ int PLAYER_X = 0;
 int PLAYER_Y = 0;
 int PLAYER_X_VELOCITY = 0;
 int PLAYER_Y_VELOCITY = 0;
-int PLAYER_MOVE_SPEED = 8;//Pixels per second
-int PLAYER_WIDTH = 32;
-int PLAYER_HEIGHT = 32;
+const int PLAYER_MOVE_SPEED = 8;//Pixels per second
+const int PLAYER_WIDTH = 32;
+const int PLAYER_HEIGHT = 32;
 direction PLAYER_FACING = 0;
 double PLAYER_EXP = 0;
 double PLAYER_EXP_TO_NEXT = 100;
 int PLAYER_LEVEL = 0;
-double PLAYER_MAX_HEALTH = 100;
+const double PLAYER_MAX_HEALTH = 100;
 double PLAYER_HEALTH;
-double PLAYER_MAX_MAGIC = 100;
+const double PLAYER_MAX_MAGIC = 100;
 double PLAYER_MAGIC;
-double PLAYER_REGEN = 0.1;
-double PLAYER_MREGEN = 0.1;
+const double PLAYER_REGEN = 0.1;
+const double PLAYER_MREGEN = 0.1;
 GLuint PLAYER_TEXTURES[4];
 color PLAYER_COLOR;
 vertex PLAYER_VERTICES[4];
@@ -62,31 +62,6 @@ void initialize_player()
 	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), PLAYER_VERTICES, GL_STATIC_DRAW);
 }
 
-void draw_player()
-{
-	glPushMatrix();
-	glTranslatef(PLAYER_X, PLAYER_Y, 0);
-	
-	glBindTexture(GL_TEXTURE_2D, PLAYER_TEXTURES[PLAYER_FACING]);
-
-	glColor3f(1.0, 1.0, 1.0);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-		glBindBuffer(GL_ARRAY_BUFFER, PLAYER_VERTEX_HANDLER);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
-		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
-		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
-
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-
-	glPopMatrix();
-}
-
 int get_player_x()
 {
 	return PLAYER_X;
@@ -105,6 +80,11 @@ int get_player_w()
 int get_player_h()
 {
 	return PLAYER_HEIGHT;
+}
+
+int get_player_facing()
+{
+	return PLAYER_FACING;
 }
 
 double get_player_health()
@@ -162,13 +142,54 @@ void warp_player(int x, int y)
 	PLAYER_Y = y;
 }
 
-void shoot_player_weapon(int pressed)
+void melee_player_weapon(int pressed, direction d)
+{
+	if (pressed) {
+		int xv = 0;
+		int yv = 0;
+		switch (d) {
+			case NORTH:
+				yv = -16;
+				break;
+			case SOUTH:
+				yv = 16;
+				break;
+			case WEST:
+				xv = -16;
+				break;
+			case EAST:
+				xv = 16;
+				break;
+		}
+		spawn_projectile(PLAYER_COLOR,
+				PLAYER_X+(PLAYER_WIDTH/2)-4, PLAYER_Y+(PLAYER_HEIGHT/2)-4,
+				xv, yv, 8, 5, NULL, 16, 4, 50);
+	}
+}
+
+void shoot_player_weapon(int pressed, direction d)
 {
 	if (pressed) {
 		if (PLAYER_MAGIC >= 4) {
-			spawn_projectile(PLAYER_COLOR, PLAYER_FACING,
+			int xv = 0;
+			int yv = 0;
+			switch (d) {
+				case NORTH:
+					yv = -16;
+					break;
+				case SOUTH:
+					yv = 16;
+					break;
+				case WEST:
+					xv = -16;
+					break;
+				case EAST:
+					xv = 16;
+					break;
+			}
+			spawn_projectile(PLAYER_COLOR,
 					PLAYER_X+(PLAYER_WIDTH/2)-4, PLAYER_Y+(PLAYER_HEIGHT/2)-4,
-					8, NULL, 2, 16, 4, 50);
+					xv, yv, 8, 100, NULL, 16, 4, 50);
 			PLAYER_MAGIC -= 4;
 		}
 	}
@@ -291,8 +312,30 @@ mode update_player()
 			if (!shouldmovex || !shouldmovey) {
 				player.x = PLAYER_X;
 				player.y = PLAYER_Y;
-				if (!check_collision(player, b)) {
-					collide_enemy((enemy *) c->data);
+				collide_enemy((enemy *) c->data);
+				goto end;
+			}
+		}
+	}
+
+	list_node *entities = get_entities();
+	for (c = entities->next; c->next != NULL; c = c->next) {
+		if (((entity *) c->data) != NULL) {
+			b.x = ((entity *) c->data)->x;
+			b.y = ((entity *) c->data)->y;
+			b.w = ((entity *) c->data)->w;
+			b.h = ((entity *) c->data)->h;
+			player.x = PLAYER_X+PLAYER_X_VELOCITY;
+			shouldmovex = check_collision(player, b);
+			player.x = PLAYER_X;
+			player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
+			shouldmovey = check_collision(player, b);
+			player.y = PLAYER_Y;
+			if (!shouldmovex || !shouldmovey) {
+				player.x = PLAYER_X;
+				player.y = PLAYER_Y;
+				if (collide_entity((entity *) c->data)) {
+					return DRAW_MODE;
 				}
 				goto end;
 			}
@@ -302,13 +345,34 @@ mode update_player()
 end:
 	if (shouldmovex) {
 		PLAYER_X = tempx;
-	} else {
-		PLAYER_X_VELOCITY = 0;
 	}
 	if (shouldmovey) {
 		PLAYER_Y = tempy;
-	} else {
-		PLAYER_Y_VELOCITY = 0;
 	}
 	return DRAW_MODE;
+}
+
+void draw_player()
+{
+	glPushMatrix();
+	glTranslatef(PLAYER_X, PLAYER_Y, 0);
+	
+	glBindTexture(GL_TEXTURE_2D, PLAYER_TEXTURES[PLAYER_FACING]);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+		glBindBuffer(GL_ARRAY_BUFFER, PLAYER_VERTEX_HANDLER);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+		glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+		glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glPopMatrix();
 }

@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "debug.h"
+#include "entity.h"
 #include "player.h"
 #include "enemy.h"
 #include "projectile.h"
@@ -28,6 +29,7 @@ typedef struct level {
 } level;
 
 level *get_current_level();
+int get_current_level_index();
 int get_block_dim();
 int is_solid_block();
 void initialize_levels();
