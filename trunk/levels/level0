@@ -1,13 +1,9 @@
-25 12
-#i#i#i#i#i#i#i#i#i#i#i#i#
-#C                      #
-#             <         #
-#                       #
-#                       #
-#                       #
-#              W        #
-#                       #
-#     S                 #
-#                       #
-#                       #
-#i#i#i#i#i#i#i#i#i#i#i#i# 
+level 0: WASD to move
+7 7 0.75
+i##i##i
+#C    #
+#     #
+i     i
+#     #
+#    <#
+i##i##i

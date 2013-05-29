@@ -175,6 +175,8 @@ void draw_smoke_particle(effect *e, int xdiff, int ydiff)
 
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
 
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	glColor4f(r, g, b, e->c.a);
 
 	glEnableClientState(GL_VERTEX_ARRAY);

@@ -1,4 +1,4 @@
-OBJECTS = src/main.o src/game.o src/level.o src/entity.o src/player.o src/enemy.o src/ai.o src/utils.o src/projectile.o src/gui.o src/fx.o
+OBJECTS = src/main.o src/game.o src/level.o src/lights.o src/entity.o src/player.o src/enemy.o src/ai.o src/utils.o src/projectile.o src/gui.o src/fx.o
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = cp -r
@@ -10,11 +10,8 @@ datadir = $(datarootdir)
 libdir = $(exec_prefix)/lib
 CFLAGS = -Iinclude -g -Wall -DDATADIR="\"$(DESTDIR)$(datadir)/purge/\""
 
-#ENABLE DEBUG MODE
-#CFLAGS = -Iinclude -g -Wall -DDATADIR="\"\""
-
-all : $(OBJECTS)
-	gcc $(OBJECTS) -lm -lGLEW -lSDL -lGL -lGLU -lSDL_image -lSDL_ttf -o purge
+all: $(OBJECTS)
+	gcc $(OBJECTS) -lm -lGLEW -lSDL -lGL -lGLU -lSDL_image -o purge
 install:
 	$(INSTALL_PROGRAM) purge $(DESTDIR)$(bindir)/purge
 	mkdir -p $(DESTDIR)$(datadir)/purge

@@ -3,31 +3,47 @@
 GLuint HEALTHBAR;
 GLuint MAGICBAR;
 GLuint EXPBAR;
-GLuint CURRENT_LEVEL_TEX;
-int CURRENT_LEVEL_TEX_W;
-int CURRENT_LEVEL_TEX_H;
-TTF_Font *GAMEFONT;
-int BELIEVED_CURRENT_LEVEL = 0;
+char CURRENT_PLAYER_LEVEL_TEXT[256];
+char CURRENT_LEVEL_TEXT[256];
+int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
+int BELIEVED_CURRENT_LEVEL = -1;
+GLuint BUTTON_BACKGROUND;
 
 void initialize_gui()
 {
-	HEALTHBAR = load_texture(DATADIR "textures/gui/health.png");
-	MAGICBAR = load_texture(DATADIR "textures/gui/magic.png");
-	EXPBAR = load_texture(DATADIR "textures/gui/exp.png");
-	GAMEFONT = TTF_OpenFont(DATADIR "fonts/courier.ttf", 16);
-	if(!GAMEFONT) {
-		log_err("Failure to open font: %s", TTF_GetError());
-	}
-	char sprintf_fodder[32];
-	sprintf(sprintf_fodder, "level %d", get_player_level());
-	CURRENT_LEVEL_TEX = load_text(GAMEFONT, sprintf_fodder,
-			&CURRENT_LEVEL_TEX_W, &CURRENT_LEVEL_TEX_H);
+	HEALTHBAR = load_texture("textures/gui/health.png");
+	MAGICBAR = load_texture("textures/gui/magic.png");
+	EXPBAR = load_texture("textures/gui/exp.png");
+	BUTTON_BACKGROUND = load_texture("textures/gui/buttontemplate.png");
 }
 
 void update_gui()
 {
 	;
 }
+
+void draw_button(int id, char *text, int x, int y)
+{
+	//debug("draw_button: id=%d, text=%s, x=%d, y=%d, BUTTON_TEXTURES[id]=%d",
+			//id, text, x, y, BUTTON_TEXTURES[id]);
+	glPushMatrix();
+	glTranslatef(x, y, 0);
+
+	glColor3f(1.0, 1.0, 1.0);
+
+	glBindTexture(GL_TEXTURE_2D, BUTTON_BACKGROUND);
+
+	glBegin(GL_QUADS);
+	glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
+	glTexCoord2i(1, 0); glVertex3f(200, 0, 0);
+	glTexCoord2i(1, 1); glVertex3f(200, 50, 0);
+	glTexCoord2i(0, 1); glVertex3f(0, 50, 0);
+	glEnd();
+	glPopMatrix();
+
+	render_text_bitmap(x + 10, y + 10, text, 2);
+}
+
 
 void draw_gui()
 {
@@ -43,12 +59,14 @@ void draw_gui()
 	mlength = (100 * m) / mm;
 	int elength;
 	elength = (100 * e) / me;
-	if (BELIEVED_CURRENT_LEVEL != get_player_level()) {
-		BELIEVED_CURRENT_LEVEL = get_player_level();
-		char sprintf_fodder[32];
-		sprintf(sprintf_fodder, "level %d", BELIEVED_CURRENT_LEVEL);
-		CURRENT_LEVEL_TEX = load_text(GAMEFONT, sprintf_fodder,
-				&CURRENT_LEVEL_TEX_W, &CURRENT_LEVEL_TEX_H);
+	if (BELIEVED_CURRENT_PLAYER_LEVEL != get_player_level()) {
+		BELIEVED_CURRENT_PLAYER_LEVEL = get_player_level();
+		sprintf(CURRENT_PLAYER_LEVEL_TEXT, "level %d", BELIEVED_CURRENT_PLAYER_LEVEL);
+	}
+	if (BELIEVED_CURRENT_LEVEL != get_current_level_index()) {
+		BELIEVED_CURRENT_LEVEL = get_current_level_index();
+		char *buffer =  get_current_level_name();
+		strncpy(CURRENT_LEVEL_TEXT, buffer, 256);
 	}
 
 	glPushMatrix();
@@ -131,19 +149,11 @@ void draw_gui()
 
 	glPopMatrix();
 
-	glPushMatrix();
+	render_text_bitmap(135, 72, CURRENT_PLAYER_LEVEL_TEXT, 1.5);
 
-	glTranslatef(140, 70, 0);
-	glColor3f(1.0, 1.0, 1.0);
-	glBindTexture(GL_TEXTURE_2D, CURRENT_LEVEL_TEX);
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(CURRENT_LEVEL_TEX_W, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(CURRENT_LEVEL_TEX_W, CURRENT_LEVEL_TEX_H, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, CURRENT_LEVEL_TEX_H, 0);
-	glEnd();
-
-	glPopMatrix();
+	//LEVEL TITLE
+	
+	render_text_bitmap(250, 0, CURRENT_LEVEL_TEXT, 4);
 
 	glPopMatrix();
 }

@@ -2,7 +2,6 @@
 #define GAME_H
 #include <GL/glew.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_ttf.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -10,6 +9,7 @@
 #include "debug.h"
 #include "utils.h"
 #include "level.h"
+#include "lights.h"
 #include "entity.h"
 #include "player.h"
 #include "enemy.h"
@@ -20,8 +20,10 @@
 
 void initialize_game();
 void initGL();
+void reset_game();
 void main_game_loop();
 void draw_title_loop();
 int draw_main_menu_loop();
 int draw_main_loop();
+int draw_game_over_loop();
 #endif

@@ -83,6 +83,9 @@ int collide_entity(entity *e)
 			load_level(get_current_level_index()-1);
 			return 1;
 			break;
+		case 2:
+			give_player_key();
+			break;
 	}
 	return 0;
 }

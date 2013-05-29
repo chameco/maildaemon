@@ -1,8 +1,8 @@
 #include "projectile.h"
 
 list_node *PROJECTILES;
-vertex PROJECTILE_VERTICES[256][4];
-GLuint PROJECTILE_VERTEX_HANDLERS[256] = {0};
+vertex PROJECTILE_VERTICES[256][256][4];
+GLuint PROJECTILE_VERTEX_HANDLERS[256][256] = {{0}};
 
 void initialize_projectile()
 {
@@ -20,8 +20,8 @@ void reset_projectile()
 	PROJECTILES = make_list();
 }
 
-void spawn_projectile(color c, int x, int y, int xv, int yv, int dim,
-		int longevity, void *sb, int dmg, int edim, int eradius)
+void spawn_projectile(color c, int x, int y, int xv, int yv, int w, int h,
+		int longevity, void *sb, int dmg, int edim, GLuint texture)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
 	p->c = c;
@@ -29,27 +29,41 @@ void spawn_projectile(color c, int x, int y, int xv, int yv, int dim,
 	p->y = y;
 	p->xv = xv;
 	p->yv = yv;
-	p->dim = dim;
+	p->w = w;
+	p->h = h;
 	p->longevity = longevity;
 	p->sb = sb;
 	p->dmg = dmg;
 	p->edim = edim;
-	if (PROJECTILE_VERTEX_HANDLERS[p->dim] == 0) {
-		PROJECTILE_VERTICES[p->dim][0].x = 0;
-		PROJECTILE_VERTICES[p->dim][0].y = 0;
+	p->texture = texture;
+	if (PROJECTILE_VERTEX_HANDLERS[p->w][p->h] == 0) {
+		PROJECTILE_VERTICES[p->w][p->h][0].x = 0;
+		PROJECTILE_VERTICES[p->w][p->h][0].y = 0;
 
-		PROJECTILE_VERTICES[p->dim][1].x = p->dim;
-		PROJECTILE_VERTICES[p->dim][1].y = 0;
+		PROJECTILE_VERTICES[p->w][p->h][1].x = p->w;
+		PROJECTILE_VERTICES[p->w][p->h][1].y = 0;
 
-		PROJECTILE_VERTICES[p->dim][2].x = p->dim;
-		PROJECTILE_VERTICES[p->dim][2].y = p->dim;
+		PROJECTILE_VERTICES[p->w][p->h][2].x = p->w;
+		PROJECTILE_VERTICES[p->w][p->h][2].y = p->h;
 
-		PROJECTILE_VERTICES[p->dim][3].x = 0;
-		PROJECTILE_VERTICES[p->dim][3].y = p->dim;
+		PROJECTILE_VERTICES[p->w][p->h][3].x = 0;
+		PROJECTILE_VERTICES[p->w][p->h][3].y = p->h;
 
-		glGenBuffers(1, &PROJECTILE_VERTEX_HANDLERS[p->dim]);
-		glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->dim]);
-		glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), PROJECTILE_VERTICES[p->dim], GL_STATIC_DRAW);
+		PROJECTILE_VERTICES[p->w][p->h][0].s = 0;
+		PROJECTILE_VERTICES[p->w][p->h][0].t = 0;
+
+		PROJECTILE_VERTICES[p->w][p->h][1].s = 1;
+		PROJECTILE_VERTICES[p->w][p->h][1].t = 0;
+
+		PROJECTILE_VERTICES[p->w][p->h][2].s = 1;
+		PROJECTILE_VERTICES[p->w][p->h][2].t = 1;
+
+		PROJECTILE_VERTICES[p->w][p->h][3].s = 0;
+		PROJECTILE_VERTICES[p->w][p->h][3].t = 1;
+
+		glGenBuffers(1, &PROJECTILE_VERTEX_HANDLERS[p->w][p->h]);
+		glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->w][p->h]);
+		glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), PROJECTILE_VERTICES[p->w][p->h], GL_STATIC_DRAW);
 	}
 	insert_list(PROJECTILES, (void *) p);
 }
@@ -59,8 +73,8 @@ void check_projectile_collisions(projectile *p)
 	SDL_Rect a = {
 		p->x,
 		p->y,
-		p->dim,
-		p->dim
+		p->w,
+		p->h
 	};
 	SDL_Rect b;
 
@@ -146,19 +160,22 @@ void destroy_projectile(projectile *p)
 void draw_one_projectile(projectile *p)
 {
 	glPushMatrix();
-
 	glTranslatef(p->x, p->y, 0);
-	
+
 	glColor4f(p->c.r, p->c.g, p->c.b, p->c.a);
+	glBindTexture(GL_TEXTURE_2D, p->texture);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->dim]);
+	glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->w][p->h]);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
 	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
 
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glPopMatrix();

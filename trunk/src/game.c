@@ -4,7 +4,7 @@ SDL_Surface *screen;
 int SCREEN_WIDTH = 0;
 int SCREEN_HEIGHT = 0;
 int GAME_OVER = 0;
-mode CURRENT_MODE = TITLE_MODE;
+mode CURRENT_MODE = MAIN_MENU_MODE;
 int LAST_TIME = 0;
 int CURRENT_TIME = 0;
 
@@ -31,14 +31,17 @@ void initialize_game()
 	SCREEN_WIDTH = screen->w;
 	SCREEN_HEIGHT = screen->h;
 
+	debug("SCREEN_WIDTH=%d, SCREEN_HEIGHT=%d", SCREEN_WIDTH, SCREEN_HEIGHT);
+
 	IMG_Init(IMG_INIT_PNG);
-	TTF_Init();
 	initGL();
 
 	SDL_WM_SetCaption("Purge", NULL);
 
 	initialize_utils();
 	debug("INITIALIZED UTILS");
+	initialize_lights();
+	debug("INITIALIZED LIGHTS");
 	initialize_enemy();
 	debug("INITIALIZED ENEMY");
 	initialize_ai();
@@ -89,6 +92,12 @@ void initGL()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+void reset_game()
+{
+	reset_player();
+	load_level(0);
+}
+
 void main_game_loop()
 {
 	int running = 1;
@@ -104,8 +113,7 @@ void main_game_loop()
 				running = draw_main_loop();
 				break;
 			case GAME_OVER_MODE:
-				debug("GAME OVER");
-				running = 0;
+				running = draw_game_over_loop();
 				break;
 		}
 	}
@@ -142,21 +150,44 @@ void draw_title_loop()
 			CURRENT_MODE = MAIN_MENU_MODE;
 		}
 	}
-
 }
 
 int draw_main_menu_loop()
 {
+	static int loaded = 0;
 	static GLuint menu_background = 0;
-	if (!menu_background) {
+	static GLuint menu_title = 0;
+	static SDL_Rect button_enter_rect;
+	static SDL_Rect button_quit_rect;
+	if (!loaded) {
+		loaded = 1;
 		menu_background = load_texture("textures/menu.png");
+		menu_title = load_texture("textures/menutitle.png");
+		button_enter_rect.w = 200;
+		button_enter_rect.h = 50;
+		button_enter_rect.x = SCREEN_WIDTH/2 - button_enter_rect.w/2;
+		button_enter_rect.y = SCREEN_HEIGHT/2 - button_enter_rect.h/2;
+		button_quit_rect.w = 200;
+		button_quit_rect.h = 50;
+		button_quit_rect.x = button_enter_rect.x;
+		button_quit_rect.y = button_enter_rect.y + 75;
+
 	}
+	SDL_Rect mousecursor;
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		switch (event.type) {
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
-					CURRENT_MODE = DRAW_MODE;
+					mousecursor.w = mousecursor.h = 1;
+					mousecursor.x = event.button.x;
+					mousecursor.y = event.button.y;
+					if (!check_collision(mousecursor, button_enter_rect)) {
+						CURRENT_MODE = DRAW_MODE;
+					}
+					if (!check_collision(mousecursor, button_quit_rect)) {
+						return 0;
+					}
 				}
 				break;
 			case SDL_QUIT:
@@ -180,11 +211,26 @@ int draw_main_menu_loop()
 	glEnd();
 	glPopMatrix();
 
-	//Draw Buttons
+	//Draw Title
 	glPushMatrix();
-	glTranslatef(SCREEN_WIDTH/2 - 100, SCREEN_HEIGHT/2 - 100, 0);
+	glTranslatef(75, 100, 0);
+	glBindTexture(GL_TEXTURE_2D, menu_title);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_QUADS);
+	glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
+	glTexCoord2i(1, 0); glVertex3f(700, 0, 0);
+	glTexCoord2i(1, 1); glVertex3f(700, 200, 0);
+	glTexCoord2i(0, 1); glVertex3f(0, 200, 0);
+	glEnd();
+	glPopMatrix();
+
+	//Draw Buttons
+	draw_button(0, "Enter Game", button_enter_rect.x, button_enter_rect.y);
+	draw_button(1, "Quit", button_quit_rect.x, button_quit_rect.y);
 
 	SDL_GL_SwapBuffers();
+	
 	return 1;
 }
 
@@ -251,11 +297,80 @@ int draw_main_loop()
 	draw_projectile();
 	draw_fx();
 	draw_entity();
+	draw_lights();
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 
 	draw_gui();
+
+	SDL_GL_SwapBuffers();
+	return 1;
+}
+
+int draw_game_over_loop()
+{
+	static int loaded = 0;
+	static GLuint game_over_text = 0;
+	static SDL_Rect button_respawn_rect;
+	static SDL_Rect button_quit_rect;
+	if (!loaded) {
+		loaded = 1;
+		game_over_text = load_texture("textures/gameover.png");
+		button_respawn_rect.w = 200;
+		button_respawn_rect.h = 50;
+		button_respawn_rect.x = SCREEN_WIDTH/2 - 250;
+		button_respawn_rect.y = SCREEN_HEIGHT/2 + 100;
+		button_quit_rect.w = 200;
+		button_quit_rect.h = 50;
+		button_quit_rect.x = SCREEN_WIDTH/2 + 50;
+		button_quit_rect.y = SCREEN_HEIGHT/2 + 100;
+
+	}
+	SDL_Rect mousecursor;
+	SDL_Event event;
+	while(SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					mousecursor.w = mousecursor.h = 1;
+					mousecursor.x = event.button.x;
+					mousecursor.y = event.button.y;
+					if (!check_collision(mousecursor, button_respawn_rect)) {
+						reset_game();
+						CURRENT_MODE = MAIN_MENU_MODE;
+					}
+					else if (!check_collision(mousecursor, button_quit_rect)) {
+						return 0;
+					}
+				}
+				break;
+			case SDL_QUIT:
+				return 0;
+				break;
+			default:
+				break;
+		}
+	}
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glPushMatrix();
+	glTranslatef(SCREEN_WIDTH/2 - 350, SCREEN_HEIGHT/2 - 100, 0);
+	glBindTexture(GL_TEXTURE_2D, game_over_text);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_QUADS);
+	glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
+	glTexCoord2i(1, 0); glVertex3f(700, 0, 0);
+	glTexCoord2i(1, 1); glVertex3f(700, 200, 0);
+	glTexCoord2i(0, 1); glVertex3f(0, 200, 0);
+	glEnd();
+	glPopMatrix();
+	
+	//Draw Buttons
+	
+	draw_button(10, "Main Menu", button_respawn_rect.x, button_respawn_rect.y);
+	draw_button(11, "Quit", button_quit_rect.x, button_quit_rect.y);
 
 	SDL_GL_SwapBuffers();
 	return 1;

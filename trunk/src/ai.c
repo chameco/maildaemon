@@ -96,6 +96,8 @@ void initialize_ai()
 	AI_SENTRY = make_ai_handler(ai_cb_sentry);
 	set_ai_handler(0, AI_SENTRY);
 	set_ai_handler(1, AI_TRACK);
+	set_ai_handler(2, AI_TRACK);
+	set_ai_handler(3, AI_AMBLE);
 }
 
 void update_ai()

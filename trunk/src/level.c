@@ -2,6 +2,8 @@
 
 level *CURRENT_LEVEL;
 int CURRENT_LEVEL_INDEX;
+char CURRENT_LEVEL_NAME[256];
+double CURRENT_LEVEL_AMBIENCE;
 GLuint BLOCK_TEXTURES[256];
 const int LEVEL_COUNT = 0;
 const int BLOCK_DIM = 32;
@@ -18,6 +20,16 @@ int get_current_level_index()
 	return CURRENT_LEVEL_INDEX;
 }
 
+char *get_current_level_name()
+{
+	return CURRENT_LEVEL_NAME;
+}
+
+double get_current_level_ambience()
+{
+	return CURRENT_LEVEL_AMBIENCE;
+}
+
 int get_block_dim()
 {
 	return BLOCK_DIM;
@@ -25,11 +37,16 @@ int get_block_dim()
 
 int is_solid_block(block b)
 {
-	return b - FLOOR > 0;
+	if (b == FLOOR) {
+		return 0;
+	} else {
+		return 1;
+	}
 }
 
 void initialize_levels()
 {
+	BLOCK_TEXTURES[VOID] = load_texture("textures/blank.png");
 	BLOCK_TEXTURES[FLOOR] = load_texture("textures/floor.png");
 	BLOCK_TEXTURES[WALL] = load_texture("textures/wall.png");
 	BLOCK_TEXTURES[TORCH] = load_texture("textures/torch.png");
@@ -71,20 +88,27 @@ void load_level(int index)
 	size_t len = 0;
 	char cur;
 	char sprintf_fodder[100];
+	reset_lights();
 	reset_entities();
 	reset_enemies();
 	reset_projectile();
 	reset_fx();
 	CURRENT_LEVEL = (level *) malloc(sizeof(level));
 	CURRENT_LEVEL_INDEX = index;
+	memset((void *) CURRENT_LEVEL_NAME, 0, 256);
 	x = y = w = h = 0;
 	sprintf(sprintf_fodder, "levels/level%d", index);
 	curlevel = fopen(sprintf_fodder, "r");
 	if (curlevel == NULL) {
 		sprintf(sprintf_fodder, "%slevels/level%d", DATADIR, index);
-		fopen(sprintf_fodder, "r");
+		debug("fallback level %s", sprintf_fodder);
+		curlevel = fopen(sprintf_fodder, "r");
 	}
-	fscanf(curlevel, "%d %d\n", &w, &h);
+	char *namebuf = NULL;
+	size_t namesize = 256;
+	getline(&namebuf, &namesize, curlevel);
+	strncpy(CURRENT_LEVEL_NAME, namebuf, strlen(namebuf)-1);
+	fscanf(curlevel, "%d %d %lf\n", &w, &h, &CURRENT_LEVEL_AMBIENCE);
 	CURRENT_LEVEL->width = w;
 	CURRENT_LEVEL->height = h;
 	for (y = 0; y < h; y++) {
@@ -100,6 +124,9 @@ void load_level(int index)
 				case ' ':
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
 					break;
+				case '.':
+					CURRENT_LEVEL->dimensions[x][y] = VOID;
+					break;
 				case 'S':
 					SPAWN_SLIME(x*BLOCK_DIM, y*BLOCK_DIM);
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
@@ -108,27 +135,45 @@ void load_level(int index)
 					SPAWN_WIZARD(x*BLOCK_DIM, y*BLOCK_DIM);
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
 					break;
+				case 'g':
+					SPAWN_BOSSBLOB(x*BLOCK_DIM, y*BLOCK_DIM);
+					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
+					break;
+				case '0':
+					SPAWN_TARGET(x*BLOCK_DIM, y*BLOCK_DIM);
+					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
+					break;
 				case '#':
 					CURRENT_LEVEL->dimensions[x][y] = WALL;
 					break;
 				case '<':
 					spawn_entity(0, x*BLOCK_DIM, y*BLOCK_DIM, 32, 32);
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
+					spawn_lightsource((x * BLOCK_DIM + BLOCK_DIM / 2) - 64,
+							(y * BLOCK_DIM + BLOCK_DIM / 2) - 64,
+							128, 2, COLOR_GREEN);
 					break;
 				case '>':
 					spawn_entity(1, x*BLOCK_DIM, y*BLOCK_DIM, 32, 32);
 					CURRENT_LEVEL->dimensions[x][y] = FLOOR;
+					spawn_lightsource((x * BLOCK_DIM + BLOCK_DIM / 2) - 64,
+							(y * BLOCK_DIM + BLOCK_DIM / 2) - 64,
+							128, 2, COLOR_RED);
 					break;
 				case 'i':
 					CURRENT_LEVEL->dimensions[x][y] = TORCH;
 					SPAWN_SMOKE_CONST(x * BLOCK_DIM + BLOCK_DIM / 2,
 							y * BLOCK_DIM, 35);
+					spawn_lightsource((x * BLOCK_DIM + BLOCK_DIM / 2) - 64,
+							(y * BLOCK_DIM + BLOCK_DIM / 2) - 64,
+							128, 2, COLOR_WHITE);
 					break;
 				default:
 					log_err("Invalid syntax in level%d: %c", index, cur);
 			}
 		}
 	}
+	fclose(curlevel);
 }
 
 void draw_block(block b, int x, int y)

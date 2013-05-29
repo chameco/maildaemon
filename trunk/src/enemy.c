@@ -53,6 +53,8 @@ void initialize_enemy()
 	ENEMIES = make_list();
 	initialize_one_enemy(0, "textures/enemies/slime.png", 32, 32);
 	initialize_one_enemy(1, "textures/enemies/wizard.png", 32, 32);
+	initialize_one_enemy(2, "textures/enemies/bossblob.png", 16, 16);
+	initialize_one_enemy(3, "textures/enemies/target.png", 32, 32);
 }
 
 void reset_enemies()
@@ -68,7 +70,7 @@ void reset_enemies()
 
 void spawn_enemy(int id, int x, int y, int w, int h,
 		int health, int speed, int attk, double expval, int pcount, int pspeed, 
-		int cooldown, color pc, int pdim, int edim, int eradius)
+		int cooldown, color pc, int pdim, int edim)
 {
 	enemy *e = (enemy *) malloc(sizeof(enemy));
 	e->id = id;
@@ -90,7 +92,6 @@ void spawn_enemy(int id, int x, int y, int w, int h,
 	e->pc = pc;
 	e->pdim = pdim;
 	e->edim = edim;
-	e->eradius = eradius;
 	insert_list(ENEMIES, (void *) e);
 }
 
@@ -212,8 +213,8 @@ void update_enemy()
 			e = (enemy *) c->data;
 			if (e->firing > 0) {
 				spawn_projectile(e->pc, e->x, e->y, e->firingdirecx * e->pspeed, e->firingdirecy * e->pspeed,
-						e->pdim, 100, c->data,
-						e->attk, e->edim, e->eradius);
+						e->pdim, e->pdim, 100, c->data,
+						e->attk, e->edim, 0);
 				e->firing--;
 			} else if (e->cooldowncounter > 0) {
 				e->cooldowncounter--;

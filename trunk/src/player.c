@@ -7,17 +7,20 @@ int PLAYER_Y_VELOCITY = 0;
 const int PLAYER_MOVE_SPEED = 8;//Pixels per second
 const int PLAYER_WIDTH = 32;
 const int PLAYER_HEIGHT = 32;
+int PLAYER_ATTACK = 16;
 direction PLAYER_FACING = 0;
 double PLAYER_EXP = 0;
 double PLAYER_EXP_TO_NEXT = 100;
 int PLAYER_LEVEL = 0;
-const double PLAYER_MAX_HEALTH = 100;
+double PLAYER_MAX_HEALTH = 100;
 double PLAYER_HEALTH;
-const double PLAYER_MAX_MAGIC = 100;
+double PLAYER_MAX_MAGIC = 100;
 double PLAYER_MAGIC;
-const double PLAYER_REGEN = 0.1;
-const double PLAYER_MREGEN = 0.1;
+double PLAYER_REGEN = 0.1;
+double PLAYER_MREGEN = 0.1;
+int PLAYER_NUMKEYS = 0;
 GLuint PLAYER_TEXTURES[4];
+GLuint PLAYER_SWORD_TEXTURES[4];
 color PLAYER_COLOR;
 vertex PLAYER_VERTICES[4];
 GLuint PLAYER_VERTEX_HANDLER = 0;
@@ -32,6 +35,16 @@ void initialize_player()
 	PLAYER_TEXTURES[SOUTH] = load_texture("textures/player/s.png");
 	PLAYER_TEXTURES[WEST] = load_texture("textures/player/w.png");
 	PLAYER_TEXTURES[EAST] = load_texture("textures/player/e.png");
+
+	PLAYER_SWORD_TEXTURES[NORTH] = load_texture("textures/swordn.png");
+	PLAYER_SWORD_TEXTURES[SOUTH] = load_texture("textures/swords.png");
+	PLAYER_SWORD_TEXTURES[WEST] = load_texture("textures/swordw.png");
+	PLAYER_SWORD_TEXTURES[EAST] = load_texture("textures/sworde.png");
+
+	debug("n %d s %d e %d w %d", PLAYER_SWORD_TEXTURES[NORTH],
+			PLAYER_SWORD_TEXTURES[SOUTH],
+			PLAYER_SWORD_TEXTURES[EAST],
+			PLAYER_SWORD_TEXTURES[WEST]);
 
 	PLAYER_VERTICES[0].x = 0;
 	PLAYER_VERTICES[0].y = 0;
@@ -60,6 +73,17 @@ void initialize_player()
 	glGenBuffers(1, &PLAYER_VERTEX_HANDLER);
 	glBindBuffer(GL_ARRAY_BUFFER, PLAYER_VERTEX_HANDLER);
 	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), PLAYER_VERTICES, GL_STATIC_DRAW);
+}
+
+void reset_player()
+{
+	PLAYER_FACING = 0;
+	PLAYER_EXP = 0;
+	PLAYER_EXP_TO_NEXT = 100;
+	PLAYER_LEVEL = 0;
+	PLAYER_X_VELOCITY = PLAYER_Y_VELOCITY = 0;
+	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
+	PLAYER_MAGIC = PLAYER_MAX_MAGIC;
 }
 
 int get_player_x()
@@ -133,7 +157,14 @@ void give_player_exp(double exp)
 		PLAYER_EXP = PLAYER_EXP - PLAYER_EXP_TO_NEXT;
 		PLAYER_EXP_TO_NEXT += 50;
 		PLAYER_LEVEL += 1;
+		PLAYER_HEALTH = PLAYER_MAX_HEALTH;
+		PLAYER_MAGIC = PLAYER_MAX_MAGIC;
 	}
+}
+
+void give_player_key()
+{
+	PLAYER_NUMKEYS += 1;
 }
 
 void warp_player(int x, int y)
@@ -145,25 +176,43 @@ void warp_player(int x, int y)
 void melee_player_weapon(int pressed, direction d)
 {
 	if (pressed) {
+		int x, y;
 		int xv = 0;
 		int yv = 0;
+		int w = 0;
+		int h = 0;
 		switch (d) {
 			case NORTH:
+				x = PLAYER_X + (PLAYER_WIDTH/2);
+				y = PLAYER_Y - 16;
 				yv = -16;
+				w = 8;
+				h = 32;
 				break;
 			case SOUTH:
+				x = PLAYER_X + (PLAYER_WIDTH/2);
+				y = PLAYER_Y + PLAYER_HEIGHT - 16;
 				yv = 16;
+				w = 8;
+				h = 32;
 				break;
 			case WEST:
+				x = PLAYER_X - 16;
+				y = PLAYER_Y + (PLAYER_HEIGHT/2);
 				xv = -16;
+				w = 32;
+				h = 8;
 				break;
 			case EAST:
+				x = PLAYER_X + PLAYER_WIDTH - 16;
+				y = PLAYER_Y + (PLAYER_HEIGHT/2);
 				xv = 16;
+				w = 32;
+				h = 8;
 				break;
 		}
-		spawn_projectile(PLAYER_COLOR,
-				PLAYER_X+(PLAYER_WIDTH/2)-4, PLAYER_Y+(PLAYER_HEIGHT/2)-4,
-				xv, yv, 8, 5, NULL, 16, 4, 50);
+		spawn_projectile(COLOR_WHITE, x, y,
+				xv, yv, w, h, 2, NULL, PLAYER_ATTACK, 0, PLAYER_SWORD_TEXTURES[d]);
 	}
 }
 
@@ -189,7 +238,7 @@ void shoot_player_weapon(int pressed, direction d)
 			}
 			spawn_projectile(PLAYER_COLOR,
 					PLAYER_X+(PLAYER_WIDTH/2)-4, PLAYER_Y+(PLAYER_HEIGHT/2)-4,
-					xv, yv, 8, 100, NULL, 16, 4, 50);
+					xv, yv, 8, 8, 100, NULL, PLAYER_ATTACK, 4, 0);
 			PLAYER_MAGIC -= 4;
 		}
 	}
@@ -201,7 +250,7 @@ void move_player_north(int pressed)
 		PLAYER_Y_VELOCITY = -PLAYER_MOVE_SPEED;
 		PLAYER_FACING = NORTH;
 	} else {
-		PLAYER_Y_VELOCITY = 0;
+		PLAYER_Y_VELOCITY = PLAYER_Y_VELOCITY > 0 ? PLAYER_Y_VELOCITY : 0;
 	}
 }
 
@@ -211,7 +260,7 @@ void move_player_south(int pressed)
 		PLAYER_Y_VELOCITY = PLAYER_MOVE_SPEED;
 		PLAYER_FACING = SOUTH;
 	} else {
-		PLAYER_Y_VELOCITY = 0;
+		PLAYER_Y_VELOCITY = PLAYER_Y_VELOCITY < 0 ? PLAYER_Y_VELOCITY : 0;
 	}
 }
 
@@ -221,7 +270,7 @@ void move_player_west(int pressed)
 		PLAYER_X_VELOCITY = -PLAYER_MOVE_SPEED;
 		PLAYER_FACING = WEST;
 	} else {
-		PLAYER_X_VELOCITY = 0;
+		PLAYER_X_VELOCITY = PLAYER_X_VELOCITY > 0 ? PLAYER_X_VELOCITY : 0;
 	}
 }
 
@@ -231,7 +280,7 @@ void move_player_east(int pressed)
 		PLAYER_X_VELOCITY = PLAYER_MOVE_SPEED;
 		PLAYER_FACING = EAST;
 	} else {
-		PLAYER_X_VELOCITY = 0;
+		PLAYER_X_VELOCITY = PLAYER_X_VELOCITY < 0 ? PLAYER_X_VELOCITY : 0;
 	}
 }
 
@@ -264,6 +313,8 @@ mode update_player()
 	SDL_Rect b;
 	int shouldmovex = 1;
 	int shouldmovey = 1;
+	int curmovex;
+	int curmovey;
 
 	level *cur = get_current_level();
 	int blockdim = get_block_dim();
@@ -283,14 +334,13 @@ mode update_player()
 				b.y = y*32;
 				b.w = b.h = blockdim;
 				player.x = PLAYER_X+PLAYER_X_VELOCITY;
-				shouldmovex = check_collision(player, b);
+				curmovex = check_collision(player, b);
+				shouldmovex = shouldmovex ? curmovex : 0;
 				player.x = PLAYER_X;
 				player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
-				shouldmovey = check_collision(player, b);
+				curmovey = check_collision(player, b);
+				shouldmovey = shouldmovey ? curmovey : 0;
 				player.y = PLAYER_Y;
-				if (!shouldmovex || !shouldmovey) {
-					goto end;
-				}
 			}
 		}
 	}
@@ -304,16 +354,15 @@ mode update_player()
 			b.w = ((enemy *) c->data)->w;
 			b.h = ((enemy *) c->data)->h;
 			player.x = PLAYER_X+PLAYER_X_VELOCITY;
-			shouldmovex = check_collision(player, b);
+			curmovex = check_collision(player, b);
+			shouldmovex = shouldmovex ? curmovex : 0;
 			player.x = PLAYER_X;
 			player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
-			shouldmovey = check_collision(player, b);
+			curmovey = check_collision(player, b);
+			shouldmovey = shouldmovey ? curmovey : 0;
 			player.y = PLAYER_Y;
-			if (!shouldmovex || !shouldmovey) {
-				player.x = PLAYER_X;
-				player.y = PLAYER_Y;
+			if (!curmovex || !curmovey) {
 				collide_enemy((enemy *) c->data);
-				goto end;
 			}
 		}
 	}
@@ -326,23 +375,23 @@ mode update_player()
 			b.w = ((entity *) c->data)->w;
 			b.h = ((entity *) c->data)->h;
 			player.x = PLAYER_X+PLAYER_X_VELOCITY;
-			shouldmovex = check_collision(player, b);
+			curmovex = check_collision(player, b);
+			shouldmovex = shouldmovex ? curmovex : 0;
 			player.x = PLAYER_X;
 			player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
-			shouldmovey = check_collision(player, b);
+			curmovey = check_collision(player, b);
+			shouldmovey = shouldmovey ? curmovey : 0;
 			player.y = PLAYER_Y;
-			if (!shouldmovex || !shouldmovey) {
+			if (!curmovex || !curmovey) {
 				player.x = PLAYER_X;
 				player.y = PLAYER_Y;
 				if (collide_entity((entity *) c->data)) {
 					return DRAW_MODE;
 				}
-				goto end;
 			}
 		}
 	}
 
-end:
 	if (shouldmovex) {
 		PLAYER_X = tempx;
 	}

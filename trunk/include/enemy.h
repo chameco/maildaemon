@@ -14,12 +14,26 @@
 #include "projectile.h"
 
 #define SPAWN_SLIME(x, y) spawn_enemy(0, x, y, 32, 32, \
-		10, 8, 2, 10, 1, 16, \
-		10, COLOR_GREEN, 8, 4, 50)
+		32, 0, 2, 10, 1, 16, \
+		10, COLOR_GREEN, 8, 4)
 
 #define SPAWN_WIZARD(x, y) spawn_enemy(1, x, y, 32, 32, \
-		100, 8, 10, 100, 4, 8, \
-		15, COLOR_WHITE, 8, 4, 50)
+		128, 4, 10, 100, 4, 16, \
+		15, COLOR_WHITE, 8, 4)
+
+#define SPAWN_BOSSBLOB(x, y) spawn_enemy(2, x, y, 16, 16, \
+		16, 1, 1, 5, 0, 0, \
+		0, COLOR_WHITE, 0, 0); spawn_enemy(2, x+16, y, 16, 16, \
+		16, 1, 1, 5, 0, 0, \
+		0, COLOR_WHITE, 0, 0); spawn_enemy(2, x+16, y+16, 16, 16, \
+		16, 1, 1, 5, 0, 0, \
+		0, COLOR_WHITE, 0, 0); spawn_enemy(2, x, y+16, 16, 16, \
+		16, 1, 1, 5, 0, 0, \
+		0, COLOR_WHITE, 0, 0);
+
+#define SPAWN_TARGET(x, y) spawn_enemy(3, x, y, 32, 32, \
+		16, 0, 0, 5, 0, 0, \
+		0, COLOR_WHITE, 0, 0)
 
 typedef struct enemy {
 	int id;
@@ -33,7 +47,6 @@ typedef struct enemy {
 	int pspeed;
 	color pc;
 	int pdim, edim;
-	int eradius;
 	double expval;
 } enemy;
 
@@ -44,7 +57,7 @@ void initialize_enemy();
 void reset_enemies();
 void spawn_enemy(int id, int x, int y, int w, int h,
 		int health, int speed, int attk, double expval, int pcount, int pspeed, 
-		int cooldown, color pc, int pdim, int edim, int eradius);
+		int cooldown, color pc, int pdim, int edim);
 void hit_enemy();
 void collide_enemy(enemy *e);
 void shoot_enemy_weapon(enemy *e, int xv, int yv);

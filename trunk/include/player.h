@@ -12,7 +12,9 @@
 #include "enemy.h"
 #include "entity.h"
 #include "level.h"
+#include "lights.h"
 void initialize_player();
+void reset_player();
 int get_player_x();
 int get_player_y();
 int get_player_w();
@@ -27,6 +29,7 @@ double get_player_exp_to_next();
 int get_player_level();
 void hit_player(int dmg);
 void give_player_exp(double exp);
+void give_player_key();
 void warp_player(int x, int y);
 void melee_player_weapon(int pressed, direction d);
 void shoot_player_weapon(int pressed, direction d);
