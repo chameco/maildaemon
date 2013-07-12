@@ -154,7 +154,7 @@ void draw_particle(effect *e, int xdiff, int ydiff)
 	glPopMatrix();
 }
 
-void draw_smoke_particle(effect *e, int xdiff, int ydiff)
+inline void draw_smoke_particle(effect *e, int xdiff, int ydiff)
 {
 	GLfloat r, g, b;
 	GLfloat factor;

@@ -121,19 +121,6 @@ void load_bitmap_font(char *path)
 	SDL_SetAlpha(BITMAP, 0, 0);
 	SDL_SetColorKey(BITMAP, SDL_SRCCOLORKEY,
 			SDL_MapRGBA(BITMAP->format, 255, 0, 0, 0));
-	Uint32 rmask, gmask, bmask, amask;
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	rmask = 0xff000000;
-	gmask = 0x00ff0000;
-	bmask = 0x0000ff00;
-	amask = 0x000000ff;
-#else
-	rmask = 0x000000ff;
-	gmask = 0x0000ff00;
-	bmask = 0x00ff0000;
-	amask = 0xff000000;
-#endif
 
 	int x, y;
 	SDL_Rect srcrect = {0, 0, 8, 8};
@@ -149,8 +136,7 @@ void load_bitmap_font(char *path)
 			SDL_Surface *character = IMG_Load("textures/blank.png");
 			SDL_SetAlpha(character, 0, 0);
 			//SDL_FreeSurface(temp);
-			SDL_BlitSurface(BITMAP, &srcrect, character, &destrect);
-			BITMAP_FONT[y][x] = surface_to_texture(character);
+			SDL_BlitSurface(BITMAP, &srcrect, character, &destrect); BITMAP_FONT[y][x] = surface_to_texture(character);
 		}
 	}
 }

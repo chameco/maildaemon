@@ -102,6 +102,7 @@ void main_game_loop()
 {
 	int running = 1;
 	while (running) {
+		SDL_Delay(10);
 		switch (CURRENT_MODE) {
 			case TITLE_MODE:
 				draw_title_loop();
@@ -271,7 +272,7 @@ int draw_main_loop()
 		}
 	}
 	CURRENT_TIME = SDL_GetTicks();
-	if (CURRENT_TIME - LAST_TIME > 50) {
+	if (CURRENT_TIME - LAST_TIME > 40) {
 		CURRENT_MODE = update_player();
 		update_ai();
 		update_enemy();

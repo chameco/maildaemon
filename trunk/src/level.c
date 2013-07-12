@@ -176,7 +176,7 @@ void load_level(int index)
 	fclose(curlevel);
 }
 
-void draw_block(block b, int x, int y)
+inline void draw_block(block b, int x, int y)
 {
 	glPushMatrix();
 	glTranslatef(x, y, 0);
@@ -203,7 +203,7 @@ void draw_block(block b, int x, int y)
 void draw_current_level()
 {
 	int x, y;
-	glLoadIdentity();
+	//glLoadIdentity();
 	for (x = 0; x < CURRENT_LEVEL->width; x++) {
 		for (y = 0; y < CURRENT_LEVEL->height; y++) {
 			draw_block(CURRENT_LEVEL->dimensions[x][y],

@@ -4,11 +4,41 @@ list_node *LIGHTS;
 
 GLuint LIGHTMAP;
 GLuint LIGHT_OVERLAY;
+vertex LIGHT_VERTICES[4];
+GLuint LIGHT_VERTEX_HANDLER;
 
 void initialize_lights()
 {
 	LIGHTS = make_list();
 	LIGHTMAP = load_texture("textures/lightmap.png");
+
+	LIGHT_VERTICES[0].x = 0;
+	LIGHT_VERTICES[0].y = 0;
+
+	LIGHT_VERTICES[1].x = 128;
+	LIGHT_VERTICES[1].y = 0;
+
+	LIGHT_VERTICES[2].x = 128;
+	LIGHT_VERTICES[2].y = 128;
+
+	LIGHT_VERTICES[3].x = 0;
+	LIGHT_VERTICES[3].y = 128;
+
+	LIGHT_VERTICES[0].s = 0;
+	LIGHT_VERTICES[0].t = 0;
+
+	LIGHT_VERTICES[1].s = 1;
+	LIGHT_VERTICES[1].t = 0;
+
+	LIGHT_VERTICES[2].s = 1;
+	LIGHT_VERTICES[2].t = 1;
+
+	LIGHT_VERTICES[3].s = 0;
+	LIGHT_VERTICES[3].t = 1;
+
+	glGenBuffers(1, &LIGHT_VERTEX_HANDLER);
+	glBindBuffer(GL_ARRAY_BUFFER, LIGHT_VERTEX_HANDLER);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), LIGHT_VERTICES, GL_STATIC_DRAW);
 }
 
 void reset_lights()
@@ -73,17 +103,24 @@ void draw_lights()
 			l = (lightsource *) c->data;
 			glPushMatrix();
 			glTranslatef(l->x, l->y, 0);
-			glColor3f(l->c.r, l->c.g, l->c.b);
-			glBindTexture(GL_TEXTURE_2D, LIGHTMAP);
 			xdim = l->dim + (random() % 16);
 			ydim = l->dim + (random() % 16);
+			glScalef(xdim / 128, ydim / 128, 0);
+			glColor3f(l->c.r, l->c.g, l->c.b);
+			glBindTexture(GL_TEXTURE_2D, LIGHTMAP);
 			for (numtimes = l->intensity; numtimes > 0; numtimes--) {
-				glBegin(GL_QUADS);
-					glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-					glTexCoord2i(1, 0); glVertex3f(xdim, 0, 0);
-					glTexCoord2i(1, 1); glVertex3f(xdim, ydim, 0);
-					glTexCoord2i(0, 1); glVertex3f(0, ydim, 0);
-				glEnd();
+				glEnableClientState(GL_VERTEX_ARRAY);
+				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+				glBindBuffer(GL_ARRAY_BUFFER, LIGHT_VERTEX_HANDLER);
+				glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+				glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+				glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+				glDisableClientState(GL_VERTEX_ARRAY);
 			}
 			glPopMatrix();
 		}

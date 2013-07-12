@@ -313,8 +313,8 @@ mode update_player()
 	SDL_Rect b;
 	int shouldmovex = 1;
 	int shouldmovey = 1;
-	int curmovex;
-	int curmovey;
+	int curmovex = 0;
+	int curmovey = 0;
 
 	level *cur = get_current_level();
 	int blockdim = get_block_dim();
@@ -340,6 +340,11 @@ mode update_player()
 				player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
 				curmovey = check_collision(player, b);
 				shouldmovey = shouldmovey ? curmovey : 0;
+				player.y = PLAYER_Y;
+				player.x = PLAYER_X+PLAYER_X_VELOCITY;
+				player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
+				check_collision(player, b);
+				player.x = PLAYER_X;
 				player.y = PLAYER_Y;
 			}
 		}

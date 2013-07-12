@@ -64,7 +64,6 @@ void insert_list(list_node *l, void *data);
 void remove_list(list_node *l, void *data);
 GLuint surface_to_texture(SDL_Surface *s);
 GLuint load_texture(char *path);
-GLuint load_text(TTF_Font *font, char *text, int *w, int *h);
 void load_bitmap_font(char *path);
 int bitmap_index(char c);
 void render_text_bitmap(int x, int y, char *text, double size);

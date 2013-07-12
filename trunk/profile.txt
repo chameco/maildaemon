@@ -1,0 +1,602 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 36.36      0.04     0.04    30227     0.00     0.00  draw_enemy
+ 27.27      0.07     0.03  1036255     0.00     0.00  draw_one_enemy
+  9.09      0.08     0.01  1087113     0.00     0.00  get_standard_indices_handler
+  9.09      0.09     0.01    30227     0.00     0.00  draw_main_loop
+  9.09      0.10     0.01    30227     0.00     0.00  draw_player
+  4.55      0.10     0.01    30227     0.00     0.00  get_player_x
+  4.55      0.11     0.01    30227     0.00     0.00  get_player_y
+  0.00      0.11     0.00   221654     0.00     0.00  check_collision
+  0.00      0.11     0.00    96216     0.00     0.00  is_solid_block
+  0.00      0.11     0.00    30227     0.00     0.00  draw_entity
+  0.00      0.11     0.00    26221     0.00     0.00  bitmap_index
+  0.00      0.11     0.00    20631     0.00     0.00  draw_one_entity
+  0.00      0.11     0.00     3986     0.00     0.00  draw_button
+  0.00      0.11     0.00     3986     0.00     0.00  render_text_bitmap
+  0.00      0.11     0.00     1682     0.00     0.00  draw_game_over_loop
+  0.00      0.11     0.00     1000     0.00     0.00  get_block_dim
+  0.00      0.11     0.00     1000     0.00     0.00  get_current_level
+  0.00      0.11     0.00      993     0.00     0.00  get_enemies
+  0.00      0.11     0.00      980     0.00     0.00  get_entities
+  0.00      0.11     0.00      850     0.00     0.00  update_player
+  0.00      0.11     0.00      850     0.00     0.00  update_projectile
+  0.00      0.11     0.00      312     0.00     0.00  draw_main_menu_loop
+  0.00      0.11     0.00      246     0.00     0.00  insert_list
+  0.00      0.11     0.00      151     0.00     0.00  check_projectile_collisions
+  0.00      0.11     0.00      130     0.00     0.00  surface_to_texture
+  0.00      0.11     0.00      120     0.00     0.00  spawn_enemy
+  0.00      0.11     0.00      116     0.00     0.00  collide_enemy
+  0.00      0.11     0.00      116     0.00     0.00  hit_player
+  0.00      0.11     0.00       58     0.00     0.00  spawn_fx
+  0.00      0.11     0.00       42     0.00     0.00  shoot_player_weapon
+  0.00      0.11     0.00       39     0.00     0.00  remove_list
+  0.00      0.11     0.00       35     0.00     0.00  create_lightsource
+  0.00      0.11     0.00       35     0.00     0.00  make_list
+  0.00      0.11     0.00       35     0.00     0.00  spawn_lightsource
+  0.00      0.11     0.00       35     0.00     0.00  trace_lightsource
+  0.00      0.11     0.00       30     0.00     0.00  move_player_east
+  0.00      0.11     0.00       28     0.00     0.00  destroy_projectile
+  0.00      0.11     0.00       28     0.00     0.00  spawn_projectile
+  0.00      0.11     0.00       26     0.00     0.00  load_texture
+  0.00      0.11     0.00       22     0.00     0.00  move_player_north
+  0.00      0.11     0.00       22     0.00     0.00  move_player_south
+  0.00      0.11     0.00       19     0.00     0.00  move_player_west
+  0.00      0.11     0.00       14     0.00     0.00  get_player_facing
+  0.00      0.11     0.00       14     0.00     0.00  melee_player_weapon
+  0.00      0.11     0.00       13     0.00     0.00  hit_enemy
+  0.00      0.11     0.00       11     0.00     0.00  give_player_exp
+  0.00      0.11     0.00        6     0.00     0.00  load_level
+  0.00      0.11     0.00        6     0.00     0.00  reset_enemies
+  0.00      0.11     0.00        6     0.00     0.00  reset_entities
+  0.00      0.11     0.00        6     0.00     0.00  reset_fx
+  0.00      0.11     0.00        6     0.00     0.00  reset_lights
+  0.00      0.11     0.00        6     0.00     0.00  reset_projectile
+  0.00      0.11     0.00        6     0.00     0.00  warp_player
+  0.00      0.11     0.00        5     0.00     0.00  collide_entity
+  0.00      0.11     0.00        5     0.00     0.00  get_current_level_index
+  0.00      0.11     0.00        5     0.00     0.00  hit_entity
+  0.00      0.11     0.00        5     0.00     0.00  spawn_entity
+  0.00      0.11     0.00        4     0.00     0.00  initialize_one_enemy
+  0.00      0.11     0.00        4     0.00     0.00  make_ai_handler
+  0.00      0.11     0.00        4     0.00     0.00  set_ai_handler
+  0.00      0.11     0.00        2     0.00     0.00  initialize_one_entity
+  0.00      0.11     0.00        1     0.00     0.00  initGL
+  0.00      0.11     0.00        1     0.00     0.00  initialize_ai
+  0.00      0.11     0.00        1     0.00     0.00  initialize_enemy
+  0.00      0.11     0.00        1     0.00     0.00  initialize_entity
+  0.00      0.11     0.00        1     0.00     0.00  initialize_fx
+  0.00      0.11     0.00        1     0.00     0.00  initialize_game
+  0.00      0.11     0.00        1     0.00     0.00  initialize_gui
+  0.00      0.11     0.00        1     0.00     0.00  initialize_levels
+  0.00      0.11     0.00        1     0.00     0.00  initialize_lights
+  0.00      0.11     0.00        1     0.00     0.00  initialize_player
+  0.00      0.11     0.00        1     0.00     0.00  initialize_projectile
+  0.00      0.11     0.00        1     0.00     0.00  initialize_utils
+  0.00      0.11     0.00        1     0.00     0.00  load_bitmap_font
+  0.00      0.11     0.00        1     0.00   110.00  main_game_loop
+
+ %         the percentage of the total running time of the
+time       program used by this function.
+
+cumulative a running sum of the number of seconds accounted
+ seconds   for by this function and those listed above it.
+
+ self      the number of seconds accounted for by this
+seconds    function alone.  This is the major sort for this
+           listing.
+
+calls      the number of times this function was invoked, if
+           this function is profiled, else blank.
+ 
+ self      the average number of milliseconds spent in this
+ms/call    function per call, if this function is profiled,
+	   else blank.
+
+ total     the average number of milliseconds spent in this
+ms/call    function and its descendents per call, if this 
+	   function is profiled, else blank.
+
+name       the name of the function.  This is the minor sort
+           for this listing. The index shows the location of
+	   the function in the gprof listing. If the index is
+	   in parenthesis it shows where it would appear in
+	   the gprof listing if it were to be printed.
+
+		     Call graph (explanation follows)
+
+
+granularity: each sample hit covers 4 byte(s) for 9.09% of 0.11 seconds
+
+index % time    self  children    called     name
+                0.01    0.10   30227/30227       main_game_loop [2]
+[1]    100.0    0.01    0.10   30227         draw_main_loop [1]
+                0.04    0.04   30227/30227       draw_enemy [4]
+                0.01    0.00   30227/30227       draw_player [6]
+                0.01    0.00   30227/30227       get_player_y [9]
+                0.01    0.00   30227/30227       get_player_x [8]
+                0.00    0.00   30227/30227       draw_entity [10]
+                0.00    0.00     850/850         update_player [22]
+                0.00    0.00     850/850         update_projectile [23]
+                0.00    0.00      42/42          shoot_player_weapon [32]
+                0.00    0.00      30/30          move_player_east [38]
+                0.00    0.00      22/22          move_player_north [42]
+                0.00    0.00      22/22          move_player_south [43]
+                0.00    0.00      19/19          move_player_west [44]
+                0.00    0.00      14/14          get_player_facing [45]
+                0.00    0.00      14/14          melee_player_weapon [46]
+-----------------------------------------------
+                0.00    0.11       1/1           main [3]
+[2]    100.0    0.00    0.11       1         main_game_loop [2]
+                0.01    0.10   30227/30227       draw_main_loop [1]
+                0.00    0.00    1682/1682        draw_game_over_loop [17]
+                0.00    0.00     312/312         draw_main_menu_loop [24]
+-----------------------------------------------
+                                                 <spontaneous>
+[3]    100.0    0.00    0.11                 main [3]
+                0.00    0.11       1/1           main_game_loop [2]
+                0.00    0.00       1/1           initialize_game [69]
+                0.00    0.00       1/6           load_level [49]
+-----------------------------------------------
+                0.04    0.04   30227/30227       draw_main_loop [1]
+[4]     72.3    0.04    0.04   30227         draw_enemy [4]
+                0.03    0.01 1036255/1036255     draw_one_enemy [5]
+-----------------------------------------------
+                0.03    0.01 1036255/1036255     draw_enemy [4]
+[5]     35.9    0.03    0.01 1036255         draw_one_enemy [5]
+                0.01    0.00 1036255/1087113     get_standard_indices_handler [7]
+-----------------------------------------------
+                0.01    0.00   30227/30227       draw_main_loop [1]
+[6]      9.3    0.01    0.00   30227         draw_player [6]
+                0.00    0.00   30227/1087113     get_standard_indices_handler [7]
+-----------------------------------------------
+                0.00    0.00   20631/1087113     draw_one_entity [11]
+                0.00    0.00   30227/1087113     draw_player [6]
+                0.01    0.00 1036255/1087113     draw_one_enemy [5]
+[7]      9.1    0.01    0.00 1087113         get_standard_indices_handler [7]
+-----------------------------------------------
+                0.01    0.00   30227/30227       draw_main_loop [1]
+[8]      4.5    0.01    0.00   30227         get_player_x [8]
+-----------------------------------------------
+                0.01    0.00   30227/30227       draw_main_loop [1]
+[9]      4.5    0.01    0.00   30227         get_player_y [9]
+-----------------------------------------------
+                0.00    0.00   30227/30227       draw_main_loop [1]
+[10]     0.2    0.00    0.00   30227         draw_entity [10]
+                0.00    0.00   20631/20631       draw_one_entity [11]
+-----------------------------------------------
+                0.00    0.00   20631/20631       draw_entity [10]
+[11]     0.2    0.00    0.00   20631         draw_one_entity [11]
+                0.00    0.00   20631/1087113     get_standard_indices_handler [7]
+-----------------------------------------------
+                0.00    0.00       2/221654      draw_main_menu_loop [24]
+                0.00    0.00       2/221654      draw_game_over_loop [17]
+                0.00    0.00   12506/221654      check_projectile_collisions [26]
+                0.00    0.00  209144/221654      update_player [22]
+[12]     0.0    0.00    0.00  221654         check_collision [12]
+-----------------------------------------------
+                0.00    0.00   15463/96216       check_projectile_collisions [26]
+                0.00    0.00   80753/96216       update_player [22]
+[13]     0.0    0.00    0.00   96216         is_solid_block [13]
+-----------------------------------------------
+                0.00    0.00   26221/26221       render_text_bitmap [16]
+[14]     0.0    0.00    0.00   26221         bitmap_index [14]
+-----------------------------------------------
+                0.00    0.00     624/3986        draw_main_menu_loop [24]
+                0.00    0.00    3362/3986        draw_game_over_loop [17]
+[15]     0.0    0.00    0.00    3986         draw_button [15]
+                0.00    0.00    3986/3986        render_text_bitmap [16]
+-----------------------------------------------
+                0.00    0.00    3986/3986        draw_button [15]
+[16]     0.0    0.00    0.00    3986         render_text_bitmap [16]
+                0.00    0.00   26221/26221       bitmap_index [14]
+-----------------------------------------------
+                0.00    0.00    1682/1682        main_game_loop [2]
+[17]     0.0    0.00    0.00    1682         draw_game_over_loop [17]
+                0.00    0.00    3362/3986        draw_button [15]
+                0.00    0.00       2/221654      check_collision [12]
+                0.00    0.00       1/26          load_texture [41]
+-----------------------------------------------
+                0.00    0.00     151/1000        check_projectile_collisions [26]
+                0.00    0.00     849/1000        update_player [22]
+[18]     0.0    0.00    0.00    1000         get_block_dim [18]
+-----------------------------------------------
+                0.00    0.00     151/1000        check_projectile_collisions [26]
+                0.00    0.00     849/1000        update_player [22]
+[19]     0.0    0.00    0.00    1000         get_current_level [19]
+-----------------------------------------------
+                0.00    0.00     144/993         check_projectile_collisions [26]
+                0.00    0.00     849/993         update_player [22]
+[20]     0.0    0.00    0.00     993         get_enemies [20]
+-----------------------------------------------
+                0.00    0.00     131/980         check_projectile_collisions [26]
+                0.00    0.00     849/980         update_player [22]
+[21]     0.0    0.00    0.00     980         get_entities [21]
+-----------------------------------------------
+                0.00    0.00     850/850         draw_main_loop [1]
+[22]     0.0    0.00    0.00     850         update_player [22]
+                0.00    0.00  209144/221654      check_collision [12]
+                0.00    0.00   80753/96216       is_solid_block [13]
+                0.00    0.00     849/1000        get_current_level [19]
+                0.00    0.00     849/1000        get_block_dim [18]
+                0.00    0.00     849/993         get_enemies [20]
+                0.00    0.00     849/980         get_entities [21]
+                0.00    0.00     116/116         collide_enemy [29]
+                0.00    0.00       5/5           collide_entity [56]
+-----------------------------------------------
+                0.00    0.00     850/850         draw_main_loop [1]
+[23]     0.0    0.00    0.00     850         update_projectile [23]
+                0.00    0.00     151/151         check_projectile_collisions [26]
+                0.00    0.00       3/28          destroy_projectile [39]
+-----------------------------------------------
+                0.00    0.00     312/312         main_game_loop [2]
+[24]     0.0    0.00    0.00     312         draw_main_menu_loop [24]
+                0.00    0.00     624/3986        draw_button [15]
+                0.00    0.00       2/26          load_texture [41]
+                0.00    0.00       2/221654      check_collision [12]
+-----------------------------------------------
+                0.00    0.00       5/246         spawn_entity [59]
+                0.00    0.00      28/246         spawn_projectile [40]
+                0.00    0.00      35/246         trace_lightsource [37]
+                0.00    0.00      58/246         spawn_fx [31]
+                0.00    0.00     120/246         spawn_enemy [28]
+[25]     0.0    0.00    0.00     246         insert_list [25]
+-----------------------------------------------
+                0.00    0.00     151/151         update_projectile [23]
+[26]     0.0    0.00    0.00     151         check_projectile_collisions [26]
+                0.00    0.00   15463/96216       is_solid_block [13]
+                0.00    0.00   12506/221654      check_collision [12]
+                0.00    0.00     151/1000        get_current_level [19]
+                0.00    0.00     151/1000        get_block_dim [18]
+                0.00    0.00     144/993         get_enemies [20]
+                0.00    0.00     131/980         get_entities [21]
+                0.00    0.00      25/28          destroy_projectile [39]
+                0.00    0.00      13/13          hit_enemy [47]
+                0.00    0.00       5/5           hit_entity [58]
+-----------------------------------------------
+                0.00    0.00      26/130         load_texture [41]
+                0.00    0.00     104/130         load_bitmap_font [76]
+[27]     0.0    0.00    0.00     130         surface_to_texture [27]
+-----------------------------------------------
+                0.00    0.00     120/120         load_level [49]
+[28]     0.0    0.00    0.00     120         spawn_enemy [28]
+                0.00    0.00     120/246         insert_list [25]
+-----------------------------------------------
+                0.00    0.00     116/116         update_player [22]
+[29]     0.0    0.00    0.00     116         collide_enemy [29]
+                0.00    0.00     116/116         hit_player [30]
+-----------------------------------------------
+                0.00    0.00     116/116         collide_enemy [29]
+[30]     0.0    0.00    0.00     116         hit_player [30]
+-----------------------------------------------
+                0.00    0.00      28/58          destroy_projectile [39]
+                0.00    0.00      30/58          load_level [49]
+[31]     0.0    0.00    0.00      58         spawn_fx [31]
+                0.00    0.00      58/246         insert_list [25]
+-----------------------------------------------
+                0.00    0.00      42/42          draw_main_loop [1]
+[32]     0.0    0.00    0.00      42         shoot_player_weapon [32]
+                0.00    0.00      21/28          spawn_projectile [40]
+-----------------------------------------------
+                0.00    0.00      11/39          hit_enemy [47]
+                0.00    0.00      28/39          destroy_projectile [39]
+[33]     0.0    0.00    0.00      39         remove_list [33]
+-----------------------------------------------
+                0.00    0.00      35/35          spawn_lightsource [36]
+[34]     0.0    0.00    0.00      35         create_lightsource [34]
+-----------------------------------------------
+                0.00    0.00       1/35          initialize_lights [72]
+                0.00    0.00       1/35          initialize_entity [67]
+                0.00    0.00       1/35          initialize_enemy [66]
+                0.00    0.00       1/35          initialize_projectile [74]
+                0.00    0.00       1/35          initialize_fx [68]
+                0.00    0.00       6/35          reset_lights [53]
+                0.00    0.00       6/35          reset_entities [51]
+                0.00    0.00       6/35          reset_enemies [50]
+                0.00    0.00       6/35          reset_projectile [54]
+                0.00    0.00       6/35          reset_fx [52]
+[35]     0.0    0.00    0.00      35         make_list [35]
+-----------------------------------------------
+                0.00    0.00      35/35          load_level [49]
+[36]     0.0    0.00    0.00      35         spawn_lightsource [36]
+                0.00    0.00      35/35          create_lightsource [34]
+                0.00    0.00      35/35          trace_lightsource [37]
+-----------------------------------------------
+                0.00    0.00      35/35          spawn_lightsource [36]
+[37]     0.0    0.00    0.00      35         trace_lightsource [37]
+                0.00    0.00      35/246         insert_list [25]
+-----------------------------------------------
+                0.00    0.00      30/30          draw_main_loop [1]
+[38]     0.0    0.00    0.00      30         move_player_east [38]
+-----------------------------------------------
+                0.00    0.00       3/28          update_projectile [23]
+                0.00    0.00      25/28          check_projectile_collisions [26]
+[39]     0.0    0.00    0.00      28         destroy_projectile [39]
+                0.00    0.00      28/39          remove_list [33]
+                0.00    0.00      28/58          spawn_fx [31]
+-----------------------------------------------
+                0.00    0.00       7/28          melee_player_weapon [46]
+                0.00    0.00      21/28          shoot_player_weapon [32]
+[40]     0.0    0.00    0.00      28         spawn_projectile [40]
+                0.00    0.00      28/246         insert_list [25]
+-----------------------------------------------
+                0.00    0.00       1/26          draw_game_over_loop [17]
+                0.00    0.00       1/26          initialize_lights [72]
+                0.00    0.00       2/26          draw_main_menu_loop [24]
+                0.00    0.00       2/26          initialize_one_entity [63]
+                0.00    0.00       4/26          initialize_levels [71]
+                0.00    0.00       4/26          initialize_one_enemy [60]
+                0.00    0.00       4/26          initialize_gui [70]
+                0.00    0.00       8/26          initialize_player [73]
+[41]     0.0    0.00    0.00      26         load_texture [41]
+                0.00    0.00      26/130         surface_to_texture [27]
+-----------------------------------------------
+                0.00    0.00      22/22          draw_main_loop [1]
+[42]     0.0    0.00    0.00      22         move_player_north [42]
+-----------------------------------------------
+                0.00    0.00      22/22          draw_main_loop [1]
+[43]     0.0    0.00    0.00      22         move_player_south [43]
+-----------------------------------------------
+                0.00    0.00      19/19          draw_main_loop [1]
+[44]     0.0    0.00    0.00      19         move_player_west [44]
+-----------------------------------------------
+                0.00    0.00      14/14          draw_main_loop [1]
+[45]     0.0    0.00    0.00      14         get_player_facing [45]
+-----------------------------------------------
+                0.00    0.00      14/14          draw_main_loop [1]
+[46]     0.0    0.00    0.00      14         melee_player_weapon [46]
+                0.00    0.00       7/28          spawn_projectile [40]
+-----------------------------------------------
+                0.00    0.00      13/13          check_projectile_collisions [26]
+[47]     0.0    0.00    0.00      13         hit_enemy [47]
+                0.00    0.00      11/39          remove_list [33]
+                0.00    0.00      11/11          give_player_exp [48]
+-----------------------------------------------
+                0.00    0.00      11/11          hit_enemy [47]
+[48]     0.0    0.00    0.00      11         give_player_exp [48]
+-----------------------------------------------
+                0.00    0.00       1/6           main [3]
+                0.00    0.00       5/6           collide_entity [56]
+[49]     0.0    0.00    0.00       6         load_level [49]
+                0.00    0.00     120/120         spawn_enemy [28]
+                0.00    0.00      35/35          spawn_lightsource [36]
+                0.00    0.00      30/58          spawn_fx [31]
+                0.00    0.00       6/6           reset_lights [53]
+                0.00    0.00       6/6           reset_enemies [50]
+                0.00    0.00       6/6           reset_entities [51]
+                0.00    0.00       6/6           reset_projectile [54]
+                0.00    0.00       6/6           reset_fx [52]
+                0.00    0.00       6/6           warp_player [55]
+                0.00    0.00       5/5           spawn_entity [59]
+-----------------------------------------------
+                0.00    0.00       6/6           load_level [49]
+[50]     0.0    0.00    0.00       6         reset_enemies [50]
+                0.00    0.00       6/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       6/6           load_level [49]
+[51]     0.0    0.00    0.00       6         reset_entities [51]
+                0.00    0.00       6/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       6/6           load_level [49]
+[52]     0.0    0.00    0.00       6         reset_fx [52]
+                0.00    0.00       6/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       6/6           load_level [49]
+[53]     0.0    0.00    0.00       6         reset_lights [53]
+                0.00    0.00       6/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       6/6           load_level [49]
+[54]     0.0    0.00    0.00       6         reset_projectile [54]
+                0.00    0.00       6/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       6/6           load_level [49]
+[55]     0.0    0.00    0.00       6         warp_player [55]
+-----------------------------------------------
+                0.00    0.00       5/5           update_player [22]
+[56]     0.0    0.00    0.00       5         collide_entity [56]
+                0.00    0.00       5/5           get_current_level_index [57]
+                0.00    0.00       5/6           load_level [49]
+-----------------------------------------------
+                0.00    0.00       5/5           collide_entity [56]
+[57]     0.0    0.00    0.00       5         get_current_level_index [57]
+-----------------------------------------------
+                0.00    0.00       5/5           check_projectile_collisions [26]
+[58]     0.0    0.00    0.00       5         hit_entity [58]
+-----------------------------------------------
+                0.00    0.00       5/5           load_level [49]
+[59]     0.0    0.00    0.00       5         spawn_entity [59]
+                0.00    0.00       5/246         insert_list [25]
+-----------------------------------------------
+                0.00    0.00       4/4           initialize_enemy [66]
+[60]     0.0    0.00    0.00       4         initialize_one_enemy [60]
+                0.00    0.00       4/26          load_texture [41]
+-----------------------------------------------
+                0.00    0.00       4/4           initialize_ai [65]
+[61]     0.0    0.00    0.00       4         make_ai_handler [61]
+-----------------------------------------------
+                0.00    0.00       4/4           initialize_ai [65]
+[62]     0.0    0.00    0.00       4         set_ai_handler [62]
+-----------------------------------------------
+                0.00    0.00       2/2           initialize_entity [67]
+[63]     0.0    0.00    0.00       2         initialize_one_entity [63]
+                0.00    0.00       2/26          load_texture [41]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[64]     0.0    0.00    0.00       1         initGL [64]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[65]     0.0    0.00    0.00       1         initialize_ai [65]
+                0.00    0.00       4/4           make_ai_handler [61]
+                0.00    0.00       4/4           set_ai_handler [62]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[66]     0.0    0.00    0.00       1         initialize_enemy [66]
+                0.00    0.00       4/4           initialize_one_enemy [60]
+                0.00    0.00       1/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[67]     0.0    0.00    0.00       1         initialize_entity [67]
+                0.00    0.00       2/2           initialize_one_entity [63]
+                0.00    0.00       1/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[68]     0.0    0.00    0.00       1         initialize_fx [68]
+                0.00    0.00       1/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       1/1           main [3]
+[69]     0.0    0.00    0.00       1         initialize_game [69]
+                0.00    0.00       1/1           initGL [64]
+                0.00    0.00       1/1           initialize_utils [75]
+                0.00    0.00       1/1           initialize_lights [72]
+                0.00    0.00       1/1           initialize_enemy [66]
+                0.00    0.00       1/1           initialize_ai [65]
+                0.00    0.00       1/1           initialize_player [73]
+                0.00    0.00       1/1           initialize_projectile [74]
+                0.00    0.00       1/1           initialize_entity [67]
+                0.00    0.00       1/1           initialize_levels [71]
+                0.00    0.00       1/1           initialize_gui [70]
+                0.00    0.00       1/1           initialize_fx [68]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[70]     0.0    0.00    0.00       1         initialize_gui [70]
+                0.00    0.00       4/26          load_texture [41]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[71]     0.0    0.00    0.00       1         initialize_levels [71]
+                0.00    0.00       4/26          load_texture [41]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[72]     0.0    0.00    0.00       1         initialize_lights [72]
+                0.00    0.00       1/35          make_list [35]
+                0.00    0.00       1/26          load_texture [41]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[73]     0.0    0.00    0.00       1         initialize_player [73]
+                0.00    0.00       8/26          load_texture [41]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[74]     0.0    0.00    0.00       1         initialize_projectile [74]
+                0.00    0.00       1/35          make_list [35]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_game [69]
+[75]     0.0    0.00    0.00       1         initialize_utils [75]
+                0.00    0.00       1/1           load_bitmap_font [76]
+-----------------------------------------------
+                0.00    0.00       1/1           initialize_utils [75]
+[76]     0.0    0.00    0.00       1         load_bitmap_font [76]
+                0.00    0.00     104/130         surface_to_texture [27]
+-----------------------------------------------
+
+ This table describes the call tree of the program, and was sorted by
+ the total amount of time spent in each function and its children.
+
+ Each entry in this table consists of several lines.  The line with the
+ index number at the left hand margin lists the current function.
+ The lines above it list the functions that called this function,
+ and the lines below it list the functions this one called.
+ This line lists:
+     index	A unique number given to each element of the table.
+		Index numbers are sorted numerically.
+		The index number is printed next to every function name so
+		it is easier to look up where the function is in the table.
+
+     % time	This is the percentage of the `total' time that was spent
+		in this function and its children.  Note that due to
+		different viewpoints, functions excluded by options, etc,
+		these numbers will NOT add up to 100%.
+
+     self	This is the total amount of time spent in this function.
+
+     children	This is the total amount of time propagated into this
+		function by its children.
+
+     called	This is the number of times the function was called.
+		If the function called itself recursively, the number
+		only includes non-recursive calls, and is followed by
+		a `+' and the number of recursive calls.
+
+     name	The name of the current function.  The index number is
+		printed after it.  If the function is a member of a
+		cycle, the cycle number is printed between the
+		function's name and the index number.
+
+
+ For the function's parents, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the function into this parent.
+
+     children	This is the amount of time that was propagated from
+		the function's children into this parent.
+
+     called	This is the number of times this parent called the
+		function `/' the total number of times the function
+		was called.  Recursive calls to the function are not
+		included in the number after the `/'.
+
+     name	This is the name of the parent.  The parent's index
+		number is printed after it.  If the parent is a
+		member of a cycle, the cycle number is printed between
+		the name and the index number.
+
+ If the parents of the function cannot be determined, the word
+ `<spontaneous>' is printed in the `name' field, and all the other
+ fields are blank.
+
+ For the function's children, the fields have the following meanings:
+
+     self	This is the amount of time that was propagated directly
+		from the child into the function.
+
+     children	This is the amount of time that was propagated from the
+		child's children to the function.
+
+     called	This is the number of times the function called
+		this child `/' the total number of times the child
+		was called.  Recursive calls by the child are not
+		listed in the number after the `/'.
+
+     name	This is the name of the child.  The child's index
+		number is printed after it.  If the child is a
+		member of a cycle, the cycle number is printed
+		between the name and the index number.
+
+ If there are any cycles (circles) in the call graph, there is an
+ entry for the cycle-as-a-whole.  This entry shows who called the
+ cycle (as parents) and the members of the cycle (as children.)
+ The `+' recursive calls entry shows the number of function calls that
+ were internal to the cycle, and the calls entry for each member shows,
+ for that member, how many times it was called from other members of
+ the cycle.
+
+
+Index by function name
+
+  [14] bitmap_index           [48] give_player_exp        [35] make_list
+  [12] check_collision        [47] hit_enemy              [46] melee_player_weapon
+  [26] check_projectile_collisions [58] hit_entity        [38] move_player_east
+  [29] collide_enemy          [30] hit_player             [42] move_player_north
+  [56] collide_entity         [64] initGL                 [43] move_player_south
+  [34] create_lightsource     [65] initialize_ai          [44] move_player_west
+  [39] destroy_projectile     [66] initialize_enemy       [33] remove_list
+  [15] draw_button            [67] initialize_entity      [16] render_text_bitmap
+   [4] draw_enemy             [68] initialize_fx          [50] reset_enemies
+  [10] draw_entity            [69] initialize_game        [51] reset_entities
+  [17] draw_game_over_loop    [70] initialize_gui         [52] reset_fx
+   [1] draw_main_loop         [71] initialize_levels      [53] reset_lights
+  [24] draw_main_menu_loop    [72] initialize_lights      [54] reset_projectile
+   [5] draw_one_enemy         [60] initialize_one_enemy   [62] set_ai_handler
+  [11] draw_one_entity        [63] initialize_one_entity  [32] shoot_player_weapon
+   [6] draw_player            [73] initialize_player      [28] spawn_enemy
+  [18] get_block_dim          [74] initialize_projectile  [59] spawn_entity
+  [19] get_current_level      [75] initialize_utils       [31] spawn_fx
+  [57] get_current_level_index [25] insert_list           [36] spawn_lightsource
+  [20] get_enemies            [13] is_solid_block         [40] spawn_projectile
+  [21] get_entities           [76] load_bitmap_font       [27] surface_to_texture
+  [45] get_player_facing      [49] load_level             [37] trace_lightsource
+   [8] get_player_x           [41] load_texture           [22] update_player
+   [9] get_player_y            [2] main_game_loop         [23] update_projectile
+   [7] get_standard_indices_handler [61] make_ai_handler  [55] warp_player
