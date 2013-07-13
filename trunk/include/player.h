@@ -31,7 +31,6 @@ void hit_player(int dmg);
 void give_player_exp(double exp);
 void give_player_key();
 void warp_player(int x, int y);
-void melee_player_weapon(int pressed, direction d);
 void shoot_player_weapon(int pressed, direction d);
 void move_player_north(int pressed);
 void move_player_south(int pressed);

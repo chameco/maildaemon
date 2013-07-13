@@ -2,11 +2,14 @@
 
 int PLAYER_X = 0;
 int PLAYER_Y = 0;
-int PLAYER_X_VELOCITY = 0;
-int PLAYER_Y_VELOCITY = 0;
+int NORTH_PRESSED = 0;
+int SOUTH_PRESSED = 0;
+int WEST_PRESSED = 0;
+int EAST_PRESSED = 0;
 const int PLAYER_MOVE_SPEED = 8;//Pixels per second
-const int PLAYER_WIDTH = 32;
-const int PLAYER_HEIGHT = 32;
+const int DIAG_SPEED = 6;
+const int PLAYER_WIDTH = 30;
+const int PLAYER_HEIGHT = 30;
 int PLAYER_ATTACK = 16;
 direction PLAYER_FACING = 0;
 double PLAYER_EXP = 0;
@@ -81,7 +84,6 @@ void reset_player()
 	PLAYER_EXP = 0;
 	PLAYER_EXP_TO_NEXT = 100;
 	PLAYER_LEVEL = 0;
-	PLAYER_X_VELOCITY = PLAYER_Y_VELOCITY = 0;
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 	PLAYER_MAGIC = PLAYER_MAX_MAGIC;
 }
@@ -173,49 +175,6 @@ void warp_player(int x, int y)
 	PLAYER_Y = y;
 }
 
-void melee_player_weapon(int pressed, direction d)
-{
-	if (pressed) {
-		int x, y;
-		int xv = 0;
-		int yv = 0;
-		int w = 0;
-		int h = 0;
-		switch (d) {
-			case NORTH:
-				x = PLAYER_X + (PLAYER_WIDTH/2);
-				y = PLAYER_Y - 16;
-				yv = -16;
-				w = 8;
-				h = 32;
-				break;
-			case SOUTH:
-				x = PLAYER_X + (PLAYER_WIDTH/2);
-				y = PLAYER_Y + PLAYER_HEIGHT - 16;
-				yv = 16;
-				w = 8;
-				h = 32;
-				break;
-			case WEST:
-				x = PLAYER_X - 16;
-				y = PLAYER_Y + (PLAYER_HEIGHT/2);
-				xv = -16;
-				w = 32;
-				h = 8;
-				break;
-			case EAST:
-				x = PLAYER_X + PLAYER_WIDTH - 16;
-				y = PLAYER_Y + (PLAYER_HEIGHT/2);
-				xv = 16;
-				w = 32;
-				h = 8;
-				break;
-		}
-		spawn_projectile(COLOR_WHITE, x, y,
-				xv, yv, w, h, 2, NULL, PLAYER_ATTACK, 0, PLAYER_SWORD_TEXTURES[d]);
-	}
-}
-
 void shoot_player_weapon(int pressed, direction d)
 {
 	if (pressed) {
@@ -247,40 +206,40 @@ void shoot_player_weapon(int pressed, direction d)
 void move_player_north(int pressed)
 {
 	if (pressed) {
-		PLAYER_Y_VELOCITY = -PLAYER_MOVE_SPEED;
+		NORTH_PRESSED = 1;
 		PLAYER_FACING = NORTH;
 	} else {
-		PLAYER_Y_VELOCITY = PLAYER_Y_VELOCITY > 0 ? PLAYER_Y_VELOCITY : 0;
+		NORTH_PRESSED = 0;
 	}
 }
 
 void move_player_south(int pressed)
 {
 	if (pressed) {
-		PLAYER_Y_VELOCITY = PLAYER_MOVE_SPEED;
+		SOUTH_PRESSED = 1;
 		PLAYER_FACING = SOUTH;
 	} else {
-		PLAYER_Y_VELOCITY = PLAYER_Y_VELOCITY < 0 ? PLAYER_Y_VELOCITY : 0;
+		SOUTH_PRESSED = 0;
 	}
 }
 
 void move_player_west(int pressed)
 {
 	if (pressed) {
-		PLAYER_X_VELOCITY = -PLAYER_MOVE_SPEED;
+		WEST_PRESSED = 1;
 		PLAYER_FACING = WEST;
 	} else {
-		PLAYER_X_VELOCITY = PLAYER_X_VELOCITY > 0 ? PLAYER_X_VELOCITY : 0;
+		WEST_PRESSED = 0;
 	}
 }
 
 void move_player_east(int pressed)
 {
 	if (pressed) {
-		PLAYER_X_VELOCITY = PLAYER_MOVE_SPEED;
+		EAST_PRESSED = 1;
 		PLAYER_FACING = EAST;
 	} else {
-		PLAYER_X_VELOCITY = PLAYER_X_VELOCITY < 0 ? PLAYER_X_VELOCITY : 0;
+		EAST_PRESSED = 0;
 	}
 }
 
@@ -302,8 +261,41 @@ mode update_player()
 		PLAYER_MAGIC = PLAYER_MAX_MAGIC;
 	}
 
-	int tempx = PLAYER_X + PLAYER_X_VELOCITY;
-	int tempy = PLAYER_Y + PLAYER_Y_VELOCITY;
+	int tempx = PLAYER_X;
+	int tempy = PLAYER_Y;
+
+	if (NORTH_PRESSED) {
+		if (WEST_PRESSED || EAST_PRESSED) {
+			tempy -= DIAG_SPEED;
+		} else {
+			tempy -= PLAYER_MOVE_SPEED;
+		}
+	}
+
+	if (SOUTH_PRESSED) {
+		if (WEST_PRESSED || EAST_PRESSED) {
+			tempy += DIAG_SPEED;
+		} else {
+			tempy += PLAYER_MOVE_SPEED;
+		}
+	}
+
+	if (WEST_PRESSED) {
+		if (NORTH_PRESSED || SOUTH_PRESSED) {
+			tempx -= DIAG_SPEED;
+		} else {
+			tempx -= PLAYER_MOVE_SPEED;
+		}
+	}
+
+	if (EAST_PRESSED) {
+		if (NORTH_PRESSED || SOUTH_PRESSED) {
+			tempx += DIAG_SPEED;
+		} else {
+			tempx += PLAYER_MOVE_SPEED;
+		}
+	}
+
 	SDL_Rect player = {
 		PLAYER_X,
 		PLAYER_Y,
@@ -333,18 +325,14 @@ mode update_player()
 				b.x = x*32;
 				b.y = y*32;
 				b.w = b.h = blockdim;
-				player.x = PLAYER_X+PLAYER_X_VELOCITY;
+				player.x = tempx;
+				player.y = PLAYER_Y;
 				curmovex = check_collision(player, b);
 				shouldmovex = shouldmovex ? curmovex : 0;
 				player.x = PLAYER_X;
-				player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
+				player.y = tempy;
 				curmovey = check_collision(player, b);
 				shouldmovey = shouldmovey ? curmovey : 0;
-				player.y = PLAYER_Y;
-				player.x = PLAYER_X+PLAYER_X_VELOCITY;
-				player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
-				check_collision(player, b);
-				player.x = PLAYER_X;
 				player.y = PLAYER_Y;
 			}
 		}
@@ -358,11 +346,11 @@ mode update_player()
 			b.y = ((enemy *) c->data)->y;
 			b.w = ((enemy *) c->data)->w;
 			b.h = ((enemy *) c->data)->h;
-			player.x = PLAYER_X+PLAYER_X_VELOCITY;
+			player.x = tempx;
 			curmovex = check_collision(player, b);
 			shouldmovex = shouldmovex ? curmovex : 0;
 			player.x = PLAYER_X;
-			player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
+			player.y = tempy;
 			curmovey = check_collision(player, b);
 			shouldmovey = shouldmovey ? curmovey : 0;
 			player.y = PLAYER_Y;
@@ -379,11 +367,11 @@ mode update_player()
 			b.y = ((entity *) c->data)->y;
 			b.w = ((entity *) c->data)->w;
 			b.h = ((entity *) c->data)->h;
-			player.x = PLAYER_X+PLAYER_X_VELOCITY;
+			player.x = tempx;
 			curmovex = check_collision(player, b);
 			shouldmovex = shouldmovex ? curmovex : 0;
 			player.x = PLAYER_X;
-			player.y = PLAYER_Y+PLAYER_Y_VELOCITY;
+			player.y = tempy;
 			curmovey = check_collision(player, b);
 			shouldmovey = shouldmovey ? curmovey : 0;
 			player.y = PLAYER_Y;

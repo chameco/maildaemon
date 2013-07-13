@@ -262,8 +262,6 @@ int draw_main_loop()
 					shoot_player_weapon(pressed, WEST);
 				} else if (event.key.keysym.sym == SDLK_RIGHT) {
 					shoot_player_weapon(pressed, EAST);
-				} else if (event.key.keysym.sym == SDLK_SPACE) {
-					melee_player_weapon(pressed, get_player_facing());
 				}
 				break;
 			case SDL_QUIT:
