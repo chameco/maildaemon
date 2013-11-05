@@ -1,18 +1,12 @@
-#ifndef GUI_H
-#define GUI_H
-#include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include "debug.h"
-#include "utils.h"
-#include "player.h"
-#include "level.h"
+#ifndef PURGE_GUI_H
+#define PURGE_GUI_H
+
 void initialize_gui();
+void load_bitmap_font(char *path);
+int bitmap_index(char c);
+void render_text_bitmap(int x, int y, char *text, double size);
 void update_gui();
-void draw_button(int id, char *text, int x, int y);
+void draw_button(char *text, int x, int y);
+void draw_dialog_box(char *text, int x, int y);
 void draw_gui();
 #endif

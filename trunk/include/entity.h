@@ -1,33 +1,30 @@
-#ifndef ENTITY_H
-#define ENTITY_H
-#include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include "debug.h"
-#include "level.h"
-#include "player.h"
-#include "enemy.h"
-#include "projectile.h"
-#include "fx.h"
-#include "utils.h"
+#ifndef PURGE_ENTITY_H
+#define PURGE_ENTITY_H
+#include <SDL2/SDL.h>
+#include <cuttle/utils.h>
+#include "weapon.h"
 
 typedef struct entity {
 	int id;
 	int x, y, w, h;
+	weapon *weapon;
+	int health, speed;
+	double expval;
 } entity;
 
 list_node *get_entities();
-void initialize_one_entity(int i, char *path, int w, int h);
+void set_entities(list_node *entities);
 void initialize_entity();
 void reset_entities();
-void spawn_entity(int id, int x, int y, int w, int h);
-int collide_entity(entity *e);
-void hit_entity(entity *e, int dmg);
+void spawn_entity(int id, int x, int y, int w, int h,
+		weapon *weapon, int health, int speed, double expval);
+void hit_entity();
+void collide_entity(entity *e);
+void move_entity_north(entity *e);
+void move_entity_south(entity *e);
+void move_entity_west(entity *e);
+void move_entity_east(entity *e);
+void move_entity_worker(entity *e, SDL_Rect a);
 void update_entity();
-void draw_one_entity(entity *e);
 void draw_entity();
 #endif

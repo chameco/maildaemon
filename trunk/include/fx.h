@@ -1,18 +1,7 @@
-#ifndef FX_H
-#define FX_H
-#include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <SDL/SDL_ttf.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include "debug.h"
+#ifndef PURGE_FX_H
+#define PURGE_FX_H
 #include "utils.h"
-#define SPAWN_SMOKE_CONST(x, y, radius) \
-	spawn_fx(SMOKE_CONST, COLOR_GRAY, \
-				x, y, 8, radius, 1)
+
 typedef struct effect {
 	color c;
 	int x, y, dim;
@@ -20,7 +9,7 @@ typedef struct effect {
 	int speed;
 	int cur;
 	int statelen;
-	int state[25][3];
+	int state[30][5]; //x, y, xv, yv, exists? for each particle
 	etype type;
 } effect;
 void initialize_fx();

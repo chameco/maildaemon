@@ -1,14 +1,5 @@
-#ifndef LIGHTS_H
-#define LIGHTS_H
-#include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include "debug.h"
-#include "level.h"
+#ifndef PURGE_LIGHTS_H
+#define PURGE_LIGHTS_H
 #include "utils.h"
 
 typedef struct lightsource {

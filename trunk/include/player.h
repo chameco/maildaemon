@@ -1,18 +1,8 @@
-#ifndef CHARACTER_H
-#define CHARACTER_H
-#include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include "debug.h"
+#ifndef PURGE_CHARACTER_H
+#define PURGE_CHARACTER_H
 #include "utils.h"
-#include "projectile.h"
-#include "enemy.h"
-#include "entity.h"
-#include "level.h"
-#include "lights.h"
+#include "weapon.h"
+
 void initialize_player();
 void reset_player();
 int get_player_x();
@@ -26,11 +16,12 @@ double get_player_magic();
 double get_player_max_magic();
 double get_player_exp();
 double get_player_exp_to_next();
+weapon *get_player_weapon();
 int get_player_level();
 void hit_player(int dmg);
 void give_player_exp(double exp);
-void give_player_key();
 void warp_player(int x, int y);
+void set_player_weapon_index(int i);
 void shoot_player_weapon(int pressed, direction d);
 void move_player_north(int pressed);
 void move_player_south(int pressed);

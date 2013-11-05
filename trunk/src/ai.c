@@ -1,22 +1,50 @@
 #include "ai.h"
 
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
+#include "utils.h"
+#include "gui.h"
+#include "worldgen.h"
+#include "level.h"
+#include "player.h"
+#include "entity.h"
+
 ai_handler *AI_HANDLERS[100];
 ai_handler *AI_JITTER;
 ai_handler *AI_AMBLE;
 ai_handler *AI_TRACK;
 ai_handler *AI_SENTRY;
 
-ai_handler *get_ai_handler(int enemyid)
+char *CURRENT_DIALOG = NULL;
+
+char *get_current_dialog()
 {
-	return AI_HANDLERS[enemyid];
+	return CURRENT_DIALOG;
 }
 
-void set_ai_handler(int enemyid, ai_handler *ai)
+void set_current_dialog(char *text)
 {
-	AI_HANDLERS[enemyid] = ai;
+	CURRENT_DIALOG = text;
 }
 
-ai_handler *make_ai_handler(void (*cb)(enemy *)) {
+ai_handler *get_ai_handler(int entityid)
+{
+	return AI_HANDLERS[entityid];
+}
+
+void set_ai_handler(int entityid, ai_handler *ai)
+{
+	AI_HANDLERS[entityid] = ai;
+}
+
+ai_handler *make_ai_handler(void (*cb)(entity *)) {
 	ai_handler *ret = (ai_handler *) malloc(sizeof(ai_handler));
 	ret->callback = cb;
 	return ret;
@@ -24,32 +52,32 @@ ai_handler *make_ai_handler(void (*cb)(enemy *)) {
 
 // AI DECLARATIONS //
 
-void ai_cb_jitter(enemy *e)
+void ai_cb_jitter(entity *e)
 {
-	if ((random() % 11) > 5) {
-		if ((random() % 11) > 5) {
-			move_enemy_north(e);
+	if ((rand() % 11) > 5) {
+		if ((rand() % 11) > 5) {
+			move_entity_north(e);
 		} else {
-			move_enemy_south(e);
+			move_entity_south(e);
 		}
 	} else {
-		if ((random() % 11) > 5) {
-			move_enemy_west(e);
+		if ((rand() % 11) > 5) {
+			move_entity_west(e);
 		} else {
-			move_enemy_east(e);
+			move_entity_east(e);
 		}
 	}
-	if (!(random() % 11)) {
-		shoot_enemy_weapon(e, random() % 2, random() % 2);
+	if (!(rand() % 11)) {
+		press_trigger(e->weapon, rand() % 4);
 	}
 }
 
-void ai_cb_amble(enemy *e)
+void ai_cb_amble(entity *e)
 {
 	;
 }
 
-void ai_cb_track(enemy *e)
+void ai_cb_track(entity *e)
 {
 	int px = get_player_x();
 	int py = get_player_y();
@@ -57,32 +85,32 @@ void ai_cb_track(enemy *e)
 	int ydiff = py - e->y;
 	if (abs(xdiff) > abs(ydiff)) {
 		if (xdiff < 0) {
-			move_enemy_west(e);
+			move_entity_west(e);
 		} else {
-			move_enemy_east(e);
+			move_entity_east(e);
 		}
 	} else {
 		if (ydiff < 0) {
-			move_enemy_north(e);
+			move_entity_north(e);
 		} else {
-			move_enemy_south(e);
+			move_entity_south(e);
 		}
 	}
 	ai_cb_sentry(e);
 }
 
-void ai_cb_sentry(enemy *e)
+void ai_cb_sentry(entity *e)
 {
 	int px = get_player_x();
 	int py = get_player_y();
 	if (py <= e->y && px <= e->x + 50 && px >= e->x - 50) {
-		shoot_enemy_weapon(e, 0, -1);
+		press_trigger(e->weapon, NORTH);
 	} else if (py >= e->y && px <= e->x + 50 && px >= e->x - 50) {
-		shoot_enemy_weapon(e, 0, 1);
+		press_trigger(e->weapon, SOUTH);
 	} else if (px <= e->x && py <= e->y + 50 && py >= e->y - 50) {
-		shoot_enemy_weapon(e, -1, 0);
+		press_trigger(e->weapon, WEST);
 	} else if (px >= e->x && py <= e->y + 50 && py >= e->y - 50) {
-		shoot_enemy_weapon(e, 1, 0);
+		press_trigger(e->weapon, EAST);
 	}
 }
 
@@ -102,12 +130,12 @@ void initialize_ai()
 
 void update_ai()
 {
-	list_node *enemies = get_enemies();
+	list_node *entities = get_entities();
 	list_node *c;
-	for (c = enemies->next; c->next != NULL; c = c->next) {
-		if (((enemy *) c->data) != NULL) {
-			get_ai_handler(((enemy *) c->data)->id)->callback(
-					((enemy *) c->data));
+	for (c = entities->next; c->next != NULL; c = c->next) {
+		if (((entity *) c->data) != NULL) {
+			get_ai_handler(((entity *) c->data)->id)->callback(
+					((entity *) c->data));
 		}
 	}
 }

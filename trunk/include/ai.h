@@ -1,29 +1,20 @@
-#ifndef AI_H
-#define AI_H
-#include <GL/glew.h>
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-#include "debug.h"
-#include "utils.h"
-#include "level.h"
-#include "player.h"
-#include "enemy.h"
+#ifndef PURGE_AI_H
+#define PURGE_AI_H
+#include "entity.h"
 
 typedef struct ai_handler {
-	void (*callback)(enemy *);
+	void (*callback)(entity *);
 } ai_handler;
 
-ai_handler *get_ai_handler(int enemyid);
-void set_ai_handler(int enemyid, ai_handler *ai);
-ai_handler *make_ai_handler(void (*cb)(enemy *));
-void ai_cb_jitter(enemy *e);
-void ai_cb_amble(enemy *e);
-void ai_cb_track(enemy *e);
-void ai_cb_sentry(enemy *e);
+char *get_current_dialog();
+void set_current_dialog(char *text);
+ai_handler *get_ai_handler(int entityid);
+void set_ai_handler(int entityid, ai_handler *ai);
+ai_handler *make_ai_handler(void (*cb)(entity *));
+void ai_cb_jitter(entity *e);
+void ai_cb_amble(entity *e);
+void ai_cb_track(entity *e);
+void ai_cb_sentry(entity *e);
 void initialize_ai();
 void update_ai();
 #endif

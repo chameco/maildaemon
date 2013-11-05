@@ -1,5 +1,7 @@
 *.o
 a.out
 session.vim
+tags
+world_save
 *.swp
 *.swo

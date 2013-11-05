@@ -1,0 +1,8 @@
+CC = i486-mingw32-gcc
+OBJECTS = src/main.o src/resources.o src/game.o src/worldgen.o src/weapon.o src/level.o src/lights.o src/player.o src/entity.o src/ai.o src/utils.o src/projectile.o src/gui.o src/fx.o
+CFLAGS = -static -DGLEW_STATIC -Iinclude -g -Wall -I/usr/i486-mingw32/include -I/usr/local/include
+
+all: $(OBJECTS)
+	$(CC) $(OBJECTS) -L/usr/i486-mingw32/lib -L/usr/i486-mingw32/bin -L/usr/local/lib -lmingw32 -lglew32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer -lm -lcuttle -lopengl32 -lglu32 -o purge.exe
+clean:
+	rm src/*.o

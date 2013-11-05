@@ -1,5 +1,20 @@
 #include "projectile.h"
 
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
+#include "utils.h"
+#include "worldgen.h"
+#include "player.h"
+#include "entity.h"
+#include "level.h"
+#include "fx.h"
+
 list_node *PROJECTILES;
 vertex PROJECTILE_VERTICES[256][256][4];
 GLuint PROJECTILE_VERTEX_HANDLERS[256][256] = {{0}};
@@ -21,7 +36,7 @@ void reset_projectile()
 }
 
 void spawn_projectile(color c, int x, int y, int xv, int yv, int w, int h,
-		int longevity, void *sb, int dmg, int edim, GLuint texture)
+		int longevity, weapon *spawned_by, int dmg)
 {
 	projectile *p = (projectile *) malloc(sizeof(projectile));
 	p->c = c;
@@ -32,10 +47,8 @@ void spawn_projectile(color c, int x, int y, int xv, int yv, int w, int h,
 	p->w = w;
 	p->h = h;
 	p->longevity = longevity;
-	p->sb = sb;
+	p->spawned_by = spawned_by;
 	p->dmg = dmg;
-	p->edim = edim;
-	p->texture = texture;
 	if (PROJECTILE_VERTEX_HANDLERS[p->w][p->h] == 0) {
 		PROJECTILE_VERTICES[p->w][p->h][0].x = 0;
 		PROJECTILE_VERTICES[p->w][p->h][0].y = 0;
@@ -78,7 +91,7 @@ void check_projectile_collisions(projectile *p)
 	};
 	SDL_Rect b;
 
-	if (p->sb != NULL) {
+	if (p->spawned_by != get_player_weapon()) {
 		b.x = get_player_x();
 		b.y = get_player_y();
 		b.w = get_player_w();
@@ -91,20 +104,15 @@ void check_projectile_collisions(projectile *p)
 
 	}
 
-	level *cur = get_current_level();
 	int blockdim = get_block_dim();
 	int xmin = (p->x/blockdim)-2;
-	xmin = (xmin >= 0) ? xmin : 0;
 	int ymin = (p->y/blockdim)-2;
-	ymin = (ymin >= 0) ? ymin : 0;
 	int xmax = (p->x/blockdim)+2;
-	xmax = (xmax >= cur->width) ? xmax : cur->width-1;
 	int ymax = (p->y/blockdim)+2;
-	ymax = (ymax >= cur->height) ? ymax : cur->width-1;
 	int x, y;
 	for (x = xmin; x <= xmax; x++) {
 		for (y = ymin; y <= ymax; y++) {
-			if (is_solid_block(cur->dimensions[x][y])) {
+			if (is_solid_block(get_current_region(get_world()), x, y)) {
 				b.x = x*32;
 				b.y = y*32;
 				b.w = b.h = blockdim;
@@ -116,26 +124,10 @@ void check_projectile_collisions(projectile *p)
 		}
 	}
 
-	list_node *enemies = get_enemies();
-	list_node *c;
-	for (c = enemies->next; c->next != NULL; c = c->next) {
-		if ((enemy *) c->data != p->sb &&
-				((enemy *) c->data) != NULL) {
-			b.x = ((enemy *) c->data)->x;
-			b.y = ((enemy *) c->data)->y;
-			b.w = ((enemy *) c->data)->w;
-			b.h = ((enemy *) c->data)->h;
-			if (!check_collision(a, b)) {
-				hit_enemy((enemy *) c->data, p->dmg);
-				destroy_projectile(p);
-				return;
-			}
-		}
-	}
-
 	list_node *entities = get_entities();
+	list_node *c;
 	for (c = entities->next; c->next != NULL; c = c->next) {
-		if ((entity *) c->data != p->sb &&
+		if (((entity *) c->data)->weapon != p->spawned_by &&
 				((entity *) c->data) != NULL) {
 			b.x = ((entity *) c->data)->x;
 			b.y = ((entity *) c->data)->y;
@@ -153,8 +145,6 @@ void check_projectile_collisions(projectile *p)
 void destroy_projectile(projectile *p)
 {
 	remove_list(PROJECTILES, p);
-	spawn_fx(EXPLOSION, p->c,
-			p->x, p->y, p->edim, 50, 10);
 }
 
 void draw_one_projectile(projectile *p)
@@ -163,7 +153,7 @@ void draw_one_projectile(projectile *p)
 	glTranslatef(p->x, p->y, 0);
 
 	glColor4f(p->c.r, p->c.g, p->c.b, p->c.a);
-	glBindTexture(GL_TEXTURE_2D, p->texture);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
