@@ -56,8 +56,8 @@ void initialize_player()
 	PLAYER_ALTERNATE[SOUTH] = load_resource("textures/player/default/sa.png");
 	PLAYER_ALTERNATE[WEST] = load_resource("textures/player/default/wa.png");
 	PLAYER_ALTERNATE[EAST] = load_resource("textures/player/default/ea.png");
-	PLAYER_WEAPONS[0] = make_weapon(PLAYER_COLOR, &PLAYER_X, &PLAYER_Y, 8, 8, 8, 16, 16, 100.0, 0, 1, "sfx/laser.wav");
-	PLAYER_WEAPONS[1] = make_weapon(COLOR_WHITE, &PLAYER_X, &PLAYER_Y, 8, 8, 8, 2, 16, 100.0, 1, 1, "sfx/beam.wav");
+	PLAYER_WEAPONS[0] = make_weapon(PLAYER_COLOR, &PLAYER_X, &PLAYER_Y, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
+	PLAYER_WEAPONS[1] = make_weapon(COLOR_WHITE, &PLAYER_X, &PLAYER_Y, 8, 8, 16, 2, 100.0, 1, 1, 8, "sfx/beam.wav");
 }
 
 void reset_player()

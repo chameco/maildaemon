@@ -85,9 +85,9 @@ void update_level()
 			randx = rand() % get_current_region(WORLD)->width;
 			randy = rand() % get_current_region(WORLD)->height;
 			if (!is_solid_block(get_current_region(WORLD), randx, randy)) {
-				spawn_entity(0, randx * get_block_dim(), randy * get_block_dim(), 32, 32,
-						make_weapon(COLOR_GREEN, NULL, NULL, 8, 8, 8, 16, 16, 100.0, 0, 1, "sfx/laser.wav"),
-						10, 0, 10.0);
+				spawn_entity(1, randx * get_block_dim(), randy * get_block_dim(), 32, 32,
+						make_weapon(COLOR_GREEN, NULL, NULL, 8, 8, 8, 8, 100.0, 0, 1, 8, "sfx/laser.wav"),
+						10, 4, 10.0);
 			}
 		}
 	}
