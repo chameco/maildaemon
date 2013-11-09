@@ -1,14 +1,15 @@
 #include "entity.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <GL/glew.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
@@ -16,7 +17,6 @@
 #include "fx.h"
 #include "player.h"
 #include "weapon.h"
-#include "projectile.h"
 
 resource *ENTITY_RESOURCES[256];
 list_node *ENTITIES;
@@ -84,58 +84,38 @@ void collide_entity(entity *e)
 {
 }
 
-void move_entity_north(entity *e)
+void move_entity(entity *e, direction d)
 {
-	SDL_Rect a = {
-		e->x,
-		e->y - e->speed,
-		e->w,
-		e->h
-	};
-	move_entity_worker(e, a);
-}
+	int xv, yv;
+	switch (d) {
+		case NORTH:
+			xv = 0;
+			yv = -e->speed;
+			break;
+		case SOUTH:
+			xv = 0;
+			yv = e->speed;
+			break;
+		case WEST:
+			xv = -e->speed;
+			yv = 0;
+			break;
+		case EAST:
+			xv = e->speed;
+			yv = 0;
+			break;
+	}
 
-void move_entity_south(entity *e)
-{
-	SDL_Rect a = {
-		e->x,
-		e->y + e->speed,
-		e->w,
-		e->h
-	};
-	move_entity_worker(e, a);
-}
-
-void move_entity_west(entity *e)
-{
-	SDL_Rect a = {
-		e->x - e->speed,
-		e->y,
-		e->w,
-		e->h
-	};
-	move_entity_worker(e, a);
-}
-
-void move_entity_east(entity *e)
-{
-	SDL_Rect a = {
-		e->x + e->speed,
-		e->y,
-		e->w,
-		e->h
-	};
-	move_entity_worker(e, a);
-}
-
-void move_entity_worker(entity *e, SDL_Rect a)
-{
-	SDL_Rect b;
-
+	SDL_Rect a, b;
+	a.x = e->x + xv;
+	a.y = e->y + yv;
+	a.w = e->w;
+	a.h = e->h;
 	b.x = get_player_x();
 	b.y = get_player_y();
 	b.w = get_player_w();
 	b.h = get_player_h();
+
 	if (!check_collision(a, b)) {
 		collide_entity(e);
 		return;

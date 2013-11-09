@@ -1,13 +1,16 @@
 #include "projectile.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "worldgen.h"
 #include "player.h"

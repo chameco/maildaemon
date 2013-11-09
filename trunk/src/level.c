@@ -1,14 +1,13 @@
 #include "level.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
@@ -77,18 +76,16 @@ void update_level()
 	w = get_player_w();
 	h = get_player_h();
 	int region_x, region_y;
-	region_x = get_current_x_coord(WORLD);
-	region_y = get_current_y_coord(WORLD);
+	region_x = WORLD->player_x;
+	region_y = WORLD->player_y;
 	int randx, randy;
-	if (rand() % 16 == 0) {
-		if (get_current_region(WORLD)->humidity >= 0.5) {
-			randx = rand() % get_current_region(WORLD)->width;
-			randy = rand() % get_current_region(WORLD)->height;
-			if (!is_solid_block(get_current_region(WORLD), randx, randy)) {
-				spawn_entity(1, randx * get_block_dim(), randy * get_block_dim(), 32, 32,
-						make_weapon(COLOR_GREEN, NULL, NULL, 8, 8, 8, 8, 100.0, 0, 1, 8, "sfx/laser.wav"),
-						10, 4, 10.0);
-			}
+	if (rand() % 32 == 0) {
+		randx = rand() % get_current_region(WORLD)->width;
+		randy = rand() % get_current_region(WORLD)->height;
+		if (!is_solid_block(get_current_region(WORLD), randx, randy)) {
+			spawn_entity(1, randx * get_block_dim(), randy * get_block_dim(), 32, 32,
+					make_weapon(COLOR_GREEN, NULL, NULL, 8, 8, 8, 8, 100.0, 0, 1, 8, "sfx/laser.wav"),
+					10, 4, 10.0);
 		}
 	}
 	if (x <= 0 && region_x != 0) {

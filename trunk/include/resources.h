@@ -2,6 +2,7 @@
 #define PURGE_RESOURCES_H
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include "utils.h"
 #ifndef DATADIR
 #define DATADIR ""
@@ -12,6 +13,10 @@ typedef struct resource {
 	vertex vertices[4];
 	GLuint vertex_handler;
 } resource;
+
+typedef struct sound {
+	Mix_Chunk *sound;
+} sound;
 
 GLuint surface_to_texture(SDL_Surface *s);
 

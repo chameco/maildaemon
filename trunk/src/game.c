@@ -4,12 +4,15 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
@@ -48,7 +51,7 @@ void initialize_game()
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	if ((SCREEN = SDL_CreateWindow("Purge", 
+	if ((SCREEN = SDL_CreateWindow("maildaemon", 
 					SDL_WINDOWPOS_UNDEFINED,
 					SDL_WINDOWPOS_UNDEFINED,
 					0, 0,
@@ -97,6 +100,8 @@ void initialize_game()
 	debug("INITIALIZED EFFECTS");
 
 	set_current_dialog("Hello");
+	spawn_lightsource(16, 16, 128, 3, COLOR_WHITE);
+	spawn_fx(SMOKE_CONST, COLOR_GRAY, 144, 128, 10, 50, 4);
 }
 
 void initGL()
@@ -127,6 +132,28 @@ void initGL()
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void take_screenshot(char *path)
+{
+	SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_WIDTH, SCREEN_HEIGHT, 24, 0x000000FF, 0x0000FF00, 0x00FF0000, 0);
+	glReadBuffer(GL_FRONT);
+	glReadPixels(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+	int index;
+	void *temp_row;
+	 
+	temp_row = (void *) malloc(image->pitch);
+	if (temp_row == NULL) {
+			log_err("Not enough memory for image inversion");
+	}
+	for(index = 0; index < image->h/2; index++)    {
+		memcpy((Uint8 *) temp_row, (Uint8 *) image->pixels + image->pitch * index, image->pitch);
+		memcpy((Uint8 *) image->pixels + image->pitch * index, (Uint8 *) image->pixels + image->pitch * (image->h - index-1), image->pitch);
+		memcpy((Uint8 *) image->pixels + image->pitch * (image->h - index-1), temp_row, image->pitch);
+	}
+	free(temp_row);
+	IMG_SavePNG(image, path);
+	SDL_FreeSurface(image);
 }
 
 void reset_game()
@@ -208,6 +235,11 @@ int draw_main_menu_loop()
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
 		switch (event.type) {
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym == SDLK_F2) {
+					take_screenshot("screenshot.png");
+				}
+				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == SDL_BUTTON_LEFT) {
 					mousecursor.w = mousecursor.h = 1;
@@ -253,7 +285,9 @@ int draw_main_loop()
 			case SDL_KEYUP:
 				if (!event.key.repeat) {
 					pressed = pressed ? pressed : 0;
-					if (event.key.keysym.sym == SDLK_w) {
+					if (event.key.keysym.sym == SDLK_F2) {
+						take_screenshot("screenshot.png");
+					} else if (event.key.keysym.sym == SDLK_w) {
 						move_player_north(pressed);
 					} else if (event.key.keysym.sym == SDLK_s) {
 						move_player_south(pressed);

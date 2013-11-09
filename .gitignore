@@ -1,5 +1,9 @@
 *.o
 a.out
+make_world
+maildaemon
+*.exe
+*.dll
 session.vim
 tags
 world_save

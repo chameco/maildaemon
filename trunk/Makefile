@@ -12,15 +12,15 @@ libdir = $(exec_prefix)/lib
 CFLAGS = -Iinclude -std=c99 -g -Wall -Werror -DDATADIR="\"$(DESTDIR)$(datadir)/purge/\""
 
 all: $(OBJECTS) worldgen
-	$(CC) $(OBJECTS) -lm -lcuttle -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o purge_linux
+	$(CC) $(OBJECTS) -lm -lcuttle -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o maildaemon
 worldgen: src/make_world.o src/worldgen.o
 	$(CC) src/make_world.o src/worldgen.o -o make_world
 install:
-	$(INSTALL_PROGRAM) purge_linux $(DESTDIR)$(bindir)/purge
-	mkdir -p $(DESTDIR)$(datadir)/purge
-	$(INSTALL_DATA) levels textures music fonts $(DESTDIR)$(datadir)/purge/
+	$(INSTALL_PROGRAM) maildaemon $(DESTDIR)$(bindir)/maildaemon
+	mkdir -p $(DESTDIR)$(datadir)/maildaemon
+	$(INSTALL_DATA) levels textures music fonts $(DESTDIR)$(datadir)/maildaemon/
 uninstall:
-	rm $(DESTDIR)$(bindir)/purge_linux
-	rm $(DESTDIR)$(datadir)/purge -r
+	rm $(DESTDIR)$(bindir)/maildaemon
+	rm $(DESTDIR)$(datadir)/maildaemon -r
 clean:
 	rm src/*.o

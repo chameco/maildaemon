@@ -1,14 +1,17 @@
 #include "ai.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "gui.h"
 #include "worldgen.h"
@@ -56,15 +59,15 @@ void ai_cb_jitter(entity *e)
 {
 	if ((rand() % 11) > 5) {
 		if ((rand() % 11) > 5) {
-			move_entity_north(e);
+			move_entity(e, NORTH);
 		} else {
-			move_entity_south(e);
+			move_entity(e, SOUTH);
 		}
 	} else {
 		if ((rand() % 11) > 5) {
-			move_entity_west(e);
+			move_entity(e, WEST);
 		} else {
-			move_entity_east(e);
+			move_entity(e, EAST);
 		}
 	}
 	if (!(rand() % 11)) {
@@ -85,15 +88,15 @@ void ai_cb_track(entity *e)
 	int ydiff = py - e->y;
 	if (abs(xdiff) > abs(ydiff)) {
 		if (xdiff < 0) {
-			move_entity_west(e);
+			move_entity(e, WEST);
 		} else {
-			move_entity_east(e);
+			move_entity(e, EAST);
 		}
 	} else {
 		if (ydiff < 0) {
-			move_entity_north(e);
+			move_entity(e, NORTH);
 		} else {
-			move_entity_south(e);
+			move_entity(e, SOUTH);
 		}
 	}
 	ai_cb_sentry(e);

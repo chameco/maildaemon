@@ -1,25 +1,26 @@
 #include "gui.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
 #include "level.h"
 #include "player.h"
 
-resource *HEALTHBAR;
-resource *MAGICBAR;
-resource *EXPBAR;
 resource *BUTTON_BACKGROUND;
 resource *DIALOG_BOX_BACKGROUND;
+resource *METER_BACKGROUND;
 char CURRENT_PLAYER_LEVEL_TEXT[256];
 char CURRENT_LEVEL_TEXT[256];
 int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
@@ -29,11 +30,9 @@ GLuint BITMAP_FONT[4][26] = {{0}};
 
 void initialize_gui()
 {
-	HEALTHBAR = load_resource("textures/gui/health.png");
-	MAGICBAR = load_resource("textures/gui/magic.png");
-	EXPBAR = load_resource("textures/gui/exp.png");
 	BUTTON_BACKGROUND = load_resource("textures/gui/buttontemplate.png");
 	DIALOG_BOX_BACKGROUND = load_resource("textures/gui/dialogtemplate.png");
+	METER_BACKGROUND = load_resource("textures/gui/meter.png");
 	load_bitmap_font("fonts/font.png");
 }
 
@@ -194,6 +193,28 @@ void draw_dialog_box(char *text, int x, int y)
 	render_text_bitmap(x + 10, y + 10, text, 2);
 }
 
+void draw_meter(char *text, int x, int y, color c, int full)
+{
+	draw_resource(METER_BACKGROUND, x, y);
+
+	glPushMatrix();
+
+	glTranslatef(x + 4, y + 4, 0);
+	glColor3f(c.r, c.g, c.b);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glBegin(GL_QUADS);
+		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
+		glTexCoord2i(1, 0); glVertex3f(full, 0, 0);
+		glTexCoord2i(1, 1); glVertex3f(full, 24, 0);
+		glTexCoord2i(0, 1); glVertex3f(0, 24, 0);
+	glEnd();
+
+	glPopMatrix();
+
+	render_text_bitmap(x + 55 - (16 * strlen(text))/2, y + 8, text, 2);
+}
+
 void draw_gui()
 {
 	double h = get_player_health();
@@ -210,75 +231,17 @@ void draw_gui()
 	elength = (100 * e) / me;
 	if (BELIEVED_CURRENT_PLAYER_LEVEL != get_player_level()) {
 		BELIEVED_CURRENT_PLAYER_LEVEL = get_player_level();
-		sprintf(CURRENT_PLAYER_LEVEL_TEXT, "level %d", BELIEVED_CURRENT_PLAYER_LEVEL);
+		sprintf(CURRENT_PLAYER_LEVEL_TEXT, "lvl %d", BELIEVED_CURRENT_PLAYER_LEVEL);
 	}
-	if (strcmp(CURRENT_LEVEL_TEXT, get_current_region_name(get_world())) != 0) {
-		char *buffer =  get_current_region_name(get_world());
+	if (strcmp(CURRENT_LEVEL_TEXT, get_current_region(get_world())->name) != 0) {
+		char *buffer =  get_current_region(get_world())->name;
 		strncpy(CURRENT_LEVEL_TEXT, buffer, 256);
 	}
 
-	glPushMatrix();
-	glTranslatef(0, 0, 0);
-
-	//HEALTH BAR
-	glPushMatrix();
-
-	draw_resource(HEALTHBAR, 0, 0);
-
-	glTranslatef(127, 4, 0);
-	glColor3f(0.0, 1.0, 0.0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(hlength, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(hlength, 24, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, 24, 0);
-	glEnd();
-
-	glPopMatrix();
-
-	//MAGIC BAR
-	glPushMatrix();
-
-	draw_resource(MAGICBAR, 0, 32);
-
-	glTranslatef(127, 36, 0);
-	glColor3f(0.0, 0.0, 1.0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(mlength, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(mlength, 24, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, 24, 0);
-	glEnd();
-
-	glPopMatrix();
-
-	//EXP BAR
-	glPushMatrix();
-
-	draw_resource(EXPBAR, 0, 64);
-
-	glTranslatef(127, 68, 0);
-	glColor3f(0.8, 0.5, 0.0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(elength, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(elength, 24, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, 24, 0);
-	glEnd();
-
-	glPopMatrix();
-
-	render_text_bitmap(135, 72, CURRENT_PLAYER_LEVEL_TEXT, 1.5);
+	draw_meter("Health", 0, 0, COLOR_GREEN, hlength);
+	draw_meter("Ammo", 0, 32, get_player_weapon()->c, mlength);
+	draw_meter(CURRENT_PLAYER_LEVEL_TEXT, 0, 64, (color) {1.0, 0.8, 0.0, 1.0}, elength);
 
 	//LEVEL TITLE
-	
-	render_text_bitmap(250, 0, CURRENT_LEVEL_TEXT, 4);
-
-	glPopMatrix();
+	render_text_bitmap(150, 0, CURRENT_LEVEL_TEXT, 4);
 }

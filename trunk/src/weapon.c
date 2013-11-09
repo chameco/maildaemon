@@ -1,8 +1,10 @@
 #include "weapon.h"
 
 #include <SDL2/SDL_mixer.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "projectile.h"
 

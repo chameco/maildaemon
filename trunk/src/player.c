@@ -1,24 +1,28 @@
 #include "player.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
 #include "entity.h"
 #include "weapon.h"
+#include "game.h"
 #include "level.h"
 #include "projectile.h"
 #include "lights.h"
 
-int PLAYER_X = 0;
-int PLAYER_Y = 0;
+int PLAYER_X = 160;
+int PLAYER_Y = 160;
 int NORTH_PRESSED = 0;
 int SOUTH_PRESSED = 0;
 int WEST_PRESSED = 0;
@@ -163,6 +167,7 @@ void warp_player(int x, int y)
 
 void set_player_weapon_index(int i)
 {
+	release_trigger(PLAYER_WEAPONS[PLAYER_WEAPON_INDEX]);
 	if (PLAYER_WEAPONS[i] != NULL) {
 		PLAYER_WEAPON_INDEX = i;
 	}

@@ -1,14 +1,15 @@
 #include "lights.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <GL/glew.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
@@ -66,7 +67,7 @@ void draw_lights()
 
 	glPushMatrix();
 	glTranslatef(-64, -64, 0);
-	glColor4f(0, 0, 0, get_current_region_ambience(get_world()));
+	glColor4f(0, 0, 0, get_current_region(get_world())->ambience);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBegin(GL_QUADS);
 		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);

@@ -2,6 +2,12 @@
 #define PURGE_FX_H
 #include "utils.h"
 
+typedef enum etype {
+	EXPLOSION,
+	SMOKE_CONST,
+	SMOKE
+} etype;
+
 typedef struct effect {
 	color c;
 	int x, y, dim;

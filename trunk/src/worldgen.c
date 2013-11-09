@@ -4,9 +4,11 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+
 #include <cuttle/debug.h>
 
 void (*REGION_HANDLERS[256])(region *) = {NULL};
+int REGION_HANDLERS_INDEX = 0;
 
 void save_world(world *w)
 {
@@ -46,16 +48,6 @@ void unload_world(world *w)
 	}
 	free(w);
 
-}
-
-int get_current_x_coord(world *w)
-{
-	return w->player_x;
-}
-
-int get_current_y_coord(world *w)
-{
-	return w->player_y;
 }
 
 region *get_region(world *w, int x, int y)
@@ -102,260 +94,43 @@ void unload_region(world *w, int x, int y) {
 	}
 }
 
-region *generate_region(char *name, int width, int height, int temperature, double altitude)
+region *generate_region(char *name, int width, int height)
 {
 	region *ret = (region *) malloc(sizeof(region));
 	strcpy(ret->name, name);
 	ret->width = width;
 	ret->height = height;
-	ret->temperature = temperature;
-	ret->altitude = altitude;
-	ret->humidity = 0.5;
-	if (temperature < 10) {
-		if (altitude < 0.25) {
-			ret->terrain_type = ICEVLLY;
-		} else if (altitude < 0.5) {
-			ret->terrain_type = TUNDRA;
-		} else if (altitude < 0.75) {
-			ret->terrain_type = TAIGA;
-		} else {
-			ret->terrain_type = ICEMTNS;
-		}
-	} else if (temperature < 70) {
-		if (altitude < 0.25) {
-			ret->terrain_type = VALLEY;
-		} else if (altitude < 0.5) {
-			ret->terrain_type = PLAIN;
-		} else if (altitude < 0.75) {
-			ret->terrain_type = FOREST;
-		} else {
-			ret->terrain_type = MOUNTAINS;
-		}
-	} else {
-		if (altitude < 0.25) {
-			ret->terrain_type = CRATER;
-		} else if (altitude < 0.5) {
-			ret->terrain_type = DESERT;
-		} else if (altitude < 0.75) {
-			ret->terrain_type = OASIS;
-		} else {
-			ret->terrain_type = DUNES;
-		}
-	}
-	if (REGION_HANDLERS[ret->terrain_type] != NULL) {
-		REGION_HANDLERS[ret->terrain_type](ret);
-	} else {
-		log_err("Invalid terrain type for region %s", name);
-		exit(1);
-	}
+	REGION_HANDLERS[rand() % REGION_HANDLERS_INDEX](ret);
 	return ret;
 }
 
-void register_region_handler(int terrain_type, void (*handler)(region *))
+void add_region_handler(void (*handler)(region *))
 {
-	REGION_HANDLERS[terrain_type] = handler;
+	REGION_HANDLERS[REGION_HANDLERS_INDEX++] = handler;
 }
 
 void register_standard_handlers()
 {
-	register_region_handler(ICEVLLY, handler_icevlly);
-	register_region_handler(TUNDRA, handler_tundra);
-	register_region_handler(TAIGA, handler_taiga);
-	register_region_handler(ICEMTNS, handler_icemtns);
-
-	register_region_handler(VALLEY, handler_valley);
-	register_region_handler(PLAIN, handler_plain);
-	register_region_handler(FOREST, handler_forest);
-	register_region_handler(MOUNTAINS, handler_mountains);
-
-	register_region_handler(CRATER, handler_crater);
-	register_region_handler(DESERT, handler_desert);
-	register_region_handler(OASIS, handler_oasis);
-	register_region_handler(DUNES, handler_dunes);
+	add_region_handler(handler_emptyroom);
 }
 
-void handler_icevlly(region *r)
+void handler_emptyroom(region *r)
 {
-	r->ambience = 0.0;
-	r->humidity = 0.1;
+	r->ambience = 0.8;
 	int x, y;
 	for (x = 0; x < r->width; ++x) {
 		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = SAND;
-			} else {
-				r->blocks[x][y] = SNOW;
-			}
-		}
-	}
-}
-
-void handler_tundra(region *r)
-{
-	r->ambience = 0.0;
-	r->humidity = 0.1;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			r->blocks[x][y] = SNOW;
-		}
-	}
-}
-
-void handler_taiga(region *r)
-{
-	r->ambience = 0.2;
-	r->humidity = 0.2;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = SHRUB;
-			} else {
-				r->blocks[x][y] = SNOW;
-			}
-		}
-	}
-}
-
-void handler_icemtns(region *r)
-{
-	r->ambience = 0.0;
-	r->humidity = 0.1;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = STONE;
-			} else {
-				r->blocks[x][y] = SNOW;
-			}
-		}
-	}
-}
-
-void handler_valley(region *r)
-{
-	r->ambience = 0.2;
-	r->humidity = 0.5;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = SAND;
-			} else {
-				r->blocks[x][y] = GRASS;
-			}
-		}
-	}
-}
-
-void handler_plain(region *r)
-{
-	r->ambience = 0.2;
-	r->humidity = 0.5;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			r->blocks[x][y] = GRASS;
-		}
-	}
-}
-
-void handler_forest(region *r)
-{
-	r->ambience = 0.5;
-	r->humidity = 0.7;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = SHRUB;
-			} else {
-				r->blocks[x][y] = GRASS;
-			}
-		}
-	}
-}
-
-void handler_mountains(region *r)
-{
-	r->ambience = 0.2;
-	r->humidity = 0.5;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = STONE;
+			if (x == 4 && y == 4) {
+				r->blocks[x][y] = TORCH;
+			} else if (x == 0 || y == 0 || x == r->width-1 || y == r->height-1) {
+				if ((x == (r->width / 2) - 1 || x == (r->width / 2))
+						|| (y == (r->height / 2) - 1 || y == (r->height / 2))) {
+					r->blocks[x][y] = PLANKS;
+				} else {
+					r->blocks[x][y] = STONE;
+				}
 			} else {
 				r->blocks[x][y] = PLANKS;
-			}
-		}
-	}
-}
-
-void handler_crater(region *r)
-{
-	r->ambience = 0.0;
-	r->humidity = 0.0;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = PLANKS;
-			} else {
-				r->blocks[x][y] = SAND;
-			}
-		}
-	}
-}
-
-void handler_desert(region *r)
-{
-	r->ambience = 0.0;
-	r->humidity = 0.0;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 8 == 0) {
-				r->blocks[x][y] = STONE;
-			} else {
-				r->blocks[x][y] = SAND;
-			}
-		}
-	}
-}
-
-void handler_oasis(region *r)
-{
-	r->ambience = 0.2;
-	r->humidity = 0.7;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (rand() % 4 == 0) {
-				r->blocks[x][y] = SHRUB;
-			} else {
-				r->blocks[x][y] = SAND;
-			}
-		}
-	}
-}
-
-void handler_dunes(region *r)
-{
-	r->ambience = 0.0;
-	r->humidity = 0.0;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			int n = rand() % 4;
-			if (n == 0) {
-				r->blocks[x][y] = STONE;
-			} else if (n == 1) {
-				r->blocks[x][y] = PLANKS;
-			} else {
-				r->blocks[x][y] = SAND;
 			}
 		}
 	}
@@ -383,14 +158,4 @@ void set_current_region(world *w, int x, int y)
 region *get_current_region(world *w)
 {
 	return get_region(w, w->player_x, w->player_y);
-}
-
-char *get_current_region_name(world *w)
-{
-	return get_current_region(w)->name;
-}
-
-double get_current_region_ambience(world *w)
-{
-	return get_current_region(w)->ambience;
 }

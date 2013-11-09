@@ -2,6 +2,7 @@
 #define PURGE_CHARACTER_H
 #include "utils.h"
 #include "weapon.h"
+#include "game.h"
 
 void initialize_player();
 void reset_player();
