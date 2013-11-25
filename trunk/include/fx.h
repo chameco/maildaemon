@@ -17,12 +17,14 @@ typedef struct effect {
 	int statelen;
 	int state[30][5]; //x, y, xv, yv, exists? for each particle
 	etype type;
+	int freeable;
 } effect;
 void initialize_fx();
 void reset_fx();
-void spawn_fx(etype type, color col,
+effect *make_fx(etype type, color col,
 		int x, int y, int dim,
 		int radius, int speed);
+void spawn_fx(effect *e);
 void update_fx();
 void draw_particle(effect *e, int xdiff, int ydiff);
 void draw_smoke_particle(effect *e, int xdiff, int ydiff);

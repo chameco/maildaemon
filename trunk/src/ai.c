@@ -86,33 +86,37 @@ void ai_cb_track(entity *e)
 	int py = get_player_y();
 	int xdiff = px - e->x;
 	int ydiff = py - e->y;
-	if (abs(xdiff) > abs(ydiff)) {
-		if (xdiff < 0) {
-			move_entity(e, WEST);
-		} else {
-			move_entity(e, EAST);
-		}
+	if (xdiff == 0 || ydiff == 0) {
+		ai_cb_sentry(e);
 	} else {
+		if (xdiff < 0) {
+			e->xv = -e->speed;
+		} else if (xdiff > 0) {
+			e->xv = e->speed;
+		}
 		if (ydiff < 0) {
-			move_entity(e, NORTH);
-		} else {
-			move_entity(e, SOUTH);
+			e->yv = -e->speed;
+		} else if (ydiff > 0) {
+			e->yv = e->speed;
 		}
 	}
-	ai_cb_sentry(e);
 }
 
 void ai_cb_sentry(entity *e)
 {
-	int px = get_player_x();
-	int py = get_player_y();
-	if (py <= e->y && px <= e->x + 50 && px >= e->x - 50) {
+	int px = get_player_x() + get_player_w()/2;
+	int py = get_player_y() + get_player_h()/2;
+	int ex = e->x + e->w/2;
+	int ey = e->y + e->h/2;
+	int xdiff = px - ex;
+	int ydiff = py - ey;
+	if (ydiff < 0 && px <= ex + 50 && px >= ex - 50) {
 		press_trigger(e->weapon, NORTH);
-	} else if (py >= e->y && px <= e->x + 50 && px >= e->x - 50) {
+	} else if (ydiff > 0 && px <= ex + 50 && px >= ex - 50) {
 		press_trigger(e->weapon, SOUTH);
-	} else if (px <= e->x && py <= e->y + 50 && py >= e->y - 50) {
+	} else if (xdiff < 0 && py <= ey + 50 && py >= ey - 50) {
 		press_trigger(e->weapon, WEST);
-	} else if (px >= e->x && py <= e->y + 50 && py >= e->y - 50) {
+	} else if (xdiff > 0 && py <= ey + 50 && py >= ey - 50) {
 		press_trigger(e->weapon, EAST);
 	}
 }

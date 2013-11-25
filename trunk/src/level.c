@@ -43,6 +43,16 @@ void initialize_level()
 	BLOCK_RESOURCES[SHRUB] = load_resource("textures/shrub.png");
 	BLOCK_RESOURCES[TORCH] = load_resource("textures/torch.png");
 	WORLD = load_world();
+	load_region_assets(get_current_region(WORLD));
+	warp_player(WORLD->player_position_x, WORLD->player_position_y);
+}
+
+void reset_level()
+{
+	unload_world(WORLD);
+	WORLD = load_world();
+	load_region_assets(get_current_region(WORLD));
+	warp_player(WORLD->player_position_x, WORLD->player_position_y);
 }
 
 void change_current_region(int rx, int ry, direction d)
@@ -66,6 +76,7 @@ void change_current_region(int rx, int ry, direction d)
 	reset_entities();
 	reset_projectile();
 	reset_fx();
+	load_region_assets(get_current_region(WORLD));
 }
 
 void update_level()
@@ -78,16 +89,6 @@ void update_level()
 	int region_x, region_y;
 	region_x = WORLD->player_x;
 	region_y = WORLD->player_y;
-	int randx, randy;
-	if (rand() % 32 == 0) {
-		randx = rand() % get_current_region(WORLD)->width;
-		randy = rand() % get_current_region(WORLD)->height;
-		if (!is_solid_block(get_current_region(WORLD), randx, randy)) {
-			spawn_entity(1, randx * get_block_dim(), randy * get_block_dim(), 32, 32,
-					make_weapon(COLOR_GREEN, NULL, NULL, 8, 8, 8, 8, 100.0, 0, 1, 8, "sfx/laser.wav"),
-					10, 4, 10.0);
-		}
-	}
 	if (x <= 0 && region_x != 0) {
 		change_current_region(region_x-1, region_y, WEST);
 	} else if (x+w >= get_block_dim() * get_current_region(WORLD)->width && region_x != WORLD_DIM - 1) {

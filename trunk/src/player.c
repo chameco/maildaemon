@@ -7,6 +7,7 @@
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -21,8 +22,8 @@
 #include "projectile.h"
 #include "lights.h"
 
-int PLAYER_X = 160;
-int PLAYER_Y = 160;
+int PLAYER_X = 0;
+int PLAYER_Y = 0;
 int NORTH_PRESSED = 0;
 int SOUTH_PRESSED = 0;
 int WEST_PRESSED = 0;

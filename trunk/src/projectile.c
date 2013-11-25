@@ -45,10 +45,10 @@ void spawn_projectile(color c, int x, int y, int xv, int yv, int w, int h,
 	p->c = c;
 	p->x = x;
 	p->y = y;
-	p->xv = xv;
-	p->yv = yv;
 	p->w = w;
 	p->h = h;
+	p->xv = xv;
+	p->yv = yv;
 	p->longevity = longevity;
 	p->spawned_by = spawned_by;
 	p->dmg = dmg;
@@ -129,15 +129,17 @@ void check_projectile_collisions(projectile *p)
 
 	list_node *entities = get_entities();
 	list_node *c;
+	entity *e;
 	for (c = entities->next; c->next != NULL; c = c->next) {
 		if (((entity *) c->data)->weapon != p->spawned_by &&
 				((entity *) c->data) != NULL) {
-			b.x = ((entity *) c->data)->x;
-			b.y = ((entity *) c->data)->y;
-			b.w = ((entity *) c->data)->w;
-			b.h = ((entity *) c->data)->h;
+			e = (entity *) c->data;
+			b.x = e->x;
+			b.y = e->y;
+			b.w = e->w;
+			b.h = e->h;
 			if (!check_collision(a, b)) {
-				hit_entity((entity *) c->data, p->dmg);
+				hit_entity(e, p->dmg);
 				destroy_projectile(p);
 				return;
 			}

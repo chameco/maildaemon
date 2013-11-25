@@ -48,12 +48,6 @@ resource *load_resource(char *path)
 {
 	resource *ret = (resource *) malloc(sizeof(resource));
 	SDL_Surface *surface = IMG_Load(path);
-	char buffer[100];
-	if (surface == NULL) {
-		strcpy(buffer, DATADIR);
-		strcat(buffer, path);
-		surface = IMG_Load(buffer);
-	}
 	if (surface == NULL) {
 		log_err("File %s does not exist", path);
 		exit(1);

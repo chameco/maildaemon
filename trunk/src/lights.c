@@ -31,13 +31,15 @@ void reset_lights()
 	list_node *c;
 	for (c = LIGHTS->next; c->next != NULL; c = c->next) {
 		if (((lightsource *) c->data) != NULL) {
-			free((lightsource *) c->data);
+			if (((lightsource *) c->data)->freeable == 1) {
+				free((lightsource *) c->data);
+			}
 		}
 	}
 	LIGHTS = make_list();
 }
 
-lightsource *create_lightsource(int x, int y, int dim, int intensity, color c)
+lightsource *make_lightsource(int x, int y, int dim, int intensity, color c)
 {
 	lightsource *l = (lightsource *) malloc(sizeof(lightsource));
 	l->x = x;
@@ -45,18 +47,13 @@ lightsource *create_lightsource(int x, int y, int dim, int intensity, color c)
 	l->dim = dim;
 	l->intensity = intensity;
 	l->c = c;
+	l->freeable = 1;
 	return l;
 }
 
-void trace_lightsource(lightsource *l)
+void spawn_lightsource(lightsource *l)
 {
 	insert_list(LIGHTS, (void *) l);
-}
-
-void spawn_lightsource(int x, int y, int dim, int intensity, color c)
-{
-	lightsource *l = create_lightsource(x, y, dim, intensity, c);
-	trace_lightsource(l);
 }
 
 void draw_lights()

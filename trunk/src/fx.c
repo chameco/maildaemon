@@ -17,14 +17,30 @@
 list_node *EFFECTS;
 int PARTICLE_WIDTH = 2;
 int PARTICLE_HEIGHT = 2;
-vertex EFFECT_VERTICES[256][4];
-GLuint EFFECT_VERTEX_HANDLERS[256] = {0};
+vertex EFFECT_VERTICES[4];
+GLuint EFFECT_VERTEX_HANDLER = 0;
 Mix_Chunk *EXPLOSION_SOUND;
 
 void initialize_fx()
 {
 	EFFECTS = make_list();
 	EXPLOSION_SOUND = Mix_LoadWAV("sfx/explode.wav");
+
+	EFFECT_VERTICES[0].x = 0;
+	EFFECT_VERTICES[0].y = 0;
+
+	EFFECT_VERTICES[1].x = 1;
+	EFFECT_VERTICES[1].y = 0;
+
+	EFFECT_VERTICES[2].x = 1;
+	EFFECT_VERTICES[2].y = 1;
+
+	EFFECT_VERTICES[3].x = 0;
+	EFFECT_VERTICES[3].y = 1;
+
+	glGenBuffers(1, &EFFECT_VERTEX_HANDLER);
+	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
+	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), EFFECT_VERTICES, GL_STATIC_DRAW);
 }
 
 void reset_fx()
@@ -32,13 +48,15 @@ void reset_fx()
 	list_node *c;
 	for (c = EFFECTS->next; c->next != NULL; c = c->next) {
 		if (((effect *) c->data) != NULL) {
-			free((effect *) c->data);
+			if (((effect *) c->data)->freeable == 1) {
+				free((effect *) c->data);
+			}
 		}
 	}
 	EFFECTS = make_list();
 }
 
-void spawn_fx(etype type, color col,
+effect *make_fx(etype type, color col,
 		int x, int y, int dim,
 		int radius, int speed)
 {
@@ -52,23 +70,12 @@ void spawn_fx(etype type, color col,
 	e->speed = speed;
 	e->cur = 0;
 	e->statelen = 30;
-	if (EFFECT_VERTEX_HANDLERS[e->dim] == 0) {
-		EFFECT_VERTICES[e->dim][0].x = 0;
-		EFFECT_VERTICES[e->dim][0].y = 0;
+	e->freeable = 1;
+	return e;
+}
 
-		EFFECT_VERTICES[e->dim][1].x = e->dim;
-		EFFECT_VERTICES[e->dim][1].y = 0;
-
-		EFFECT_VERTICES[e->dim][2].x = e->dim;
-		EFFECT_VERTICES[e->dim][2].y = e->dim;
-
-		EFFECT_VERTICES[e->dim][3].x = 0;
-		EFFECT_VERTICES[e->dim][3].y = e->dim;
-
-		glGenBuffers(1, &EFFECT_VERTEX_HANDLERS[e->dim]);
-		glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLERS[e->dim]);
-		glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), EFFECT_VERTICES[e->dim], GL_STATIC_DRAW);
-	}
+void spawn_fx(effect *e)
+{
 	int c;
 	switch (e->type) {
 		case EXPLOSION:
@@ -86,6 +93,7 @@ void spawn_fx(etype type, color col,
 				e->state[c][2] = e->state[c][0];
 				e->state[c][3] = e->state[c][1];
 				e->state[c][4] = 1;
+				Mix_PlayChannel(-1, EXPLOSION_SOUND, 0);
 			}
 			break;
 		case SMOKE_CONST:
@@ -102,8 +110,6 @@ void spawn_fx(etype type, color col,
 			break;
 	}
 	insert_list(EFFECTS, (void *) e);
-
-	Mix_PlayChannel(-1, EXPLOSION_SOUND, 0);
 }
 
 void update_fx()
@@ -119,14 +125,18 @@ void update_fx()
 					e->cur += e->speed;
 					if (e->cur >= e->radius) {
 						remove_list(EFFECTS, c->data);
-					}
-					for (counter = 0; counter < e->statelen; counter++) {
-						if (!(e->state[counter][2] == 0 && e->state[counter][3] == 0)) {
-							if (e->state[counter][4]) {
-								e->state[counter][0] += e->state[counter][2];
-								e->state[counter][1] += e->state[counter][3];
-								e->state[counter][2] /= 2;
-								e->state[counter][3] /= 2;
+						if (e->freeable != 0) {
+							free(e);
+						}
+					} else {
+						for (counter = 0; counter < e->statelen; counter++) {
+							if (!(e->state[counter][2] == 0 && e->state[counter][3] == 0)) {
+								if (e->state[counter][4]) {
+									e->state[counter][0] += e->state[counter][2];
+									e->state[counter][1] += e->state[counter][3];
+									e->state[counter][2] /= 2;
+									e->state[counter][3] /= 2;
+								}
 							}
 						}
 					}
@@ -154,18 +164,22 @@ void update_fx()
 					e->cur += e->speed;
 					if (e->cur >= 100) {
 						remove_list(EFFECTS, c->data);
-					}
-					for (counter = 0; counter < e->statelen; counter++) {
-						if (e->state[counter][4]) {
-							if (rand() % 2) {
-								e->state[counter][0] += rand() % 3;
-							} else {
-								e->state[counter][0] -= rand() % 3;
-							}
-							if (e->state[counter][1] >= -(e->radius)) {
-								e->state[counter][1] -= rand() % 5;
-							} else {
-								e->state[counter][2] = 0;
+						if (e->freeable != 0) {
+							free(e);
+						}
+					} else {
+						for (counter = 0; counter < e->statelen; counter++) {
+							if (e->state[counter][4]) {
+								if (rand() % 2) {
+									e->state[counter][0] += rand() % 3;
+								} else {
+									e->state[counter][0] -= rand() % 3;
+								}
+								if (e->state[counter][1] >= -(e->radius)) {
+									e->state[counter][1] -= rand() % 5;
+								} else {
+									e->state[counter][2] = 0;
+								}
 							}
 						}
 					}
@@ -181,11 +195,13 @@ inline void draw_particle(effect *e, int xdiff, int ydiff)
 
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
 
+	glScalef(e->dim, e->dim, 1);
+
 	glColor4f(e->c.r, e->c.g, e->c.b, e->c.a);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLERS[e->dim]);
+	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
 	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
@@ -217,13 +233,15 @@ inline void draw_smoke_particle(effect *e, int xdiff, int ydiff)
 
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
 
+	glScalef(e->dim, e->dim, 1);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glColor4f(r, g, b, e->c.a);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
-	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLERS[e->dim]);
+	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
 	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());

@@ -4,9 +4,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include "utils.h"
-#ifndef DATADIR
-#define DATADIR ""
-#endif
 
 typedef struct resource {
 	GLuint texture;

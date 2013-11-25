@@ -7,13 +7,19 @@
 
 #include <cuttle/debug.h>
 
-void (*REGION_HANDLERS[256])(region *) = {NULL};
-int REGION_HANDLERS_INDEX = 0;
+#include "player.h"
+#include "entity.h"
+#include "lights.h"
+#include "fx.h" 
+region *STANDARD_ROOMS[32];
+int STANDARD_ROOMS_INDEX = 0;
 
 void save_world(world *w)
 {
 	FILE *f = fopen("world_save", "wb");
-	fwrite(w, sizeof(int), 2, f);
+	w->player_position_x = get_player_x();
+	w->player_position_y = get_player_y();
+	fwrite(w, sizeof(int), 4, f);
 	int x, y;
 	for (x = 0; x < WORLD_DIM; ++x) {
 		for (y = 0; y < WORLD_DIM; ++y) {
@@ -26,8 +32,12 @@ void save_world(world *w)
 world *load_world()
 {
 	world *ret = (world *) malloc(sizeof(world));
-	ret->player_x = 0;
-	ret->player_y = 0;
+	FILE *f = fopen("world_save", "rb");
+	fread(&(ret->player_x), sizeof(int), 1, f);
+	fread(&(ret->player_y), sizeof(int), 1, f);
+	fread(&(ret->player_position_x), sizeof(int), 1, f);
+	fread(&(ret->player_position_y), sizeof(int), 1, f);
+	fclose(f);
 	int x, y;
 	for (x = 0; x < WORLD_DIM; ++x) {
 		for (y = 0; y < WORLD_DIM; ++y) {
@@ -83,6 +93,24 @@ void load_region(world *w, int x, int y)
 	w->player_y = y;
 }
 
+void load_region_assets(region *r)
+{
+	int i;
+	for (i = 0; i < r->numentities; i++) {
+		entity *e = &(r->entities[i]);
+		spawn_entity(e);
+		e->weapon = make_weapon(COLOR_GREEN, &(e->x), &(e->y), 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
+	}
+	for (i = 0; i < r->numlights; i++) {
+		lightsource *l = &(r->lights[i]);
+		spawn_lightsource(l);
+	}
+	for (i = 0; i < r->numfx; i++) {
+		effect *fx = &(r->fx[i]);
+		spawn_fx(fx);
+	}
+}
+
 void unload_region(world *w, int x, int y) {
 	
 	if (w->regions[x][y] != NULL) {
@@ -100,41 +128,31 @@ region *generate_region(char *name, int width, int height)
 	strcpy(ret->name, name);
 	ret->width = width;
 	ret->height = height;
-	REGION_HANDLERS[rand() % REGION_HANDLERS_INDEX](ret);
+	ret->numentities = 0;
+	ret->numlights = 0;
+	ret->numfx = 0;
 	return ret;
 }
 
-void add_region_handler(void (*handler)(region *))
+void add_standard_room(region *r)
 {
-	REGION_HANDLERS[REGION_HANDLERS_INDEX++] = handler;
+	STANDARD_ROOMS[STANDARD_ROOMS_INDEX++] = r;
 }
 
-void register_standard_handlers()
+void populate_region(region *r, int rtype)
 {
-	add_region_handler(handler_emptyroom);
+	r->width = STANDARD_ROOMS[rtype]->width;
+	r->height = STANDARD_ROOMS[rtype]->height;
+	r->ambience = STANDARD_ROOMS[rtype]->ambience;
+	r->numentities = STANDARD_ROOMS[rtype]->numentities;
+	r->numlights = STANDARD_ROOMS[rtype]->numlights;
+	r->numfx = STANDARD_ROOMS[rtype]->numfx;
+	memcpy(r->blocks, STANDARD_ROOMS[rtype]->blocks, sizeof(r->blocks));
+	memcpy(r->entities, STANDARD_ROOMS[rtype]->entities, sizeof(r->entities));
+	memcpy(r->lights, STANDARD_ROOMS[rtype]->lights, sizeof(r->lights));
+	memcpy(r->fx, STANDARD_ROOMS[rtype]->fx, sizeof(r->fx));
 }
 
-void handler_emptyroom(region *r)
-{
-	r->ambience = 0.8;
-	int x, y;
-	for (x = 0; x < r->width; ++x) {
-		for (y = 0; y < r->height; ++y) {
-			if (x == 4 && y == 4) {
-				r->blocks[x][y] = TORCH;
-			} else if (x == 0 || y == 0 || x == r->width-1 || y == r->height-1) {
-				if ((x == (r->width / 2) - 1 || x == (r->width / 2))
-						|| (y == (r->height / 2) - 1 || y == (r->height / 2))) {
-					r->blocks[x][y] = PLANKS;
-				} else {
-					r->blocks[x][y] = STONE;
-				}
-			} else {
-				r->blocks[x][y] = PLANKS;
-			}
-		}
-	}
-}
 
 int is_solid_block(region *r, int x, int y)
 {

@@ -79,29 +79,17 @@ void initialize_game()
 	Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
 
 	initialize_utils();
-	debug("INITIALIZED UTILS");
 	initialize_weapons();
-	debug("INITIALIZED WEAPONS");
 	initialize_lights();
-	debug("INITIALIZED LIGHTS");
 	initialize_entity();
-	debug("INITIALIZED ENEMY");
 	initialize_ai();
-	debug("INITIALIZED AI");
 	initialize_player();
-	debug("INITIALIZED PLAYER");
 	initialize_projectile();
-	debug("INITIALIZED PROJECTILE");
-	initialize_level();
-	debug("INITIALIZED LEVELS");
-	initialize_gui();
-	debug("INITIALIZED GUI");
 	initialize_fx();
-	debug("INITIALIZED EFFECTS");
+	initialize_level();
+	initialize_gui();
 
 	set_current_dialog("Hello");
-	spawn_lightsource(16, 16, 128, 3, COLOR_WHITE);
-	spawn_fx(SMOKE_CONST, COLOR_GRAY, 144, 128, 10, 50, 4);
 }
 
 void initGL()
@@ -161,9 +149,9 @@ void reset_game()
 	reset_lights();
 	reset_entities();
 	reset_player();
-	load_region(get_world(), 0, 0);
 	reset_projectile();
 	reset_fx();
+	reset_level();
 }
 
 void main_game_loop()

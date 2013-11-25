@@ -7,6 +7,7 @@ world *get_world();
 
 int get_block_dim();
 void initialize_level();
+void reset_level();
 void change_current_region(int rx, int ry, direction d);
 void update_level();
 void draw_level();

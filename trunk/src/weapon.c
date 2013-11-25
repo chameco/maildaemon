@@ -41,6 +41,9 @@ weapon *make_weapon(color c, int *x, int *y, int xoffset, int yoffset,
 
 void press_trigger(weapon *w, direction d)
 {
+	if (w == NULL) {
+		return;
+	}
 	if (w->cooldown == 0) {
 		switch (d) {
 			case NORTH:
@@ -72,6 +75,9 @@ void press_trigger(weapon *w, direction d)
 }
 void release_trigger(weapon *w)
 {
+	if (w == NULL) {
+		return;
+	}
 	if (w->isbeam) {
 		w->firing = 0;
 		Mix_HaltChannel(w->channel);
@@ -87,12 +93,11 @@ void update_weapons()
 			w = (weapon *) c->data;
 			if (w->isbeam == 1) {
 				if (w->firing) {
-					w->charge -= 0.5;
-					if (w->charge < 0) {
-						w->charge = 0;
-					}
-					if (w->charge > 100) {
-						w->charge = 100;
+					if (w->charge >= 0.5) {
+						w->charge -= 0.5;
+					} else {
+						w->firing = 0;
+						continue;
 					}
 					if (abs(w->xv) > abs(w->yv)) {
 						spawn_projectile(w->c, *(w->x)+w->xoffset, *(w->y)+w->yoffset,
@@ -102,32 +107,28 @@ void update_weapons()
 								w->xv, w->yv, w->pdim, w->pdim*2, 100, w, w->damage);
 					}
 				} else {
-					w->charge += 0.5;
-					if (w->charge < 0) {
-						w->charge = 0;
-					}
-					if (w->charge > 100) {
-						w->charge = 100;
+					if (w->charge <= 99.9) {
+						w->charge += 0.1;
 					}
 				}
 			} else {
-				w->charge += 0.1;
-				if (w->charge < 0) {
-					w->charge = 0;
-				}
-				if (w->charge > 100) {
-					w->charge = 100;
-				}
 				if (w->cooldown > 0) {
 					w->cooldown--;
 				}
 				if (w->firing) {
-					if (w->charge >= 0.5) {
-						w->charge -= 0.5;
+					if (w->charge >= 5.0) {
+						w->charge -= 5.0;
 						spawn_projectile(w->c, *(w->x)+w->xoffset, *(w->y)+w->yoffset,
 								w->xv, w->yv, w->pdim, w->pdim, 100, w, w->damage);
 						Mix_PlayChannel(-1, w->sound, 0);
 						w->firing = 0;
+					}
+				} else {
+					if (w->charge <= 99.9) {
+						w->charge += 0.1;
+					} else {
+						w->firing = 0;
+						continue;
 					}
 				}
 			}
