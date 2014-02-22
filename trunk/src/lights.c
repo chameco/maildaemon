@@ -9,7 +9,9 @@
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
+#include <solid/solid.h>
 
+#include "vm.h"
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
@@ -20,16 +22,36 @@ list_node *LIGHTS;
 resource *LIGHTMAP;
 GLuint LIGHT_OVERLAY;
 
+void PAPI_make_lightsource(solid_vm *vm)
+{
+	color c = *((color *) solid_get_struct_value(solid_pop_stack(vm)));
+	int intensity = solid_get_int_value(solid_pop_stack(vm));
+	int dim = solid_get_int_value(solid_pop_stack(vm));
+	int y = solid_get_int_value(solid_pop_stack(vm));
+	int x = solid_get_int_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_struct(vm, make_lightsource(x, y, dim, intensity, c));
+}
+
+PAPI_1param(spawn_lightsource, solid_get_struct_value)
+
+void initialize_lights_api()
+{
+	solid_object *ns = make_namespace("Lights");
+	define_function(ns, "make_lightsource", PAPI_make_lightsource);
+	define_function(ns, "spawn_lightsource", PAPI_spawn_lightsource);
+}
+
 void initialize_lights()
 {
 	LIGHTS = make_list();
 	LIGHTMAP = load_resource("textures/lightmap.png");
+	initialize_lights_api();
 }
 
 void reset_lights()
 {
 	list_node *c;
-	for (c = LIGHTS->next; c->next != NULL; c = c->next) {
+	for (c = LIGHTS->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((lightsource *) c->data) != NULL) {
 			if (((lightsource *) c->data)->freeable == 1) {
 				free((lightsource *) c->data);
@@ -75,6 +97,7 @@ void draw_lights()
 	glPopMatrix();
 
 	glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
+	//glBlendFunc(GL_DST_COLOR, GL_ZERO);
 	list_node *c;
 	lightsource *l;
 	int numtimes;

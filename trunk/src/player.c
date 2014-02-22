@@ -12,6 +12,7 @@
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
+#include "vm.h"
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
@@ -47,6 +48,66 @@ color PLAYER_COLOR;
 weapon *PLAYER_WEAPONS[10] = {NULL};
 int PLAYER_WEAPON_INDEX = 0;
 
+PAPI_getter(solid_int, get_player_x)
+PAPI_getter(solid_int, get_player_y)
+PAPI_getter(solid_int, get_player_w)
+PAPI_getter(solid_int, get_player_h)
+PAPI_getter(solid_int, get_player_facing)
+
+PAPI_getter(solid_double, get_player_health)
+PAPI_getter(solid_double, get_player_max_health)
+PAPI_getter(solid_double, get_player_magic)
+PAPI_getter(solid_double, get_player_max_magic)
+PAPI_getter(solid_double, get_player_exp)
+PAPI_getter(solid_double, get_player_exp_to_next)
+
+PAPI_getter(solid_struct, get_player_weapon)
+
+PAPI_getter(solid_int, get_player_level)
+
+PAPI_1param(hit_player, solid_get_int_value)
+PAPI_1param(give_player_exp, solid_get_double_value)
+PAPI_2param(warp_player, solid_get_int_value, solid_get_int_value)
+PAPI_1param(set_player_weapon_index, solid_get_int_value)
+PAPI_2param(shoot_player_weapon, solid_get_int_value, solid_get_int_value)
+
+PAPI_1param(move_player_north, solid_get_int_value)
+PAPI_1param(move_player_south, solid_get_int_value)
+PAPI_1param(move_player_west, solid_get_int_value)
+PAPI_1param(move_player_east, solid_get_int_value)
+
+void initialize_player_api()
+{
+	solid_object *ns = make_namespace("Player");
+	define_function(ns, "get_player_x", PAPI_get_player_x);
+	define_function(ns, "get_player_y", PAPI_get_player_y);
+	define_function(ns, "get_player_w", PAPI_get_player_w);
+	define_function(ns, "get_player_h", PAPI_get_player_h);
+	define_function(ns, "get_player_facing", PAPI_get_player_facing);
+
+	define_function(ns, "get_player_health", PAPI_get_player_health);
+	define_function(ns, "get_player_max_health", PAPI_get_player_max_health);
+	define_function(ns, "get_player_magic", PAPI_get_player_magic);
+	define_function(ns, "get_player_max_magic", PAPI_get_player_max_magic);
+	define_function(ns, "get_player_exp", PAPI_get_player_exp);
+	define_function(ns, "get_player_exp_to_next", PAPI_get_player_exp_to_next);
+
+	define_function(ns, "get_player_weapon", PAPI_get_player_weapon);
+
+	define_function(ns, "get_player_level", PAPI_get_player_level);
+
+	define_function(ns, "hit_player", PAPI_hit_player);
+	define_function(ns, "give_player_exp", PAPI_give_player_exp);
+	define_function(ns, "warp_player", PAPI_warp_player);
+	define_function(ns, "set_player_weapon_index", PAPI_set_player_weapon_index);
+	define_function(ns, "shoot_player_weapon", PAPI_shoot_player_weapon);
+
+	define_function(ns, "move_player_north", PAPI_move_player_north);
+	define_function(ns, "move_player_south", PAPI_move_player_south);
+	define_function(ns, "move_player_west", PAPI_move_player_west);
+	define_function(ns, "move_player_east", PAPI_move_player_east);
+}
+
 void initialize_player()
 {
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
@@ -63,6 +124,8 @@ void initialize_player()
 	PLAYER_ALTERNATE[EAST] = load_resource("textures/player/default/ea.png");
 	PLAYER_WEAPONS[0] = make_weapon(PLAYER_COLOR, &PLAYER_X, &PLAYER_Y, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
 	PLAYER_WEAPONS[1] = make_weapon(COLOR_WHITE, &PLAYER_X, &PLAYER_Y, 8, 8, 16, 2, 100.0, 1, 1, 8, "sfx/beam.wav");
+
+	initialize_player_api();
 }
 
 void reset_player()

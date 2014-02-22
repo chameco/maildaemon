@@ -30,7 +30,7 @@ void initialize_projectile()
 void reset_projectile()
 {
 	list_node *c;
-	for (c = PROJECTILES->next; c->next != NULL; c = c->next) {
+	for (c = PROJECTILES->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((projectile *) c->data) != NULL) {
 			free((projectile *) c->data);
 		}

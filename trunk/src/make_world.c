@@ -14,8 +14,9 @@ region *room_from_file(char *path)
 {
 	int w, h;
 	double ambience;
+	int torch_intensity;
 	FILE *f = fopen(path, "r");
-	fscanf(f, "%d %d %lf\n", &w, &h, &ambience);
+	fscanf(f, "%d %d %lf %d\n", &w, &h, &ambience, &torch_intensity);
 	region *r = generate_region("", w, h);
 	r->ambience = ambience;
 	int x = 0;
@@ -28,11 +29,15 @@ region *room_from_file(char *path)
 		while (x < w) {
 			int c = fgetc(f);
 			switch (c) {
+				case ' ':
+					r->blocks[x][y] = VOID;
+					x++;
+					break;
 				case '#':
 					r->blocks[x][y] = STONE;
 					x++;
 					break;
-				case ' ':
+				case '.':
 					r->blocks[x][y] = PLANKS;
 					x++;
 					break;
@@ -45,7 +50,7 @@ region *room_from_file(char *path)
 					x++;
 					break;
 				case 'i':
-					l = make_lightsource(x*get_block_dim() - 112, y*get_block_dim() - 112, 128, 3, COLOR_WHITE);
+					l = make_lightsource(x*get_block_dim() - 112, y*get_block_dim() - 112, 128, torch_intensity, (color) {1.0, 0.7, 0.0, 1.0});
 					l->freeable = 0;
 					r->lights[r->numlights++] = *l;
 					free(l);
@@ -60,10 +65,6 @@ region *room_from_file(char *path)
 					x = w;
 					y++;
 					break;
-				default:
-					r->blocks[x][y] = VOID;
-					x++;
-					break;
 			}
 		}
 	}
@@ -76,13 +77,30 @@ void make_world()
 	w.player_x = 0;
 	w.player_y = 0;
 	warp_player(160, 160);
+
 	region *empty = room_from_file("rooms/empty");
-	add_standard_room(empty);
+	add_standard_room(EMPTY, empty);
+	region *hall_horiz = room_from_file("rooms/hall_horiz");
+	add_standard_room(HALL_HORIZ, hall_horiz);
+	region *hall_vert = room_from_file("rooms/hall_vert");
+	add_standard_room(HALL_VERT, hall_vert);
 	int x, y;
 	for (x = 0; x < WORLD_DIM; ++x) {
 		for (y = 0; y < WORLD_DIM; ++y) {
 			w.regions[x][y] = generate_region("Name", 0, 0);
-			populate_region(w.regions[x][y], 0);
+			if (x % 2 == 0) {
+				if (y % 2 == 0) {
+					populate_region(w.regions[x][y], EMPTY);
+				} else {
+					populate_region(w.regions[x][y], HALL_VERT);
+				}
+			} else {
+				if (y % 2 == 0) {
+					populate_region(w.regions[x][y], HALL_HORIZ);
+				} else {
+					populate_region(w.regions[x][y], EMPTY);
+				}
+			}
 		}
 	}
 	save_world(&w);

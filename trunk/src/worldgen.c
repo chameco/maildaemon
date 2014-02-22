@@ -7,12 +7,17 @@
 
 #include <cuttle/debug.h>
 
+#include "vm.h"
 #include "player.h"
 #include "entity.h"
 #include "lights.h"
 #include "fx.h" 
+
 region *STANDARD_ROOMS[32];
-int STANDARD_ROOMS_INDEX = 0;
+
+PAPI_1param(save_world, solid_get_struct_value)
+PAPI_getter(solid_struct, load_world)
+PAPI_1param(unload_world, solid_get_struct_value)
 
 void save_world(world *w)
 {
@@ -134,9 +139,9 @@ region *generate_region(char *name, int width, int height)
 	return ret;
 }
 
-void add_standard_room(region *r)
+void add_standard_room(room_type rt, region *r)
 {
-	STANDARD_ROOMS[STANDARD_ROOMS_INDEX++] = r;
+	STANDARD_ROOMS[rt] = r;
 }
 
 void populate_region(region *r, int rtype)

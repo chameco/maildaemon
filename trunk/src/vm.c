@@ -30,9 +30,14 @@ void initialize_vm()
 
 solid_object *make_namespace(char *name)
 {
-	solid_object *ns = solid_clone_object(VM->namespace_stack[VM->namespace_stack_pointer]);
-	solid_set_namespace(solid_get_current_namespace(VM), solid_str(name), ns);
+	solid_object *ns = solid_clone_object(VM, VM->namespace_stack[VM->namespace_stack_pointer]);
+	solid_set_namespace(solid_get_current_namespace(VM), solid_str(VM, name), ns);
 	return ns;
+}
+
+void define_function(solid_object *ns, char *name, void(*f)(solid_vm *vm))
+{
+	solid_set_namespace(ns, solid_str(VM, name), solid_define_c_function(VM, f));
 }
 
 solid_vm *get_vm()
@@ -42,16 +47,16 @@ solid_vm *get_vm()
 
 solid_object *load_module(char *path)
 {
-	solid_object *func = solid_parse_tree(solid_parse_file(path));
+	solid_object *func = solid_parse_tree(VM, solid_parse_file(path));
 	solid_call_func(VM, func);
-	solid_delete_object(func);
+	solid_delete_object(VM, func);
 	return VM->regs[255];
 }
 
 solid_object *run_code(char *code)
 {
-	solid_object *func = solid_parse_tree(solid_parse_expr(code));
+	solid_object *func = solid_parse_tree(VM, solid_parse_expr(code));
 	solid_call_func(VM, func);
-	solid_delete_object(func);
+	solid_delete_object(VM, func);
 	return VM->regs[255];
 }

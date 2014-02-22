@@ -1,5 +1,5 @@
 CC = gcc
-OBJECTS = src/resources.o src/game.o src/worldgen.o src/weapon.o src/level.o src/lights.o src/player.o src/entity.o src/ai.o src/utils.o src/projectile.o src/gui.o src/fx.o
+OBJECTS = src/vm.o src/resources.o src/game.o src/worldgen.o src/weapon.o src/level.o src/lights.o src/player.o src/entity.o src/ai.o src/utils.o src/projectile.o src/gui.o src/fx.o
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = cp -r
@@ -12,8 +12,8 @@ libdir = $(exec_prefix)/lib
 CFLAGS = -Iinclude -std=c99 -g -Wall -Werror
 
 all: src/main.o src/make_world.o $(OBJECTS)
-	$(CC) src/main.o $(OBJECTS) -lm -lcuttle -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o maildaemon
-	$(CC) src/make_world.o $(OBJECTS) -lm -lcuttle -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o make_world
+	$(CC) src/main.o $(OBJECTS) -lm -lcuttle -lsolid -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o maildaemon
+	$(CC) src/make_world.o $(OBJECTS) -lm -lcuttle -lsolid -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o make_world
 install:
 	$(INSTALL_PROGRAM) maildaemon $(DESTDIR)$(bindir)/maildaemon
 	mkdir -p $(DESTDIR)$(datadir)/maildaemon

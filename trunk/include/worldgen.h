@@ -7,6 +7,12 @@
 
 #define WORLD_DIM 100
 
+typedef enum room_type {
+	EMPTY,
+	HALL_HORIZ,
+	HALL_VERT
+} room_type;
+
 typedef enum block {
 	VOID,
 	SNOW,
@@ -24,7 +30,7 @@ typedef struct region {
 	char name[256];
 	int width, height;
 	double ambience;
-	block blocks[10][10];
+	block blocks[20][20];
 	int numentities;
 	entity entities[10];
 	int numlights;
@@ -52,7 +58,7 @@ void unload_region(world *w, int x, int y);
 
 region *generate_region(char *name, int width, int height);
 void populate_region(region *r, int rtype);
-void add_standard_room(region *r);
+void add_standard_room(room_type rt, region *r);
 
 int is_solid_block(region *r, int x, int y);
 void set_current_region(world *w, int x, int y);

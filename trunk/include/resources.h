@@ -11,10 +11,6 @@ typedef struct resource {
 	GLuint vertex_handler;
 } resource;
 
-typedef struct sound {
-	Mix_Chunk *sound;
-} sound;
-
 GLuint surface_to_texture(SDL_Surface *s);
 
 resource *load_resource(char *path);

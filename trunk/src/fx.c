@@ -15,6 +15,7 @@
 #include <cuttle/utils.h>
 
 list_node *EFFECTS;
+list_node *GLOBAL_EFFECTS;
 int PARTICLE_WIDTH = 2;
 int PARTICLE_HEIGHT = 2;
 vertex EFFECT_VERTICES[4];
@@ -24,6 +25,7 @@ Mix_Chunk *EXPLOSION_SOUND;
 void initialize_fx()
 {
 	EFFECTS = make_list();
+	GLOBAL_EFFECTS = make_list();
 	EXPLOSION_SOUND = Mix_LoadWAV("sfx/explode.wav");
 
 	EFFECT_VERTICES[0].x = 0;
@@ -46,14 +48,16 @@ void initialize_fx()
 void reset_fx()
 {
 	list_node *c;
-	for (c = EFFECTS->next; c->next != NULL; c = c->next) {
+	for (c = EFFECTS->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((effect *) c->data) != NULL) {
 			if (((effect *) c->data)->freeable == 1) {
 				free((effect *) c->data);
 			}
 		}
 	}
+	for (c = GLOBAL_EFFECTS->next; c->next != NULL; c = c->next, free(c->prev)) {}
 	EFFECTS = make_list();
+	GLOBAL_EFFECTS = make_list();
 }
 
 effect *make_fx(etype type, color col,
@@ -62,8 +66,7 @@ effect *make_fx(etype type, color col,
 {
 	effect *e = (effect *) malloc(sizeof(effect));
 	e->type = type;
-	e->c = col;
-	e->x = x;
+	e->c = col; e->x = x;
 	e->y = y;
 	e->dim = dim;
 	e->radius = radius;
@@ -71,11 +74,6 @@ effect *make_fx(etype type, color col,
 	e->cur = 0;
 	e->statelen = 30;
 	e->freeable = 1;
-	return e;
-}
-
-void spawn_fx(effect *e)
-{
 	int c;
 	switch (e->type) {
 		case EXPLOSION:
@@ -109,14 +107,44 @@ void spawn_fx(effect *e)
 			}
 			break;
 	}
+	return e;
+}
+
+void spawn_fx(effect *e)
+{
 	insert_list(EFFECTS, (void *) e);
+}
+
+global_effect *make_global_fx(void (*callback)(), int timer)
+{
+	global_effect *ge = (global_effect *) malloc(sizeof(global_effect));
+	ge->callback = callback;
+	ge->timer = timer;
+	return ge;
+}
+
+void spawn_global_fx(global_effect *e)
+{
+	insert_list(GLOBAL_EFFECTS, (void *) e);
 }
 
 void update_fx()
 {
 	list_node *c;
 	effect *e;
+	global_effect *ge;
 	int counter;
+	for (c = GLOBAL_EFFECTS->next; c->next != NULL; c = c->next) {
+		ge = (global_effect *) c->data;
+		if (ge != NULL) {
+			ge->timer -= 1;
+			if (ge->timer <= 0) {
+				c->prev->next = c->next;
+				c->next->prev = c->prev;
+				free(c);
+			}
+		}
+	}
 	for (c = EFFECTS->next; c->next != NULL; c = c->next) {
 		e = (effect *) c->data;
 		if (e != NULL) {
@@ -124,7 +152,9 @@ void update_fx()
 				case EXPLOSION:
 					e->cur += e->speed;
 					if (e->cur >= e->radius) {
-						remove_list(EFFECTS, c->data);
+						c->prev->next = c->next;
+						c->next->prev = c->prev;
+						free(c);
 						if (e->freeable != 0) {
 							free(e);
 						}
@@ -163,7 +193,9 @@ void update_fx()
 				case SMOKE:
 					e->cur += e->speed;
 					if (e->cur >= 100) {
-						remove_list(EFFECTS, c->data);
+						c->prev->next = c->next;
+						c->next->prev = c->prev;
+						free(c);
 						if (e->freeable != 0) {
 							free(e);
 						}
@@ -185,6 +217,16 @@ void update_fx()
 					}
 					break;
 			}
+		}
+	}
+}
+
+void apply_global_fx()
+{
+	list_node *c;
+	for (c = GLOBAL_EFFECTS->next; c->next != NULL; c = c->next) {
+		if (c->data != NULL) {
+			((global_effect *) c->data)->callback();
 		}
 	}
 }

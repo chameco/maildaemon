@@ -13,6 +13,7 @@
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
+#include "vm.h"
 #include "utils.h"
 #include "resources.h"
 #include "worldgen.h"
@@ -35,6 +36,7 @@ mode CURRENT_MODE = MAIN_MENU_MODE;
 int LAST_TIME = 0;
 int CURRENT_TIME = 0;
 int DIALOG_TICKS = 0;
+Mix_Chunk *BLIP_SOUND;
 
 void initialize_game()
 {
@@ -77,7 +79,9 @@ void initialize_game()
 	IMG_Init(IMG_INIT_PNG);
 
 	Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
+	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
 
+	initialize_vm();
 	initialize_utils();
 	initialize_weapons();
 	initialize_lights();
@@ -88,6 +92,8 @@ void initialize_game()
 	initialize_fx();
 	initialize_level();
 	initialize_gui();
+
+	run_code("Lights.spawn_lightsource(Lights.make_lightsource(-112, -112, 128, 3, Utils.color_red()));");
 
 	set_current_dialog("Hello");
 }
@@ -261,6 +267,11 @@ int draw_main_menu_loop()
 	return 1;
 }
 
+void global_effect_shake()
+{
+	glTranslatef(rand() % 10, rand() % 10, 0);
+}
+
 int draw_main_loop()
 {
 	int pressed;
@@ -292,7 +303,12 @@ int draw_main_loop()
 					} else if (event.key.keysym.sym == SDLK_RIGHT) {
 						shoot_player_weapon(pressed, EAST);
 					} else if (event.key.keysym.sym == SDLK_SPACE) {
-						set_current_dialog(NULL);
+						if (pressed && get_current_dialog() != NULL) {
+							set_current_dialog(NULL);
+							Mix_PlayChannel(-1, BLIP_SOUND, 0);
+						}
+					} else if (event.key.keysym.sym == SDLK_o) {
+						spawn_global_fx(make_global_fx(global_effect_shake, 10));
 					} else if (event.key.keysym.sym == SDLK_0) {
 						set_player_weapon_index(0);
 					} else if (event.key.keysym.sym == SDLK_1) {
@@ -339,6 +355,8 @@ int draw_main_loop()
 	glPushMatrix();
 
 	glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
+
+	apply_global_fx();
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
