@@ -39,7 +39,8 @@ flags = [
 '-Werror',
 '-Iinclude',
 '-I.',
-'-I/usr/local/include',
+'-I/usr/include/guile/2.0',
+'-pthread',
 '-DNDEBUG',
 '-DUSE_CLANG_COMPLETER',
 # THIS IS IMPORTANT! Without a "-std=<something>" flag, clang won't know which

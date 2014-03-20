@@ -5,9 +5,6 @@
 #include "utils.h"
 #include "player.h"
 #include "worldgen.h"
-#include "entity.h"
-#include "lights.h"
-#include "fx.h"
 #include "level.h"
 
 region *room_from_file(char *path)
@@ -21,9 +18,7 @@ region *room_from_file(char *path)
 	r->ambience = ambience;
 	int x = 0;
 	int y = 0;
-	entity *e;
-	lightsource *l;
-	effect *fx;
+	char sprintf_fodder[256];
 	while (y < h) {
 		x = 0;
 		while (x < w) {
@@ -42,22 +37,16 @@ region *room_from_file(char *path)
 					x++;
 					break;
 				case 'W':
-					e = make_entity(1, x*get_block_dim(), y*get_block_dim(), 32, 32, NULL, 10, 4, 100.0);
-					e->freeable = 0;
-					r->entities[r->numentities++] = *e;
-					free(e);
+					sprintf(sprintf_fodder, "Scripts.Entity.Wizard.make(%d, %d);", x*get_block_dim(), y*get_block_dim());
+					strcpy(r->entities[r->numentities++], sprintf_fodder);
 					r->blocks[x][y] = PLANKS;
 					x++;
 					break;
 				case 'i':
-					l = make_lightsource(x*get_block_dim() - 112, y*get_block_dim() - 112, 128, torch_intensity, (color) {1.0, 0.7, 0.0, 1.0});
-					l->freeable = 0;
-					r->lights[r->numlights++] = *l;
-					free(l);
-					fx = make_fx(SMOKE_CONST, COLOR_GRAY, x*get_block_dim() + 16, y*get_block_dim(), 10, 50, 4);
-					fx->freeable = 0;
-					r->fx[r->numfx++] = *fx;
-					free(fx);
+					sprintf(sprintf_fodder, "Lights.make(%d, %d, 128, %d, Utils.color_white());", x*get_block_dim() - 112, y*get_block_dim() - 112, torch_intensity);
+					strcpy(r->lights[r->numlights++], sprintf_fodder);
+					sprintf(sprintf_fodder, "Fx.make(1, Utils.color_gray(), %d, %d, 10, 50, 4);", x*get_block_dim() + 16, y*get_block_dim());
+					strcpy(r->fx[r->numfx++], sprintf_fodder);
 					r->blocks[x][y] = TORCH;
 					x++;
 					break;
@@ -85,9 +74,11 @@ void make_world()
 	region *hall_vert = room_from_file("rooms/hall_vert");
 	add_standard_room(HALL_VERT, hall_vert);
 	int x, y;
+	char sprintf_fodder[256];
 	for (x = 0; x < WORLD_DIM; ++x) {
 		for (y = 0; y < WORLD_DIM; ++y) {
-			w.regions[x][y] = generate_region("Name", 0, 0);
+			sprintf(sprintf_fodder, "%d, %d", x, y);
+			w.regions[x][y] = generate_region(sprintf_fodder, 0, 0);
 			if (x % 2 == 0) {
 				if (y % 2 == 0) {
 					populate_region(w.regions[x][y], EMPTY);

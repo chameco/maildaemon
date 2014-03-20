@@ -1,14 +1,30 @@
 #ifndef PURGE_LEVEL_H
 #define PURGE_LEVEL_H
 #include "utils.h"
-#include "worldgen.h"
 
-world *get_world();
+#define TILE_DIM 32
+#define LEVEL_MAX_DIM 20
 
-int get_block_dim();
+typedef enum tile {
+	PLANKS,
+	VOID,
+	SNOW,
+	GRASS,
+	SAND,
+	STONE,
+	SHRUB,
+	TORCH
+} tile;
+
+typedef struct level {
+	tile tiles[LEVEL_MAX_DIM][LEVEL_MAX_DIM];
+	char *name;
+	double ambience;
+} level;
+
 void initialize_level();
-void reset_level();
-void change_current_region(int rx, int ry, direction d);
-void update_level();
+level *load_level(char *path);
+level *get_current_level();
+int is_solid_tile(int x, int y);
 void draw_level();
 #endif

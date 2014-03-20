@@ -28,6 +28,6 @@ void move_player_north(int pressed);
 void move_player_south(int pressed);
 void move_player_west(int pressed);
 void move_player_east(int pressed);
-mode update_player();
+void update_player();
 void draw_player();
 #endif

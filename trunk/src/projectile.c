@@ -12,7 +12,6 @@
 #include <cuttle/utils.h>
 
 #include "utils.h"
-#include "worldgen.h"
 #include "player.h"
 #include "entity.h"
 #include "level.h"
@@ -107,18 +106,17 @@ void check_projectile_collisions(projectile *p)
 
 	}
 
-	int blockdim = get_block_dim();
-	int xmin = (p->x/blockdim)-2;
-	int ymin = (p->y/blockdim)-2;
-	int xmax = (p->x/blockdim)+2;
-	int ymax = (p->y/blockdim)+2;
+	int xmin = (p->x/TILE_DIM)-2;
+	int ymin = (p->y/TILE_DIM)-2;
+	int xmax = (p->x/TILE_DIM)+2;
+	int ymax = (p->y/TILE_DIM)+2;
 	int x, y;
 	for (x = xmin; x <= xmax; x++) {
 		for (y = ymin; y <= ymax; y++) {
-			if (is_solid_block(get_current_region(get_world()), x, y)) {
+			if (is_solid_tile(x, y)) {
 				b.x = x*32;
 				b.y = y*32;
-				b.w = b.h = blockdim;
+				b.w = b.h = TILE_DIM;
 				if (!check_collision(a, b)) {
 					destroy_projectile(p);
 					return;

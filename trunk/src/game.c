@@ -16,7 +16,6 @@
 #include "vm.h"
 #include "utils.h"
 #include "resources.h"
-#include "worldgen.h"
 #include "entity.h"
 #include "weapon.h"
 #include "level.h"
@@ -83,6 +82,7 @@ void initialize_game()
 
 	initialize_vm();
 	initialize_utils();
+	initialize_level();
 	initialize_weapons();
 	initialize_lights();
 	initialize_entity();
@@ -90,10 +90,8 @@ void initialize_game()
 	initialize_player();
 	initialize_projectile();
 	initialize_fx();
-	initialize_level();
-	initialize_gui();
 
-	run_code("Lights.spawn_lightsource(Lights.make_lightsource(-112, -112, 128, 3, Utils.color_red()));");
+	initialize_gui();
 
 	set_current_dialog("Hello");
 }
@@ -150,6 +148,11 @@ void take_screenshot(char *path)
 	SDL_FreeSurface(image);
 }
 
+void set_mode(mode m)
+{
+	CURRENT_MODE = m;
+}
+
 void reset_game()
 {
 	reset_lights();
@@ -157,7 +160,6 @@ void reset_game()
 	reset_player();
 	reset_projectile();
 	reset_fx();
-	reset_level();
 }
 
 void main_game_loop()
@@ -180,7 +182,6 @@ void main_game_loop()
 				break;
 		}
 	}
-	unload_world(get_world());
 }
 
 void draw_title_loop()
@@ -339,12 +340,11 @@ int draw_main_loop()
 	}
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 40) {
-		CURRENT_MODE = update_player();
+		update_player();
 		update_ai();
 		update_entity();
 		update_weapons();
 		update_projectile();
-		update_level();
 		update_fx();
 		update_gui();
 		LAST_TIME = CURRENT_TIME;

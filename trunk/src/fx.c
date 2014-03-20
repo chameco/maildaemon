@@ -14,6 +14,9 @@
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
+#include "vm.h"
+#include "utils.h"
+
 list_node *EFFECTS;
 list_node *GLOBAL_EFFECTS;
 int PARTICLE_WIDTH = 2;
@@ -50,9 +53,7 @@ void reset_fx()
 	list_node *c;
 	for (c = EFFECTS->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((effect *) c->data) != NULL) {
-			if (((effect *) c->data)->freeable == 1) {
-				free((effect *) c->data);
-			}
+			free((effect *) c->data);
 		}
 	}
 	for (c = GLOBAL_EFFECTS->next; c->next != NULL; c = c->next, free(c->prev)) {}
@@ -73,7 +74,6 @@ effect *make_fx(etype type, color col,
 	e->speed = speed;
 	e->cur = 0;
 	e->statelen = 30;
-	e->freeable = 1;
 	int c;
 	switch (e->type) {
 		case EXPLOSION:
@@ -155,9 +155,7 @@ void update_fx()
 						c->prev->next = c->next;
 						c->next->prev = c->prev;
 						free(c);
-						if (e->freeable != 0) {
-							free(e);
-						}
+						free(e);
 					} else {
 						for (counter = 0; counter < e->statelen; counter++) {
 							if (!(e->state[counter][2] == 0 && e->state[counter][3] == 0)) {
@@ -196,9 +194,7 @@ void update_fx()
 						c->prev->next = c->next;
 						c->next->prev = c->prev;
 						free(c);
-						if (e->freeable != 0) {
-							free(e);
-						}
+						free(e);
 					} else {
 						for (counter = 0; counter < e->statelen; counter++) {
 							if (e->state[counter][4]) {

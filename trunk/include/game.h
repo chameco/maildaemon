@@ -11,6 +11,7 @@ typedef enum mode {
 void initialize_game();
 void initGL();
 void take_screenshot(char *path);
+void set_mode(mode m);
 void reset_game();
 void main_game_loop();
 void draw_title_loop();

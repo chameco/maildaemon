@@ -14,7 +14,6 @@
 
 #include "utils.h"
 #include "resources.h"
-#include "worldgen.h"
 #include "level.h"
 #include "player.h"
 
@@ -233,8 +232,8 @@ void draw_gui()
 		BELIEVED_CURRENT_PLAYER_LEVEL = get_player_level();
 		sprintf(CURRENT_PLAYER_LEVEL_TEXT, "lvl %d", BELIEVED_CURRENT_PLAYER_LEVEL);
 	}
-	if (strcmp(CURRENT_LEVEL_TEXT, get_current_region(get_world())->name) != 0) {
-		char *buffer =  get_current_region(get_world())->name;
+	if (strcmp(CURRENT_LEVEL_TEXT, get_current_level()->name) != 0) {
+		char *buffer =  get_current_level()->name;
 		strncpy(CURRENT_LEVEL_TEXT, buffer, 256);
 	}
 

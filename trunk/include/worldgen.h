@@ -5,7 +5,7 @@
 #include "lights.h"
 #include "fx.h"
 
-#define WORLD_DIM 100
+#define WORLD_DIM 10
 
 typedef enum room_type {
 	EMPTY,
@@ -32,11 +32,11 @@ typedef struct region {
 	double ambience;
 	block blocks[20][20];
 	int numentities;
-	entity entities[10];
+	char entities[10][512];
 	int numlights;
-	lightsource lights[10];
+	char lights[10][512];
 	int numfx;
-	effect fx[10];
+	char fx[10][512];
 } region;
 
 typedef struct world {

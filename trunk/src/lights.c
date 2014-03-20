@@ -9,12 +9,10 @@
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
-#include <solid/solid.h>
 
 #include "vm.h"
 #include "utils.h"
 #include "resources.h"
-#include "worldgen.h"
 #include "level.h"
 
 list_node *LIGHTS;
@@ -22,30 +20,10 @@ list_node *LIGHTS;
 resource *LIGHTMAP;
 GLuint LIGHT_OVERLAY;
 
-void PAPI_make_lightsource(solid_vm *vm)
-{
-	color c = *((color *) solid_get_struct_value(solid_pop_stack(vm)));
-	int intensity = solid_get_int_value(solid_pop_stack(vm));
-	int dim = solid_get_int_value(solid_pop_stack(vm));
-	int y = solid_get_int_value(solid_pop_stack(vm));
-	int x = solid_get_int_value(solid_pop_stack(vm));
-	vm->regs[255] = solid_struct(vm, make_lightsource(x, y, dim, intensity, c));
-}
-
-PAPI_1param(spawn_lightsource, solid_get_struct_value)
-
-void initialize_lights_api()
-{
-	solid_object *ns = make_namespace("Lights");
-	define_function(ns, "make_lightsource", PAPI_make_lightsource);
-	define_function(ns, "spawn_lightsource", PAPI_spawn_lightsource);
-}
-
 void initialize_lights()
 {
 	LIGHTS = make_list();
 	LIGHTMAP = load_resource("textures/lightmap.png");
-	initialize_lights_api();
 }
 
 void reset_lights()
@@ -53,9 +31,7 @@ void reset_lights()
 	list_node *c;
 	for (c = LIGHTS->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((lightsource *) c->data) != NULL) {
-			if (((lightsource *) c->data)->freeable == 1) {
-				free((lightsource *) c->data);
-			}
+			free((lightsource *) c->data);
 		}
 	}
 	LIGHTS = make_list();
@@ -69,7 +45,6 @@ lightsource *make_lightsource(int x, int y, int dim, int intensity, color c)
 	l->dim = dim;
 	l->intensity = intensity;
 	l->c = c;
-	l->freeable = 1;
 	return l;
 }
 
@@ -81,12 +56,12 @@ void spawn_lightsource(lightsource *l)
 void draw_lights()
 {
 	int w, h;
-	w = get_current_region(get_world())->width * get_block_dim() + 128;
-	h = get_current_region(get_world())->height * get_block_dim() + 128;
+	w = LEVEL_MAX_DIM * TILE_DIM + 128;
+	h = LEVEL_MAX_DIM * TILE_DIM + 128;
 
 	glPushMatrix();
 	glTranslatef(-64, -64, 0);
-	glColor4f(0, 0, 0, get_current_region(get_world())->ambience);
+	glColor4f(0, 0, 0, get_current_level()->ambience);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBegin(GL_QUADS);
 		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);

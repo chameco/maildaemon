@@ -14,7 +14,6 @@
 
 #include "utils.h"
 #include "gui.h"
-#include "worldgen.h"
 #include "level.h"
 #include "player.h"
 #include "entity.h"

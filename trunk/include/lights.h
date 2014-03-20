@@ -5,7 +5,6 @@
 typedef struct lightsource {
 	int x, y, dim, intensity;
 	color c;
-	int freeable;
 } lightsource;
 
 void initialize_lights();

@@ -102,16 +102,17 @@ void load_region_assets(region *r)
 {
 	int i;
 	for (i = 0; i < r->numentities; i++) {
-		entity *e = &(r->entities[i]);
+		entity *e = (entity *) run_code(r->entities[i])->data;
 		spawn_entity(e);
-		e->weapon = make_weapon(COLOR_GREEN, &(e->x), &(e->y), 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
+		e->weapon = make_weapon(COLOR_GREEN, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
+		give_entity_weapon(e, e->weapon);
 	}
 	for (i = 0; i < r->numlights; i++) {
-		lightsource *l = &(r->lights[i]);
+		lightsource *l = (lightsource *) run_code(r->lights[i])->data;
 		spawn_lightsource(l);
 	}
 	for (i = 0; i < r->numfx; i++) {
-		effect *fx = &(r->fx[i]);
+		effect *fx = (effect *) run_code(r->fx[i])->data;
 		spawn_fx(fx);
 	}
 }

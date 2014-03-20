@@ -21,7 +21,7 @@ typedef struct weapon {
 } weapon;
 
 void initialize_weapons();
-weapon *make_weapon(color c, int *x, int *y, int xoffset, int yoffset,
+weapon *make_weapon(color c, int xoffset, int yoffset,
 		int speed, int damage, double max_charge, int isbeam, int bullets_per_volley,
 		int pdim, char *sfx_path);
 void press_trigger(weapon *w, direction d);

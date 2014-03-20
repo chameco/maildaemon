@@ -1,7 +1,7 @@
 #ifndef PURGE_ENTITY_H
 #define PURGE_ENTITY_H
 #include <cuttle/utils.h>
-#include <solid/solid.h>
+#include <libguile.h>
 #include "utils.h"
 #include "weapon.h"
 
@@ -12,10 +12,6 @@ typedef struct entity {
 	weapon *weapon;
 	int health, speed;
 	double expval;
-	solid_object *on_hit;
-	solid_object *on_collide;
-	solid_object *on_update;
-	int freeable;
 } entity;
 
 void initialize_entity();
@@ -27,6 +23,7 @@ entity *make_entity(int id, int x, int y, int w, int h,
 void spawn_entity(entity *e);
 void hit_entity(entity *e, int dmg);
 void collide_entity(entity *e);
+void give_entity_weapon(entity *e, weapon *w);
 void move_entity(entity *e, direction d);
 void update_entity();
 void draw_entity();
