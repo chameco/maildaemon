@@ -8,7 +8,6 @@
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
-#include "vm.h"
 #include "utils.h"
 #include "resources.h"
 #include "lights.h"
@@ -43,6 +42,7 @@ level *load_level(char *path)
 		}
 	}
 	ret->name = "test";
+	ret->ambience = 0.75;
 	return ret;
 }
 

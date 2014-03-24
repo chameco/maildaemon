@@ -6,11 +6,11 @@
 #include <string.h>
 
 #include <GL/glew.h>
+#include <libguile.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
-#include "vm.h"
 #include "utils.h"
 #include "resources.h"
 #include "level.h"
@@ -20,10 +20,30 @@ list_node *LIGHTS;
 resource *LIGHTMAP;
 GLuint LIGHT_OVERLAY;
 
+static scm_t_bits __api_lightsource_tag;
+
+SCM __api_make_lightsource(SCM x, SCM y, SCM dim, SCM intensity, SCM c)
+{
+	color *col = (color *) SCM_SMOB_DATA(c);
+	lightsource *l = make_lightsource(scm_to_int(x), scm_to_int(y), scm_to_int(dim), scm_to_int(intensity), *col);
+	return scm_new_smob(__api_lightsource_tag, (unsigned long) l);
+}
+
+SCM __api_spawn_lightsource(SCM l)
+{
+	lightsource *light = (lightsource *) SCM_SMOB_DATA(l);
+	spawn_lightsource(light);
+	return SCM_BOOL_T;
+}
+
 void initialize_lights()
 {
 	LIGHTS = make_list();
 	LIGHTMAP = load_resource("textures/lightmap.png");
+
+	__api_lightsource_tag = scm_make_smob_type("lightsource", sizeof(lightsource));
+	scm_c_define_gsubr("make-lightsource", 5, 0, 0, __api_make_lightsource);
+	scm_c_define_gsubr("spawn-lightsource", 1, 0, 0, __api_spawn_lightsource);
 }
 
 void reset_lights()
@@ -39,7 +59,7 @@ void reset_lights()
 
 lightsource *make_lightsource(int x, int y, int dim, int intensity, color c)
 {
-	lightsource *l = (lightsource *) malloc(sizeof(lightsource));
+	lightsource *l = (lightsource *) scm_gc_malloc(sizeof(lightsource), "lightsource");
 	l->x = x;
 	l->y = y;
 	l->dim = dim;

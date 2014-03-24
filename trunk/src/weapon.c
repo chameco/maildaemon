@@ -1,19 +1,53 @@
 #include "weapon.h"
 
 #include <SDL2/SDL_mixer.h>
+#include <libguile.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
-#include "vm.h"
 #include "utils.h"
 #include "projectile.h"
 
 list_node *WEAPONS;
 
+scm_t_bits __api_weapon_tag;
+
+SCM __api_make_weapon(SCM c, SCM xoffset, SCM yoffset,
+		SCM speed, SCM damage, SCM max_charge, SCM isbeam, SCM bullets_per_volley,
+		SCM pdim, SCM sfx_path)
+{
+	color *col = (color *) SCM_SMOB_DATA(c);
+	char *sfxp = scm_to_locale_string(sfx_path);
+	weapon *w = make_weapon(*col, scm_to_int(xoffset), scm_to_int(yoffset),
+			scm_to_int(speed), scm_to_int(damage), scm_to_double(max_charge),
+			scm_to_int(isbeam), scm_to_int(bullets_per_volley), scm_to_int(pdim), sfxp);
+	free(sfxp);
+	return scm_new_smob(__api_weapon_tag, (unsigned long) w);
+}
+
+SCM __api_press_trigger(SCM w, SCM d)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	press_trigger(weap, scm_to_int(d));
+	return SCM_BOOL_T;
+}
+
+SCM __api_release_trigger(SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	release_trigger(weap);
+	return SCM_BOOL_T;
+}
+
 void initialize_weapons()
 {
 	WEAPONS = make_list();
+
+	__api_weapon_tag = scm_make_smob_type("weapon", sizeof(weapon));
+	scm_c_define_gsubr("make-weapon", 10, 0, 0, __api_make_weapon);
+	scm_c_define_gsubr("press-trigger", 2, 0, 0, __api_press_trigger);
+	scm_c_define_gsubr("release-trigger", 1, 0, 0, __api_release_trigger);
 }
 
 weapon *make_weapon(color c, int xoffset, int yoffset,

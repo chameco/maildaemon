@@ -10,6 +10,8 @@ typedef enum mode {
 
 void initialize_game();
 void initGL();
+char *get_current_dialog();
+void set_current_dialog(char *text);
 void take_screenshot(char *path);
 void set_mode(mode m);
 void reset_game();

@@ -8,6 +8,7 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <libguile.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -27,12 +28,50 @@ int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
 SDL_Surface *BITMAP = NULL;
 GLuint BITMAP_FONT[4][26] = {{0}};
 
+SCM __api_render_text_bitmap(SCM x, SCM y, SCM text, SCM size)
+{
+	char *t = scm_to_locale_string(text);
+	render_text_bitmap(scm_to_int(x), scm_to_int(y), t, scm_to_double(size));
+	free(t);
+	return SCM_BOOL_T;
+}
+
+SCM __api_draw_button(SCM text, SCM x, SCM y)
+{
+	char *t = scm_to_locale_string(text);
+	draw_button(t, scm_to_int(x), scm_to_int(y));
+	free(t);
+	return SCM_BOOL_T;
+}
+
+SCM __api_draw_dialog_box(SCM text, SCM x, SCM y)
+{
+	char *t = scm_to_locale_string(text);
+	draw_dialog_box(t, scm_to_int(x), scm_to_int(y));
+	free(t);
+	return SCM_BOOL_T;
+}
+
+SCM __api_draw_meter(SCM text, SCM x, SCM y, SCM c, SCM full)
+{
+	char *t = scm_to_locale_string(text);
+	color *col = (color *) SCM_SMOB_DATA(c);
+	draw_meter(t, scm_to_int(x), scm_to_int(y), *col, scm_to_int(full));
+	free(t);
+	return SCM_BOOL_T;
+}
+
 void initialize_gui()
 {
 	BUTTON_BACKGROUND = load_resource("textures/gui/buttontemplate.png");
 	DIALOG_BOX_BACKGROUND = load_resource("textures/gui/dialogtemplate.png");
 	METER_BACKGROUND = load_resource("textures/gui/meter.png");
 	load_bitmap_font("fonts/font.png");
+
+	scm_c_define_gsubr("render-text-bitmap", 4, 0, 0, __api_render_text_bitmap);
+	scm_c_define_gsubr("draw-button", 3, 0, 0, __api_draw_button);
+	scm_c_define_gsubr("draw-dialog-box", 3, 0, 0, __api_draw_dialog_box);
+	scm_c_define_gsubr("draw-meter", 5, 0, 0, __api_draw_meter);
 }
 
 void load_bitmap_font(char *path)

@@ -24,18 +24,6 @@ ai_handler *AI_AMBLE;
 ai_handler *AI_TRACK;
 ai_handler *AI_SENTRY;
 
-char *CURRENT_DIALOG = NULL;
-
-char *get_current_dialog()
-{
-	return CURRENT_DIALOG;
-}
-
-void set_current_dialog(char *text)
-{
-	CURRENT_DIALOG = text;
-}
-
 ai_handler *get_ai_handler(int entityid)
 {
 	return AI_HANDLERS[entityid];

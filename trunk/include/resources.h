@@ -13,6 +13,8 @@ typedef struct resource {
 
 GLuint surface_to_texture(SDL_Surface *s);
 
+void initialize_resources();
+
 resource *load_resource(char *path);
 void draw_resource(resource *r, int x, int y);
 void free_resource(resource *r);

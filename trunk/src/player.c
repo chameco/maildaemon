@@ -12,7 +12,6 @@
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
-#include "vm.h"
 #include "utils.h"
 #include "resources.h"
 #include "entity.h"

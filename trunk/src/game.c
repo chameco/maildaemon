@@ -1,27 +1,27 @@
 #include "game.h"
 
-#include <GL/glew.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_mixer.h>
-
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
+#include <libguile.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
-#include "vm.h"
 #include "utils.h"
 #include "resources.h"
+#include "repl.h"
 #include "entity.h"
 #include "weapon.h"
 #include "level.h"
 #include "lights.h"
 #include "player.h"
-#include "ai.h"
 #include "projectile.h"
 #include "gui.h"
 #include "fx.h"
@@ -34,6 +34,7 @@ int GAME_OVER = 0;
 mode CURRENT_MODE = MAIN_MENU_MODE;
 int LAST_TIME = 0;
 int CURRENT_TIME = 0;
+char *CURRENT_DIALOG = NULL;
 int DIALOG_TICKS = 0;
 Mix_Chunk *BLIP_SOUND;
 
@@ -80,18 +81,20 @@ void initialize_game()
 	Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
 	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
 
-	initialize_vm();
 	initialize_utils();
+	initialize_resources();
+	initialize_repl();
 	initialize_level();
 	initialize_weapons();
 	initialize_lights();
 	initialize_entity();
-	initialize_ai();
 	initialize_player();
 	initialize_projectile();
 	initialize_fx();
-
 	initialize_gui();
+
+	//scm_c_eval_string("(spawn-lightsource (make-lightsource 100 100 128 2 (make-color 0 1 0 1)))");
+	scm_c_eval_string("(spawn-entity (make-entity 0 128 128 32 32 10 0 40))");
 
 	set_current_dialog("Hello");
 }
@@ -125,6 +128,17 @@ void initGL()
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
+
+char *get_current_dialog()
+{
+	return CURRENT_DIALOG;
+}
+
+void set_current_dialog(char *text)
+{
+	CURRENT_DIALOG = text;
+}
+
 
 void take_screenshot(char *path)
 {
@@ -340,8 +354,8 @@ int draw_main_loop()
 	}
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 40) {
+		update_repl();
 		update_player();
-		update_ai();
 		update_entity();
 		update_weapons();
 		update_projectile();

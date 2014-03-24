@@ -14,7 +14,6 @@
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
-#include "vm.h"
 #include "utils.h"
 
 list_node *EFFECTS;

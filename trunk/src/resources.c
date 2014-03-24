@@ -10,11 +10,45 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <libguile.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
 #include "utils.h"
+
+static scm_t_bits __api_resource_tag;
+
+SCM __api_load_resource(SCM path)
+{
+	char *p = scm_to_locale_string(path);
+	resource *r = load_resource(p);
+	free(p);
+	return scm_new_smob(__api_resource_tag, (unsigned long) r);
+}
+
+SCM __api_draw_resource(SCM r, SCM x, SCM y)
+{
+	resource *res = (resource *) SCM_SMOB_DATA(r);
+	draw_resource(res, scm_to_int(x), scm_to_int(y));
+	return SCM_BOOL_T;
+}
+
+static size_t __api_smob_resource_free(SCM r)
+{
+	resource *res = (resource *) SCM_SMOB_DATA(r);
+	glDeleteBuffers(1, &res->vertex_handler);
+	scm_gc_free(res, sizeof(resource), "resource");
+	return 0;
+}
+
+void initialize_resources()
+{
+	__api_resource_tag = scm_make_smob_type("resource", sizeof(resource));
+	scm_set_smob_free(__api_resource_tag, __api_smob_resource_free);
+	scm_c_define_gsubr("load-resource", 1, 0, 0, __api_load_resource);
+	scm_c_define_gsubr("draw-resource", 3, 0, 0, __api_draw_resource);
+}
 
 GLuint surface_to_texture(SDL_Surface *surface)
 {
@@ -46,7 +80,7 @@ GLuint surface_to_texture(SDL_Surface *surface)
 
 resource *load_resource(char *path)
 {
-	resource *ret = (resource *) malloc(sizeof(resource));
+	resource *ret = (resource *) scm_gc_malloc(sizeof(resource), "resource");
 	SDL_Surface *surface = IMG_Load(path);
 	if (surface == NULL) {
 		log_err("File %s does not exist", path);
@@ -112,5 +146,5 @@ void draw_resource(resource *r, int x, int y)
 void free_resource(resource *r)
 {
 	glDeleteBuffers(1, &r->vertex_handler);
-	free(r);
+	scm_gc_free(r, sizeof(resource), "resource");
 }

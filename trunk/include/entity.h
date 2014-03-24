@@ -19,7 +19,7 @@ list_node *get_entities();
 void set_entities(list_node *entities);
 void reset_entities();
 entity *make_entity(int id, int x, int y, int w, int h,
-		weapon *weapon, int health, int speed, double expval);
+		int health, int speed, double expval);
 void spawn_entity(entity *e);
 void hit_entity(entity *e, int dmg);
 void collide_entity(entity *e);

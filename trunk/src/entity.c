@@ -7,21 +7,52 @@
 #include <math.h>
 
 #include <GL/glew.h>
+#include <libguile.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
-#include "vm.h"
 #include "utils.h"
 #include "resources.h"
 #include "level.h"
 #include "fx.h"
-#include "ai.h"
 #include "player.h"
 #include "weapon.h"
 
 resource *ENTITY_RESOURCES[256];
 list_node *ENTITIES;
+
+static scm_t_bits __api_entity_tag;
+
+SCM __api_make_entity(SCM id, SCM x, SCM y, SCM w, SCM h,
+		SCM health, SCM speed, SCM expval)
+{
+	entity *e = make_entity(scm_to_int(id), scm_to_int(x), scm_to_int(y), scm_to_int(w), scm_to_int(h),
+			scm_to_int(health), scm_to_int(speed), scm_to_double(expval));
+	return scm_new_smob(__api_entity_tag, (unsigned long) e);
+}
+
+SCM __api_spawn_entity(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	spawn_entity(ent);
+	return SCM_BOOL_T;
+}
+
+SCM __api_give_entity_weapon(SCM e, SCM w)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	give_entity_weapon(ent, weap);
+	return SCM_BOOL_T;
+}
+
+SCM __api_move_entity(SCM e, SCM d)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	move_entity(ent, scm_to_int(d));
+	return SCM_BOOL_T;
+}
 
 void initialize_entity()
 {
@@ -30,6 +61,12 @@ void initialize_entity()
 	ENTITY_RESOURCES[1] = load_resource("textures/entities/wizard.png");
 	ENTITY_RESOURCES[2] = load_resource("textures/entities/bossblob.png");
 	ENTITY_RESOURCES[3] = load_resource("textures/entities/target.png");
+
+	__api_entity_tag = scm_make_smob_type("entity", sizeof(entity));
+	scm_c_define_gsubr("make-entity", 8, 0, 0, __api_make_entity);
+	scm_c_define_gsubr("spawn-entity", 1, 0, 0, __api_spawn_entity);
+	scm_c_define_gsubr("give-entity-weapon", 2, 0, 0, __api_give_entity_weapon);
+	scm_c_define_gsubr("move-entity", 2, 0, 0, __api_move_entity);
 }
 
 list_node *get_entities()
@@ -47,23 +84,22 @@ void reset_entities()
 	list_node *c;
 	for (c = ENTITIES->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((entity *) c->data) != NULL) {
-			free((entity *) c->data);
+			scm_gc_free((entity *) c->data, sizeof(entity), "entity");
 		}
 	}
 	ENTITIES = make_list();
 }
 
 entity *make_entity(int id, int x, int y, int w, int h,
-		weapon *weapon, int health, int speed, double expval)
+		int health, int speed, double expval)
 {
-	entity *e = (entity *) malloc(sizeof(entity));
+	entity *e = (entity *) scm_gc_malloc(sizeof(entity), "entity");
 	e->id = id;
 	e->x = x;
 	e->y = y;
 	e->w = w;
 	e->h = h;
 	e->xv = e->yv = 0;
-	e->weapon = weapon;
 	if (e->weapon != NULL) {
 		e->weapon->x = &(e->x);
 		e->weapon->y = &(e->y);
@@ -87,7 +123,7 @@ void hit_entity(entity *e, int dmg)
 		give_player_exp(e->expval);
 		spawn_fx(make_fx(EXPLOSION, COLOR_WHITE,
 					e->x, e->y, 4, 100, 20));
-		free(e);
+		scm_gc_free(e, sizeof(entity), "entity");
 	}
 }
 
@@ -99,6 +135,7 @@ void give_entity_weapon(entity *e, weapon *w)
 {
 	w->x = &(e->x);
 	w->y = &(e->y);
+	e->weapon = w;
 }
 
 void move_entity(entity *e, direction d)
