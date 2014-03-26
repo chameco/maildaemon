@@ -30,14 +30,14 @@ SCM __api_press_trigger(SCM w, SCM d)
 {
 	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
 	press_trigger(weap, scm_to_int(d));
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 SCM __api_release_trigger(SCM w)
 {
 	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
 	release_trigger(weap);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 void initialize_weapons()

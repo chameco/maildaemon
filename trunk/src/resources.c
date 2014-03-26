@@ -31,7 +31,7 @@ SCM __api_draw_resource(SCM r, SCM x, SCM y)
 {
 	resource *res = (resource *) SCM_SMOB_DATA(r);
 	draw_resource(res, scm_to_int(x), scm_to_int(y));
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 static size_t __api_smob_resource_free(SCM r)

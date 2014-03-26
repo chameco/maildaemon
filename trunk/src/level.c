@@ -35,15 +35,28 @@ void initialize_level()
 level *load_level(char *path)
 {
 	level *ret = (level *) malloc(sizeof(level));
-	int x, y;
-	for (x = 0; x < LEVEL_MAX_DIM; x++) {
-		for (y = 0; y < LEVEL_MAX_DIM; y++) {
-			ret->tiles[x][y] = PLANKS;
+	FILE *f = fopen(path, "r");
+	if (f == NULL) {
+		int x, y;
+		for (x = 0; x < LEVEL_MAX_DIM; x++) {
+			for (y = 0; y < LEVEL_MAX_DIM; y++) {
+				ret->tiles[x][y] = PLANKS;
+			}
 		}
+		strcpy(ret->name, "new");
+		ret->ambience = 0.75;
+	} else {
+		fread(ret, sizeof(level), 1, f);
+		fclose(f);
 	}
-	ret->name = "test";
-	ret->ambience = 0.75;
 	return ret;
+}
+
+void save_level(level *l, char *path)
+{
+	FILE *f = fopen(path, "w");
+	fwrite(l, sizeof(level), 1, f);
+	fclose(f);
 }
 
 level *get_current_level()

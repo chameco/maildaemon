@@ -11,9 +11,9 @@ datadir = $(datarootdir)
 libdir = $(exec_prefix)/lib
 CFLAGS = -Iinclude -std=c99 -g -Wall -Werror `pkg-config guile-2.0 --cflags`
 
-all: src/main.o $(OBJECTS)
+all: src/main.o src/level_editor.o $(OBJECTS)
 	$(CC) src/main.o $(OBJECTS) -lm -lcuttle -lzmq `pkg-config guile-2.0 --libs` -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o maildaemon
-	#$(CC) src/make_world.o $(OBJECTS) -lm -lcuttle -lsolid -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o make_world
+	$(CC) src/level_editor.o $(OBJECTS) -lm -lcuttle -lzmq `pkg-config guile-2.0 --libs` -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer -o level_editor
 install:
 	$(INSTALL_PROGRAM) maildaemon $(DESTDIR)$(bindir)/maildaemon
 	mkdir -p $(DESTDIR)$(datadir)/maildaemon

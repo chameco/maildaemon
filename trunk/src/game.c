@@ -129,6 +129,21 @@ void initGL()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+SDL_Window *get_screen()
+{
+	return SCREEN;
+}
+
+int get_screen_width()
+{
+	return SCREEN_WIDTH;
+}
+
+int get_screen_height()
+{
+	return SCREEN_HEIGHT;
+}
+
 char *get_current_dialog()
 {
 	return CURRENT_DIALOG;
@@ -183,7 +198,7 @@ void main_game_loop()
 		SDL_Delay(10);
 		switch (CURRENT_MODE) {
 			case TITLE_MODE:
-				draw_title_loop();
+				running = draw_title_loop();
 				break;
 			case MAIN_MENU_MODE:
 				running = draw_main_menu_loop();
@@ -198,7 +213,7 @@ void main_game_loop()
 	}
 }
 
-void draw_title_loop()
+int draw_title_loop()
 {
 	static int ticks = 0;
 	static resource *title_image;
@@ -218,6 +233,7 @@ void draw_title_loop()
 			CURRENT_MODE = MAIN_MENU_MODE;
 		}
 	}
+	return 1;
 }
 
 int draw_main_menu_loop()
@@ -289,6 +305,12 @@ void global_effect_shake()
 
 int draw_main_loop()
 {
+	//static int counted_frames = 0;
+	//static int start_ticks = 0;
+	//if (start_ticks == 0) start_ticks = SDL_GetTicks();
+	//debug("fps: %f", counted_frames / ((SDL_GetTicks() - start_ticks) / 1000.0f));
+	//counted_frames++;
+
 	int pressed;
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {

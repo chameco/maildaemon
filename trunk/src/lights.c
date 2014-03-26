@@ -33,7 +33,7 @@ SCM __api_spawn_lightsource(SCM l)
 {
 	lightsource *light = (lightsource *) SCM_SMOB_DATA(l);
 	spawn_lightsource(light);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 void initialize_lights()

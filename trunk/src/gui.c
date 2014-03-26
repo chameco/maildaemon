@@ -33,7 +33,7 @@ SCM __api_render_text_bitmap(SCM x, SCM y, SCM text, SCM size)
 	char *t = scm_to_locale_string(text);
 	render_text_bitmap(scm_to_int(x), scm_to_int(y), t, scm_to_double(size));
 	free(t);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 SCM __api_draw_button(SCM text, SCM x, SCM y)
@@ -41,7 +41,7 @@ SCM __api_draw_button(SCM text, SCM x, SCM y)
 	char *t = scm_to_locale_string(text);
 	draw_button(t, scm_to_int(x), scm_to_int(y));
 	free(t);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 SCM __api_draw_dialog_box(SCM text, SCM x, SCM y)
@@ -49,7 +49,7 @@ SCM __api_draw_dialog_box(SCM text, SCM x, SCM y)
 	char *t = scm_to_locale_string(text);
 	draw_dialog_box(t, scm_to_int(x), scm_to_int(y));
 	free(t);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 SCM __api_draw_meter(SCM text, SCM x, SCM y, SCM c, SCM full)
@@ -58,7 +58,7 @@ SCM __api_draw_meter(SCM text, SCM x, SCM y, SCM c, SCM full)
 	color *col = (color *) SCM_SMOB_DATA(c);
 	draw_meter(t, scm_to_int(x), scm_to_int(y), *col, scm_to_int(full));
 	free(t);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 void initialize_gui()

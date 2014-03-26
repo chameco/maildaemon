@@ -32,11 +32,32 @@ SCM __api_make_entity(SCM id, SCM x, SCM y, SCM w, SCM h,
 	return scm_new_smob(__api_entity_tag, (unsigned long) e);
 }
 
+SCM __api_set_entity_hit(SCM e, SCM hit)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	set_entity_hit(ent, hit);
+	return SCM_BOOL_F;
+}
+
+SCM __api_set_entity_collide(SCM e, SCM collide)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	set_entity_hit(ent, collide);
+	return SCM_BOOL_F;
+}
+
+SCM __api_set_entity_update(SCM e, SCM update)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	set_entity_hit(ent, update);
+	return SCM_BOOL_F;
+}
+
 SCM __api_spawn_entity(SCM e)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
 	spawn_entity(ent);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 SCM __api_give_entity_weapon(SCM e, SCM w)
@@ -44,14 +65,22 @@ SCM __api_give_entity_weapon(SCM e, SCM w)
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
 	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
 	give_entity_weapon(ent, weap);
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
 }
 
 SCM __api_move_entity(SCM e, SCM d)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
 	move_entity(ent, scm_to_int(d));
-	return SCM_BOOL_T;
+	return SCM_BOOL_F;
+}
+
+SCM __api_smob_entity_mark(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	scm_gc_mark(ent->hit_func);
+	scm_gc_mark(ent->collide_func);
+	return ent->update_func;
 }
 
 void initialize_entity()
@@ -63,7 +92,11 @@ void initialize_entity()
 	ENTITY_RESOURCES[3] = load_resource("textures/entities/target.png");
 
 	__api_entity_tag = scm_make_smob_type("entity", sizeof(entity));
+	scm_set_smob_mark(__api_entity_tag, __api_smob_entity_mark);
 	scm_c_define_gsubr("make-entity", 8, 0, 0, __api_make_entity);
+	scm_c_define_gsubr("set-entity-hit", 2, 0, 0, __api_set_entity_hit);
+	scm_c_define_gsubr("set-entity-collide", 2, 0, 0, __api_set_entity_collide);
+	scm_c_define_gsubr("set-entity-update", 2, 0, 0, __api_set_entity_update);
 	scm_c_define_gsubr("spawn-entity", 1, 0, 0, __api_spawn_entity);
 	scm_c_define_gsubr("give-entity-weapon", 2, 0, 0, __api_give_entity_weapon);
 	scm_c_define_gsubr("move-entity", 2, 0, 0, __api_move_entity);
@@ -72,11 +105,6 @@ void initialize_entity()
 list_node *get_entities()
 {
 	return ENTITIES;
-}
-
-void set_entities(list_node *entities)
-{
-	ENTITIES = entities;
 }
 
 void reset_entities()
@@ -107,7 +135,23 @@ entity *make_entity(int id, int x, int y, int w, int h,
 	e->health = health;
 	e->speed = speed;
 	e->expval = expval;
+	e->hit_func = e->collide_func = e->update_func = SCM_BOOL_F;
 	return e;
+}
+
+void set_entity_hit(entity *e, SCM hit)
+{
+	e->hit_func = hit;
+}
+
+void set_entity_collide(entity *e, SCM collide)
+{
+	e->collide_func = collide;
+}
+
+void set_entity_update(entity *e, SCM update)
+{
+	e->update_func = update;
 }
 
 void spawn_entity(entity *e)
@@ -117,18 +161,25 @@ void spawn_entity(entity *e)
 
 void hit_entity(entity *e, int dmg)
 {
-	e->health -= dmg;
-	if (e->health <= 0) {
-		remove_list(ENTITIES, (void *) e);
-		give_player_exp(e->expval);
-		spawn_fx(make_fx(EXPLOSION, COLOR_WHITE,
-					e->x, e->y, 4, 100, 20));
-		scm_gc_free(e, sizeof(entity), "entity");
+	if (scm_is_true(e->hit_func)) {
+		scm_call_2(e->hit_func, scm_new_smob(__api_entity_tag, (unsigned long) e), scm_from_int(dmg));
+	} else {
+		e->health -= dmg;
+		if (e->health <= 0) {
+			remove_list(ENTITIES, (void *) e);
+			give_player_exp(e->expval);
+			spawn_fx(make_fx(EXPLOSION, COLOR_WHITE,
+						e->x, e->y, 4, 100, 20));
+			scm_gc_free(e, sizeof(entity), "entity");
+		}
 	}
 }
 
 void collide_entity(entity *e)
 {
+	if (scm_is_true(e->collide_func)) {
+		scm_call_1(e->collide_func, scm_new_smob(__api_entity_tag, (unsigned long) e));
+	}
 }
 
 void give_entity_weapon(entity *e, weapon *w)
@@ -220,6 +271,9 @@ void update_entity()
 	for (c = ENTITIES->next; c->next != NULL; c = c->next) {
 		if (((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
+			if (scm_is_true(e->collide_func)) {
+				scm_call_1(e->collide_func, scm_new_smob(__api_entity_tag, (unsigned long) e));
+			}
 			check_entity_collisions(e);
 		}
 	}
