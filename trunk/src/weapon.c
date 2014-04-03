@@ -3,8 +3,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 #include "projectile.h"
@@ -54,7 +54,7 @@ weapon *make_weapon(color c, int xoffset, int yoffset,
 		int speed, int damage, double max_charge, int isbeam, int bullets_per_volley,
 		int pdim, char *sfx_path)
 {
-	weapon *ret = (weapon *) malloc(sizeof(weapon));
+	weapon *ret = scm_gc_malloc(sizeof(weapon), "weapon");
 	insert_list(WEAPONS, (void *) ret);
 	ret->c = c;
 	ret->x = NULL;

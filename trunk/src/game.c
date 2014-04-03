@@ -11,8 +11,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 #include "resources.h"
@@ -72,9 +72,6 @@ void initialize_game()
 	SCREEN_WIDTH = dmode.w;
 	SCREEN_HEIGHT = dmode.h;
 	
-
-	debug("SCREEN_WIDTH=%d, SCREEN_HEIGHT=%d", SCREEN_WIDTH, SCREEN_HEIGHT);
-
 	initGL();
 	IMG_Init(IMG_INIT_PNG);
 
@@ -92,9 +89,6 @@ void initialize_game()
 	initialize_projectile();
 	initialize_fx();
 	initialize_gui();
-
-	//scm_c_eval_string("(spawn-lightsource (make-lightsource 100 100 128 2 (make-color 0 1 0 1)))");
-	scm_c_eval_string("(spawn-entity (make-entity 0 128 128 32 32 10 0 40))");
 
 	set_current_dialog("Hello");
 }
@@ -163,7 +157,7 @@ void take_screenshot(char *path)
 	int index;
 	void *temp_row;
 	 
-	temp_row = (void *) malloc(image->pitch);
+	temp_row = malloc(image->pitch);
 	if (temp_row == NULL) {
 			log_err("Not enough memory for image inversion");
 	}

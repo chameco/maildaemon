@@ -7,8 +7,7 @@
 
 typedef struct resource {
 	GLuint texture;
-	vertex vertices[4];
-	GLuint vertex_handler;
+	int w, h;
 } resource;
 
 GLuint surface_to_texture(SDL_Surface *s);
@@ -17,5 +16,6 @@ void initialize_resources();
 
 resource *load_resource(char *path);
 void draw_resource(resource *r, int x, int y);
+void draw_resource_scale(resource *r, int x, int y, int w, int h);
 void free_resource(resource *r);
 #endif

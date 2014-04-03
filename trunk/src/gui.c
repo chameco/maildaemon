@@ -10,8 +10,8 @@
 #include <SDL2/SDL_image.h>
 #include <libguile.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 #include "resources.h"
@@ -195,16 +195,22 @@ void render_text_bitmap(int x, int y, char *text, double size)
 			glPushMatrix();
 
 			glTranslatef(curx, cury, 0);
-			glScalef(size, size, 1);
+			glScalef(size * 8, size * 8, 1);
 			glColor3f(1.0, 1.0, 1.0);
 			glBindTexture(GL_TEXTURE_2D, BITMAP_FONT[bmpy][bmpx]);
 
-			glBegin(GL_QUADS);
-			glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-			glTexCoord2i(1, 0); glVertex3f(8, 0, 0);
-			glTexCoord2i(1, 1); glVertex3f(8, 8, 0);
-			glTexCoord2i(0, 1); glVertex3f(0, 8, 0);
-			glEnd();
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+			glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
+			glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+			glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+			glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			glDisableClientState(GL_VERTEX_ARRAY);
 
 			glPopMatrix();
 			curx += 8 * size;
@@ -238,15 +244,22 @@ void draw_meter(char *text, int x, int y, color c, int full)
 	glPushMatrix();
 
 	glTranslatef(x + 4, y + 4, 0);
+	glScalef(full, 24, 1);
 	glColor3f(c.r, c.g, c.b);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(full, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(full, 24, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, 24, 0);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glPopMatrix();
 

@@ -31,5 +31,6 @@ color COLOR_GRAY;
 
 void initialize_utils();
 GLuint get_standard_indices_handler();
+GLuint get_standard_vertices_handler();
 int check_collision(SDL_Rect A, SDL_Rect B);
 #endif

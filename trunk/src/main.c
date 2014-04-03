@@ -1,11 +1,13 @@
 #include <SDL2/SDL.h>
-#include <cuttle/debug.h>
+#include "cuttle/debug.h"
 #include <libguile.h>
+#include "level.h"
 #include "game.h"
 
 void inner_main()
 {
 	initialize_game();
+	switch_level("levels/test");
 	main_game_loop();
 	SDL_Quit();
 }

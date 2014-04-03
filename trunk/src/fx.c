@@ -11,8 +11,8 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 
@@ -64,7 +64,7 @@ effect *make_fx(etype type, color col,
 		int x, int y, int dim,
 		int radius, int speed)
 {
-	effect *e = (effect *) malloc(sizeof(effect));
+	effect *e = malloc(sizeof(effect));
 	e->type = type;
 	e->c = col; e->x = x;
 	e->y = y;
@@ -116,7 +116,7 @@ void spawn_fx(effect *e)
 
 global_effect *make_global_fx(void (*callback)(), int timer)
 {
-	global_effect *ge = (global_effect *) malloc(sizeof(global_effect));
+	global_effect *ge = malloc(sizeof(global_effect));
 	ge->callback = callback;
 	ge->timer = timer;
 	return ge;

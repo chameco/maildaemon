@@ -8,8 +8,8 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 #include "player.h"
@@ -18,8 +18,6 @@
 #include "fx.h"
 
 list_node *PROJECTILES;
-vertex PROJECTILE_VERTICES[256][256][4];
-GLuint PROJECTILE_VERTEX_HANDLERS[256][256] = {{0}};
 
 void initialize_projectile()
 {
@@ -40,7 +38,7 @@ void reset_projectile()
 void spawn_projectile(color c, int x, int y, int xv, int yv, int w, int h,
 		int longevity, weapon *spawned_by, int dmg)
 {
-	projectile *p = (projectile *) malloc(sizeof(projectile));
+	projectile *p = malloc(sizeof(projectile));
 	p->c = c;
 	p->x = x;
 	p->y = y;
@@ -51,35 +49,6 @@ void spawn_projectile(color c, int x, int y, int xv, int yv, int w, int h,
 	p->longevity = longevity;
 	p->spawned_by = spawned_by;
 	p->dmg = dmg;
-	if (PROJECTILE_VERTEX_HANDLERS[p->w][p->h] == 0) {
-		PROJECTILE_VERTICES[p->w][p->h][0].x = 0;
-		PROJECTILE_VERTICES[p->w][p->h][0].y = 0;
-
-		PROJECTILE_VERTICES[p->w][p->h][1].x = p->w;
-		PROJECTILE_VERTICES[p->w][p->h][1].y = 0;
-
-		PROJECTILE_VERTICES[p->w][p->h][2].x = p->w;
-		PROJECTILE_VERTICES[p->w][p->h][2].y = p->h;
-
-		PROJECTILE_VERTICES[p->w][p->h][3].x = 0;
-		PROJECTILE_VERTICES[p->w][p->h][3].y = p->h;
-
-		PROJECTILE_VERTICES[p->w][p->h][0].s = 0;
-		PROJECTILE_VERTICES[p->w][p->h][0].t = 0;
-
-		PROJECTILE_VERTICES[p->w][p->h][1].s = 1;
-		PROJECTILE_VERTICES[p->w][p->h][1].t = 0;
-
-		PROJECTILE_VERTICES[p->w][p->h][2].s = 1;
-		PROJECTILE_VERTICES[p->w][p->h][2].t = 1;
-
-		PROJECTILE_VERTICES[p->w][p->h][3].s = 0;
-		PROJECTILE_VERTICES[p->w][p->h][3].t = 1;
-
-		glGenBuffers(1, &PROJECTILE_VERTEX_HANDLERS[p->w][p->h]);
-		glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->w][p->h]);
-		glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), PROJECTILE_VERTICES[p->w][p->h], GL_STATIC_DRAW);
-	}
 	insert_list(PROJECTILES, (void *) p);
 }
 
@@ -154,6 +123,7 @@ void draw_one_projectile(projectile *p)
 {
 	glPushMatrix();
 	glTranslatef(p->x, p->y, 0);
+	glScalef(p->w, p->h, 1);
 
 	glColor4f(p->c.r, p->c.g, p->c.b, p->c.a);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -161,7 +131,7 @@ void draw_one_projectile(projectile *p)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glBindBuffer(GL_ARRAY_BUFFER, PROJECTILE_VERTEX_HANDLERS[p->w][p->h]);
+	glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
 	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
 	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
 

@@ -9,8 +9,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 #include "resources.h"
@@ -48,9 +48,10 @@ SCM __api_set_level_ambience(SCM a)
 	return SCM_BOOL_F;
 }
 
-void inner_main()
+void inner_main(void *data, int argc, char *argv[])
 {
 	initialize_game();
+	switch_level(argv[1]);
 	scm_c_define_gsubr("swap-block", 1, 0, 0, __api_swap_block_at_cursor);
 	scm_c_define_gsubr("set-level-name", 1, 0, 0, __api_set_level_name);
 	scm_c_define_gsubr("set-level-ambience", 1, 0, 0, __api_set_level_ambience);
@@ -73,6 +74,8 @@ void inner_main()
 							CURSOR_Y += 1;
 						} else if (event.key.keysym.sym == SDLK_d) {
 							CURSOR_X += 1;
+						} else if (event.key.keysym.sym == SDLK_x) {
+							save_level(get_current_level(), "levels/test");
 						}
 					}
 					break;
@@ -115,5 +118,9 @@ void inner_main()
 
 int main(int argc, char *argv[])
 {
+	if (argc <= 1) {
+		log_err("Usage: level_editor <path>");
+		exit(1);
+	}
 	scm_boot_guile(argc, argv, inner_main, NULL);
 }

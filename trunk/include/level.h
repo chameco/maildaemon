@@ -23,6 +23,7 @@ typedef struct level {
 } level;
 
 void initialize_level();
+void switch_level(char *path);
 level *load_level(char *path);
 void save_level(level *l, char *path);
 level *get_current_level();

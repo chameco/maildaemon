@@ -5,8 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include <libguile.h>
+
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 #include "resources.h"
@@ -29,14 +31,23 @@ void initialize_level()
 	TILE_RESOURCES[STONE] = load_resource("textures/wall.png");
 	TILE_RESOURCES[SHRUB] = load_resource("textures/shrub.png");
 	TILE_RESOURCES[TORCH] = load_resource("textures/torch.png");
-	CURRENT_LEVEL = load_level(NULL);
+}
+
+void switch_level(char *path)
+{
+	CURRENT_LEVEL = load_level(path);
 }
 
 level *load_level(char *path)
 {
-	level *ret = (level *) malloc(sizeof(level));
-	FILE *f = fopen(path, "r");
+	level *ret = malloc(sizeof(level));
+	char buf[256];
+	strcpy(buf, path);
+	int bare = strlen(buf);
+	strcat(buf, ".lvl");
+	FILE *f = fopen(buf, "r");
 	if (f == NULL) {
+		debug("null");
 		int x, y;
 		for (x = 0; x < LEVEL_MAX_DIM; x++) {
 			for (y = 0; y < LEVEL_MAX_DIM; y++) {
@@ -48,13 +59,16 @@ level *load_level(char *path)
 	} else {
 		fread(ret, sizeof(level), 1, f);
 		fclose(f);
+		buf[bare] = 0x0;
+		strcat(buf, ".scm");
+		scm_c_primitive_load(buf);
 	}
 	return ret;
 }
 
 void save_level(level *l, char *path)
 {
-	FILE *f = fopen(path, "w");
+	FILE *f = fopen(path, "w+");
 	fwrite(l, sizeof(level), 1, f);
 	fclose(f);
 }

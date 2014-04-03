@@ -59,9 +59,11 @@ void reset_lights()
 
 lightsource *make_lightsource(int x, int y, int dim, int intensity, color c)
 {
-	lightsource *l = (lightsource *) scm_gc_malloc(sizeof(lightsource), "lightsource");
-	l->x = x;
-	l->y = y;
+	lightsource *l = scm_gc_malloc(sizeof(lightsource), "lightsource");
+	l->x = x - dim/2;
+	l->y = y - dim/2;
+	//l->x = x;
+	//l->y = y;
 	l->dim = dim;
 	l->intensity = intensity;
 	l->c = c;
@@ -81,14 +83,23 @@ void draw_lights()
 
 	glPushMatrix();
 	glTranslatef(-64, -64, 0);
+	glScalef(w, h, 1);
 	glColor4f(0, 0, 0, get_current_level()->ambience);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glBegin(GL_QUADS);
-		glTexCoord2i(0, 0); glVertex3f(0, 0, 0);
-		glTexCoord2i(1, 0); glVertex3f(w, 0, 0);
-		glTexCoord2i(1, 1); glVertex3f(w, h, 0);
-		glTexCoord2i(0, 1); glVertex3f(0, h, 0);
-	glEnd();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
 	glPopMatrix();
 
 	glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
@@ -104,14 +115,14 @@ void draw_lights()
 			glTranslatef(l->x, l->y, 0);
 			xdim = l->dim + (rand() % 16);
 			ydim = l->dim + (rand() % 16);
-			glScalef(xdim / 128, ydim / 128, 0);
+			glScalef(xdim, ydim, 0);
 			glColor3f(l->c.r, l->c.g, l->c.b);
 			glBindTexture(GL_TEXTURE_2D, LIGHTMAP->texture);
 			for (numtimes = l->intensity; numtimes > 0; numtimes--) {
 				glEnableClientState(GL_VERTEX_ARRAY);
 				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-				glBindBuffer(GL_ARRAY_BUFFER, LIGHTMAP->vertex_handler);
+				glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
 				glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
 				glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
 

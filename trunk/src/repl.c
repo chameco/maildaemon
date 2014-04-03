@@ -9,8 +9,8 @@
 #include <libguile.h>
 #include <zmq.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 void *NETWORK_CONTEXT;
 void *NETWORK_SOCKET;

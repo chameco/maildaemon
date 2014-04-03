@@ -9,8 +9,8 @@
 #include <GL/glew.h>
 #include <libguile.h>
 
-#include <cuttle/debug.h>
-#include <cuttle/utils.h>
+#include "cuttle/debug.h"
+#include "cuttle/utils.h"
 
 #include "utils.h"
 #include "resources.h"
@@ -121,17 +121,13 @@ void reset_entities()
 entity *make_entity(int id, int x, int y, int w, int h,
 		int health, int speed, double expval)
 {
-	entity *e = (entity *) scm_gc_malloc(sizeof(entity), "entity");
+	entity *e = scm_gc_malloc(sizeof(entity), "entity");
 	e->id = id;
 	e->x = x;
 	e->y = y;
 	e->w = w;
 	e->h = h;
 	e->xv = e->yv = 0;
-	if (e->weapon != NULL) {
-		e->weapon->x = &(e->x);
-		e->weapon->y = &(e->y);
-	}
 	e->health = health;
 	e->speed = speed;
 	e->expval = expval;
