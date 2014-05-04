@@ -8,6 +8,7 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include <libguile.h>
 
 #include "cuttle/debug.h"
 #include "cuttle/utils.h"
@@ -21,35 +22,130 @@
 #include "projectile.h"
 #include "lights.h"
 
-int PLAYER_X = 0;
-int PLAYER_Y = 0;
-int NORTH_PRESSED = 0;
-int SOUTH_PRESSED = 0;
-int WEST_PRESSED = 0;
-int EAST_PRESSED = 0;
-const int PLAYER_MOVE_SPEED = 6;//Pixels per second
-const int DIAG_SPEED = 5;
-const int PLAYER_WIDTH = 32;
-const int PLAYER_HEIGHT = 32;
-direction PLAYER_FACING = 0;
-double PLAYER_EXP = 0;
-double PLAYER_EXP_TO_NEXT = 100;
-int PLAYER_LEVEL = 0;
-double PLAYER_MAX_HEALTH = 100;
-double PLAYER_HEALTH;
-double PLAYER_REGEN = 0.1;
-resource *PLAYER_RESOURCES[4];
-resource *PLAYER_ALTERNATE[4];
-const int PLAYER_ANIM_STEP_TIMING = 8;
-int PLAYER_ANIM_STEP = 0;
-color PLAYER_COLOR;
-weapon *PLAYER_WEAPONS[10] = {NULL};
-int PLAYER_WEAPON_INDEX = 0;
+static int PLAYER_X = 0;
+static int PLAYER_Y = 0;
+static int NORTH_PRESSED = 0;
+static int SOUTH_PRESSED = 0;
+static int WEST_PRESSED = 0;
+static int EAST_PRESSED = 0;
+static const int PLAYER_MOVE_SPEED = 6; //Pixels per second
+static const int DIAG_SPEED = 5;
+static const int PLAYER_WIDTH = 32;
+static const int PLAYER_HEIGHT = 32;
+static direction PLAYER_FACING = 0;
+static double PLAYER_EXP = 0;
+static double PLAYER_EXP_TO_NEXT = 100;
+static int PLAYER_LEVEL = 0;
+static double PLAYER_MAX_HEALTH = 100;
+static double PLAYER_HEALTH;
+static double PLAYER_REGEN = 0.1;
+static resource *PLAYER_RESOURCES[4];
+static resource *PLAYER_ALTERNATE[4];
+static const int PLAYER_ANIM_STEP_TIMING = 8;
+static int PLAYER_ANIM_STEP = 0;
+static weapon *PLAYER_WEAPONS[10] = {NULL};
+static int PLAYER_WEAPON_INDEX = 0;
+
+SCM __api_get_player_x()
+{
+	return scm_from_int(get_player_x());
+}
+
+SCM __api_get_player_y()
+{
+	return scm_from_int(get_player_y());
+}
+
+SCM __api_get_player_w()
+{
+	return scm_from_int(get_player_w());
+}
+
+SCM __api_get_player_h()
+{
+	return scm_from_int(get_player_h());
+}
+
+SCM __api_get_player_facing()
+{
+	return scm_from_int(get_player_facing());
+}
+
+SCM __api_get_player_health()
+{
+	return scm_from_double(get_player_health());
+}
+
+SCM __api_get_player_max_health()
+{
+	return scm_from_double(get_player_max_health());
+}
+
+SCM __api_get_player_charge_percent()
+{
+	return scm_from_double(get_player_charge_percent());
+}
+
+SCM __api_get_player_exp()
+{
+	return scm_from_double(get_player_exp());
+}
+
+SCM __api_get_player_exp_to_next()
+{
+	return scm_from_double(get_player_exp_to_next());
+}
+
+SCM __api_set_player_weapon(SCM i, SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	set_player_weapon(scm_to_int(i), weap);
+	return SCM_BOOL_F;
+}
+
+SCM __api_get_player_weapon()
+{
+	return scm_new_smob(get_weapon_tag(), (unsigned long) get_player_weapon());
+}
+
+SCM __api_get_player_level()
+{
+	return scm_from_int(get_player_level());
+}
+
+SCM __api_hit_player(SCM dmg)
+{
+	hit_player(scm_to_int(dmg));
+	return SCM_BOOL_F;
+}
+
+SCM __api_give_player_exp(SCM exp)
+{
+	give_player_exp(scm_to_double(exp));
+	return SCM_BOOL_F;
+}
+
+SCM __api_warp_player(SCM x, SCM y)
+{
+	warp_player(scm_to_int(x), scm_to_int(y));
+	return SCM_BOOL_F;
+}
+
+SCM __api_set_player_weapon_index(SCM i)
+{
+	set_player_weapon_index(scm_to_int(i));
+	return SCM_BOOL_F;
+}
+
+SCM __api_shoot_player_weapon(SCM pressed, SCM d)
+{
+	shoot_player_weapon(scm_to_int(pressed), scm_to_int(d));
+	return SCM_BOOL_F;
+}
 
 void initialize_player()
 {
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
-	PLAYER_COLOR = COLOR_RED;
 
 	PLAYER_RESOURCES[NORTH] = load_resource("textures/player/default/n.png");
 	PLAYER_RESOURCES[SOUTH] = load_resource("textures/player/default/s.png");
@@ -60,12 +156,34 @@ void initialize_player()
 	PLAYER_ALTERNATE[SOUTH] = load_resource("textures/player/default/sa.png");
 	PLAYER_ALTERNATE[WEST] = load_resource("textures/player/default/wa.png");
 	PLAYER_ALTERNATE[EAST] = load_resource("textures/player/default/ea.png");
-	PLAYER_WEAPONS[0] = make_weapon(PLAYER_COLOR, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
-	PLAYER_WEAPONS[0]->x = &PLAYER_X;
-	PLAYER_WEAPONS[0]->y = &PLAYER_Y;
-	PLAYER_WEAPONS[1] = make_weapon(COLOR_WHITE, 8, 8, 16, 2, 100.0, 1, 1, 8, "sfx/beam.wav");
+
+	/*PLAYER_WEAPONS[1] = make_weapon(COLOR_RED, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
 	PLAYER_WEAPONS[1]->x = &PLAYER_X;
 	PLAYER_WEAPONS[1]->y = &PLAYER_Y;
+	PLAYER_WEAPONS[2] = make_weapon(COLOR_BLUE, 8, 8, 16, 2, 100.0, 1, 1, 8, "sfx/beam.wav");
+	PLAYER_WEAPONS[2]->x = &PLAYER_X;
+	PLAYER_WEAPONS[2]->y = &PLAYER_Y;*/
+
+	scm_c_define_gsubr("get-player-x", 0, 0, 0, __api_get_player_x);
+	scm_c_define_gsubr("get-player-y", 0, 0, 0, __api_get_player_y);
+	scm_c_define_gsubr("get-player-w", 0, 0, 0, __api_get_player_w);
+	scm_c_define_gsubr("get-player-h", 0, 0, 0, __api_get_player_h);
+	scm_c_define_gsubr("get-player-facing", 0, 0, 0, __api_get_player_facing);
+	scm_c_define_gsubr("get-player-health", 0, 0, 0, __api_get_player_health);
+	scm_c_define_gsubr("get-player-max-health", 0, 0, 0, __api_get_player_max_health);
+	scm_c_define_gsubr("get-player-charge-percent", 0, 0, 0, __api_get_player_charge_percent);
+	scm_c_define_gsubr("get-player-exp", 0, 0, 0, __api_get_player_exp);
+	scm_c_define_gsubr("get-player-exp-to-next", 0, 0, 0, __api_get_player_exp_to_next);
+	scm_c_define_gsubr("set-player-weapon", 2, 0, 0, __api_set_player_weapon);
+	scm_c_define_gsubr("get-player-weapon", 0, 0, 0, __api_get_player_weapon);
+	scm_c_define_gsubr("get-player-level", 0, 0, 0, __api_get_player_level);
+	scm_c_define_gsubr("hit-player", 1, 0, 0, __api_hit_player);
+	scm_c_define_gsubr("give-player-exp", 1, 0, 0, __api_give_player_exp);
+	scm_c_define_gsubr("warp-player", 2, 0, 0, __api_warp_player);
+	scm_c_define_gsubr("set-player-weapon-index", 1, 0, 0, __api_set_player_weapon_index);
+	scm_c_define_gsubr("shoot-player-weapon", 2, 0, 0, __api_shoot_player_weapon);
+
+	scm_c_primitive_load("init/player.scm");
 }
 
 void reset_player()
@@ -117,15 +235,11 @@ double get_player_max_health()
 	return PLAYER_MAX_HEALTH;
 }
 
-double get_player_magic()
+double get_player_charge_percent()
 {
 	return PLAYER_WEAPONS[PLAYER_WEAPON_INDEX]->charge;
 }
 
-double get_player_max_magic()
-{
-	return PLAYER_WEAPONS[PLAYER_WEAPON_INDEX]->max_charge;
-}
 double get_player_exp()
 {
 	return PLAYER_EXP;
@@ -139,6 +253,13 @@ double get_player_exp_to_next()
 int get_player_level()
 {
 	return PLAYER_LEVEL;
+}
+
+void set_player_weapon(int i, weapon *w)
+{
+	PLAYER_WEAPONS[i] = w;
+	w->x = &PLAYER_X;
+	w->y = &PLAYER_Y;
 }
 
 weapon *get_player_weapon()

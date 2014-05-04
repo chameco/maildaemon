@@ -25,8 +25,8 @@
 #include "fx.h"
 #include "game.h"
 
-int CURSOR_X = 0;
-int CURSOR_Y = 0;
+static int CURSOR_X = 0;
+static int CURSOR_Y = 0;
 
 SCM __api_swap_block_at_cursor(SCM block)
 {
@@ -75,7 +75,7 @@ void inner_main(void *data, int argc, char *argv[])
 						} else if (event.key.keysym.sym == SDLK_d) {
 							CURSOR_X += 1;
 						} else if (event.key.keysym.sym == SDLK_x) {
-							save_level(get_current_level(), "levels/test");
+							save_level(get_current_level());
 						}
 					}
 					break;

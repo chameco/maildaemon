@@ -33,6 +33,8 @@ effect *make_fx(etype type, color col,
 void spawn_fx(effect *e);
 
 global_effect *make_global_fx(void (*callback)(), int timer);
+
+void global_effect_shake();
 void spawn_global_fx(global_effect *e);
 
 void update_fx();

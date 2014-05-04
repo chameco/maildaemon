@@ -15,10 +15,9 @@
 #include "resources.h"
 #include "level.h"
 
-list_node *LIGHTS;
+static list_node *LIGHTS;
 
-resource *LIGHTMAP;
-GLuint LIGHT_OVERLAY;
+static resource *LIGHTMAP;
 
 static scm_t_bits __api_lightsource_tag;
 
@@ -33,6 +32,7 @@ SCM __api_spawn_lightsource(SCM l)
 {
 	lightsource *light = (lightsource *) SCM_SMOB_DATA(l);
 	spawn_lightsource(light);
+	scm_gc_protect_object(l);
 	return SCM_BOOL_F;
 }
 
@@ -51,7 +51,7 @@ void reset_lights()
 	list_node *c;
 	for (c = LIGHTS->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((lightsource *) c->data) != NULL) {
-			free((lightsource *) c->data);
+			scm_gc_free((lightsource *) c->data, sizeof(lightsource), "lightsource");
 		}
 	}
 	LIGHTS = make_list();
@@ -62,8 +62,6 @@ lightsource *make_lightsource(int x, int y, int dim, int intensity, color c)
 	lightsource *l = scm_gc_malloc(sizeof(lightsource), "lightsource");
 	l->x = x - dim/2;
 	l->y = y - dim/2;
-	//l->x = x;
-	//l->y = y;
 	l->dim = dim;
 	l->intensity = intensity;
 	l->c = c;

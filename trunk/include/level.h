@@ -23,9 +23,9 @@ typedef struct level {
 } level;
 
 void initialize_level();
-void switch_level(char *path);
-level *load_level(char *path);
-void save_level(level *l, char *path);
+void switch_level(char *name);
+level *load_level(char *name);
+void save_level(level *l);
 level *get_current_level();
 int is_solid_tile(int x, int y);
 void draw_level();

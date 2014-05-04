@@ -16,13 +16,11 @@
 
 #include "utils.h"
 
-list_node *EFFECTS;
-list_node *GLOBAL_EFFECTS;
-int PARTICLE_WIDTH = 2;
-int PARTICLE_HEIGHT = 2;
-vertex EFFECT_VERTICES[4];
-GLuint EFFECT_VERTEX_HANDLER = 0;
-Mix_Chunk *EXPLOSION_SOUND;
+static list_node *EFFECTS;
+static list_node *GLOBAL_EFFECTS;
+static vertex EFFECT_VERTICES[4];
+static GLuint EFFECT_VERTEX_HANDLER = 0;
+static Mix_Chunk *EXPLOSION_SOUND;
 
 void initialize_fx()
 {
@@ -120,6 +118,11 @@ global_effect *make_global_fx(void (*callback)(), int timer)
 	ge->callback = callback;
 	ge->timer = timer;
 	return ge;
+}
+
+void global_effect_shake()
+{
+	glTranslatef((rand() % 10) - 5, (rand() % 10) - 5, 0);
 }
 
 void spawn_global_fx(global_effect *e)

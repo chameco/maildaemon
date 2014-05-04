@@ -18,8 +18,8 @@
 #include "projectile.h"
 #include "fx.h"
 
-level *CURRENT_LEVEL = NULL;
-resource *TILE_RESOURCES[256];
+static level *CURRENT_LEVEL = NULL;
+static resource *TILE_RESOURCES[256];
 
 void initialize_level()
 {
@@ -33,16 +33,16 @@ void initialize_level()
 	TILE_RESOURCES[TORCH] = load_resource("textures/torch.png");
 }
 
-void switch_level(char *path)
+void switch_level(char *name)
 {
-	CURRENT_LEVEL = load_level(path);
+	CURRENT_LEVEL = load_level(name);
 }
 
-level *load_level(char *path)
+level *load_level(char *name)
 {
 	level *ret = malloc(sizeof(level));
-	char buf[256];
-	strcpy(buf, path);
+	char buf[256] = "levels/";
+	strcat(buf, name);
 	int bare = strlen(buf);
 	strcat(buf, ".lvl");
 	FILE *f = fopen(buf, "r");
@@ -66,9 +66,12 @@ level *load_level(char *path)
 	return ret;
 }
 
-void save_level(level *l, char *path)
+void save_level(level *l)
 {
-	FILE *f = fopen(path, "w+");
+	char buf[256] = "levels/";
+	strncat(buf, l->name, sizeof(buf) - strlen(buf) - 5);
+	strcat(buf, ".lvl");
+	FILE *f = fopen(buf, "w+");
 	fwrite(l, sizeof(level), 1, f);
 	fclose(f);
 }

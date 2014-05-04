@@ -26,17 +26,15 @@
 #include "gui.h"
 #include "fx.h"
 
-SDL_Window *SCREEN;
-SDL_GLContext *CONTEXT;
-int SCREEN_WIDTH = 0;
-int SCREEN_HEIGHT = 0;
-int GAME_OVER = 0;
-mode CURRENT_MODE = MAIN_MENU_MODE;
-int LAST_TIME = 0;
-int CURRENT_TIME = 0;
-char *CURRENT_DIALOG = NULL;
-int DIALOG_TICKS = 0;
-Mix_Chunk *BLIP_SOUND;
+static SDL_Window *SCREEN;
+static SDL_GLContext *CONTEXT;
+static int SCREEN_WIDTH = 0;
+static int SCREEN_HEIGHT = 0;
+static mode CURRENT_MODE = MAIN_MENU_MODE;
+static int LAST_TIME = 0;
+static int CURRENT_TIME = 0;
+static char *CURRENT_DIALOG = NULL;
+static Mix_Chunk *BLIP_SOUND;
 
 void initialize_game()
 {
@@ -80,7 +78,6 @@ void initialize_game()
 
 	initialize_utils();
 	initialize_resources();
-	initialize_repl();
 	initialize_level();
 	initialize_weapons();
 	initialize_lights();
@@ -89,6 +86,8 @@ void initialize_game()
 	initialize_projectile();
 	initialize_fx();
 	initialize_gui();
+
+	initialize_repl();
 
 	set_current_dialog("Hello");
 }
@@ -292,11 +291,6 @@ int draw_main_menu_loop()
 	return 1;
 }
 
-void global_effect_shake()
-{
-	glTranslatef(rand() % 10, rand() % 10, 0);
-}
-
 int draw_main_loop()
 {
 	//static int counted_frames = 0;
@@ -339,7 +333,10 @@ int draw_main_loop()
 							Mix_PlayChannel(-1, BLIP_SOUND, 0);
 						}
 					} else if (event.key.keysym.sym == SDLK_o) {
+						scm_c_eval_string("(get-player-x)");
 						spawn_global_fx(make_global_fx(global_effect_shake, 10));
+					} else if (event.key.keysym.sym == SDLK_m) {
+						hit_player(1000);
 					} else if (event.key.keysym.sym == SDLK_0) {
 						set_player_weapon_index(0);
 					} else if (event.key.keysym.sym == SDLK_1) {

@@ -18,12 +18,12 @@
 #include "level.h"
 #include "player.h"
 
-resource *BUTTON_BACKGROUND;
-resource *DIALOG_BOX_BACKGROUND;
-resource *METER_BACKGROUND;
-char CURRENT_PLAYER_LEVEL_TEXT[256];
-char CURRENT_LEVEL_TEXT[256];
-int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
+static resource *BUTTON_BACKGROUND;
+static resource *DIALOG_BOX_BACKGROUND;
+static resource *METER_BACKGROUND;
+static char CURRENT_PLAYER_LEVEL_TEXT[256];
+static char CURRENT_LEVEL_TEXT[256];
+static int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
 
 SDL_Surface *BITMAP = NULL;
 GLuint BITMAP_FONT[4][26] = {{0}};
@@ -77,13 +77,6 @@ void initialize_gui()
 void load_bitmap_font(char *path)
 {
 	BITMAP = IMG_Load(path);
-	char buffer[100];
-	if (BITMAP == NULL) {
-		strcpy(buffer, DATADIR);
-		strcat(buffer, path);
-		debug("%s", buffer);
-		BITMAP = IMG_Load(buffer);
-	}
 	//SDL_SetSurfaceAlphaMod(BITMAP, 0);
 	SDL_SetSurfaceBlendMode(BITMAP, SDL_BLENDMODE_NONE);
 	SDL_SetColorKey(BITMAP, SDL_TRUE, SDL_MapRGBA(BITMAP->format, 255, 0, 0, 255));
@@ -270,14 +263,10 @@ void draw_gui()
 {
 	double h = get_player_health();
 	double mh = get_player_max_health();
-	double m = get_player_magic();
-	double mm = get_player_max_magic();
 	double e = get_player_exp();
 	double me = get_player_exp_to_next();
 	int hlength;
 	hlength = (100 * h) / mh;
-	int mlength;
-	mlength = (100 * m) / mm;
 	int elength;
 	elength = (100 * e) / me;
 	if (BELIEVED_CURRENT_PLAYER_LEVEL != get_player_level()) {
@@ -285,12 +274,12 @@ void draw_gui()
 		sprintf(CURRENT_PLAYER_LEVEL_TEXT, "lvl %d", BELIEVED_CURRENT_PLAYER_LEVEL);
 	}
 	if (strcmp(CURRENT_LEVEL_TEXT, get_current_level()->name) != 0) {
-		char *buffer =  get_current_level()->name;
-		strncpy(CURRENT_LEVEL_TEXT, buffer, 256);
+		char *buffer = get_current_level()->name;
+		strncpy(CURRENT_LEVEL_TEXT, buffer, sizeof(CURRENT_LEVEL_TEXT));
 	}
 
 	draw_meter("Health", 0, 0, COLOR_GREEN, hlength);
-	draw_meter("Ammo", 0, 32, get_player_weapon()->c, mlength);
+	draw_meter("Ammo", 0, 32, COLOR_GRAY, get_player_charge_percent());
 	draw_meter(CURRENT_PLAYER_LEVEL_TEXT, 0, 64, (color) {1.0, 0.8, 0.0, 1.0}, elength);
 
 	//LEVEL TITLE

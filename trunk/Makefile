@@ -1,5 +1,5 @@
 CC = gcc
-OBJECTS = src/vm.o src/resources.o src/game.o src/repl.o src/weapon.o src/level.o src/lights.o src/player.o src/entity.o src/utils.o src/projectile.o src/gui.o src/fx.o
+OBJECTS = src/main.o src/level_editor.o src/vm.o src/resources.o src/game.o src/repl.o src/weapon.o src/level.o src/lights.o src/player.o src/entity.o src/utils.o src/projectile.o src/gui.o src/fx.o
 INSTALL = install
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = cp -r
@@ -12,7 +12,7 @@ libdir = $(exec_prefix)/lib
 CFLAGS = -Iinclude -std=c99 -g -Wall -Werror `pkg-config guile-2.0 --cflags`
 LINKER_FLAGS = libs/libcuttle.a -lm -lzmq `pkg-config guile-2.0 --libs` -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer 
 
-all: src/main.o src/level_editor.o $(OBJECTS)
+all: $(OBJECTS)
 	$(CC) src/main.o $(OBJECTS) $(LINKER_FLAGS) -o maildaemon
 	$(CC) src/level_editor.o $(OBJECTS) $(LINKER_FLAGS) -o level_editor
 install:

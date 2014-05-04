@@ -7,7 +7,7 @@
 void inner_main()
 {
 	initialize_game();
-	switch_level("levels/test");
+	switch_level("test");
 	main_game_loop();
 	SDL_Quit();
 }

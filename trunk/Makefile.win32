@@ -1,10 +1,11 @@
 CC = i486-mingw32-gcc
-OBJECTS = src/main.o src/resources.o src/game.o src/worldgen.o src/weapon.o src/level.o src/lights.o src/player.o src/entity.o src/ai.o src/utils.o src/projectile.o src/gui.o src/fx.o
-CFLAGS = -static -DGLEW_STATIC -Iinclude -g -Wall -I/usr/i486-mingw32/include -I/usr/local/include
+OBJECTS = src/main.o src/level_editor.o src/vm.o src/resources.o src/game.o src/repl.o src/weapon.o src/level.o src/lights.o src/player.o src/entity.o src/utils.o src/projectile.o src/gui.o src/fx.o
+#CFLAGS = -static -DGLEW_STATIC -Iinclude -g -Wall -I/usr/i486-mingw32/include -I/usr/local/include
+CFLAGS = -Iinclude -std=c99 -g -Wall -Werror `pkg-config guile-2.0 --cflags`
 
-all: $(OBJECTS) worldgen
-	$(CC) $(OBJECTS) -L/usr/i486-mingw32/lib -L/usr/i486-mingw32/bin -L/usr/local/lib -lmingw32 -lglew32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer -lm -lcuttle -lopengl32 -lglu32 -o maildaemon.exe
-worldgen: src/make_world.o src/worldgen.o
-	$(CC) src/make_world.o src/worldgen.o -o make_world
+all: $(OBJECTS)
+	#$(CC) $(OBJECTS) -L/usr/i486-mingw32/lib -L/usr/i486-mingw32/bin -L/usr/local/lib -lmingw32 -lglew32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_mixer -lm -lcuttle -lopengl32 -lglu32 -o maildaemon.exe
+	$(CC) src/main.o $(OBJECTS) $(LINKER_FLAGS) -o maildaemon.exe
+	$(CC) src/level_editor.o $(OBJECTS) $(LINKER_FLAGS) -o level_editor.exe
 clean:
 	rm src/*.o

@@ -12,8 +12,8 @@
 #include "cuttle/debug.h"
 #include "cuttle/utils.h"
 
-void *NETWORK_CONTEXT;
-void *NETWORK_SOCKET;
+static void *NETWORK_CONTEXT;
+static void *NETWORK_SOCKET;
 
 void initialize_repl()
 {

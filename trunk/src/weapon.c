@@ -9,21 +9,65 @@
 #include "utils.h"
 #include "projectile.h"
 
-list_node *WEAPONS;
+static list_node *WEAPONS;
 
-scm_t_bits __api_weapon_tag;
+static scm_t_bits __api_weapon_tag;
 
-SCM __api_make_weapon(SCM c, SCM xoffset, SCM yoffset,
-		SCM speed, SCM damage, SCM max_charge, SCM isbeam, SCM bullets_per_volley,
-		SCM pdim, SCM sfx_path)
+SCM __api_make_weapon(SCM sfx_path, SCM update_func)
 {
-	color *col = (color *) SCM_SMOB_DATA(c);
 	char *sfxp = scm_to_locale_string(sfx_path);
-	weapon *w = make_weapon(*col, scm_to_int(xoffset), scm_to_int(yoffset),
-			scm_to_int(speed), scm_to_int(damage), scm_to_double(max_charge),
-			scm_to_int(isbeam), scm_to_int(bullets_per_volley), scm_to_int(pdim), sfxp);
+	weapon *w = make_weapon(sfxp, update_func);
 	free(sfxp);
-	return scm_new_smob(__api_weapon_tag, (unsigned long) w);
+	SCM ret = scm_new_smob(__api_weapon_tag, (unsigned long) w);
+	scm_gc_protect_object(ret);
+	return ret;
+}
+
+SCM __api_is_weapon_firing(SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	if (is_weapon_firing(weap)) {
+		return SCM_BOOL_T;
+	} else {
+		return SCM_BOOL_F;
+	}
+}
+
+SCM __api_get_weapon_charge(SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	return scm_from_double(get_weapon_charge(weap));
+}
+
+SCM __api_set_weapon_charge(SCM w, SCM c)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	set_weapon_charge(weap, scm_to_double(c));
+	return SCM_BOOL_F;
+}
+
+SCM __api_get_weapon_xv(SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	return scm_from_int(get_weapon_xv(weap));
+}
+
+SCM __api_get_weapon_yv(SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	return scm_from_int(get_weapon_yv(weap));
+}
+
+SCM __api_get_weapon_x(SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	return scm_from_int(*(weap->x));
+}
+
+SCM __api_get_weapon_y(SCM w)
+{
+	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
+	return scm_from_int(*(weap->y));
 }
 
 SCM __api_press_trigger(SCM w, SCM d)
@@ -40,38 +84,73 @@ SCM __api_release_trigger(SCM w)
 	return SCM_BOOL_F;
 }
 
+SCM __api_smob_weapon_mark(SCM w)
+{
+	weapon *wep = (weapon *) SCM_SMOB_DATA(w);
+	return wep->update_func;
+}
+
 void initialize_weapons()
 {
 	WEAPONS = make_list();
 
 	__api_weapon_tag = scm_make_smob_type("weapon", sizeof(weapon));
-	scm_c_define_gsubr("make-weapon", 10, 0, 0, __api_make_weapon);
+	scm_set_smob_mark(__api_weapon_tag, __api_smob_weapon_mark);
+	scm_c_define_gsubr("make-weapon", 2, 0, 0, __api_make_weapon);
+	scm_c_define_gsubr("is-weapon-firing", 1, 0, 0, __api_is_weapon_firing);
+	scm_c_define_gsubr("get-weapon-charge", 1, 0, 0, __api_get_weapon_charge);
+	scm_c_define_gsubr("set-weapon-charge", 2, 0, 0, __api_set_weapon_charge);
+	scm_c_define_gsubr("get-weapon-xv", 1, 0, 0, __api_get_weapon_xv);
+	scm_c_define_gsubr("get-weapon-yv", 1, 0, 0, __api_get_weapon_yv);
+	scm_c_define_gsubr("get-weapon-x", 1, 0, 0, __api_get_weapon_x);
+	scm_c_define_gsubr("get-weapon-y", 1, 0, 0, __api_get_weapon_y);
 	scm_c_define_gsubr("press-trigger", 2, 0, 0, __api_press_trigger);
 	scm_c_define_gsubr("release-trigger", 1, 0, 0, __api_release_trigger);
 }
 
-weapon *make_weapon(color c, int xoffset, int yoffset,
-		int speed, int damage, double max_charge, int isbeam, int bullets_per_volley,
-		int pdim, char *sfx_path)
+scm_t_bits get_weapon_tag()
+{
+	return __api_weapon_tag;
+}
+
+weapon *make_weapon(char *sfx_path, SCM update_func)
 {
 	weapon *ret = scm_gc_malloc(sizeof(weapon), "weapon");
 	insert_list(WEAPONS, (void *) ret);
-	ret->c = c;
 	ret->x = NULL;
 	ret->y = NULL;
-	ret->xoffset = xoffset;
-	ret->yoffset = yoffset;
-	ret->speed = speed;
-	ret->damage = damage;
-	ret->charge = ret->max_charge = max_charge;
-	ret->isbeam = isbeam;
-	ret->bullets_per_volley = bullets_per_volley;
-	ret->pdim = pdim;
-	ret->sound = Mix_LoadWAV(sfx_path);
-	ret->channel = -1;
-	ret->cooldown = 0;
 	ret->firing = 0;
+	ret->xv = ret->yv = 0;
+	ret->sound = Mix_LoadWAV(sfx_path);
+	ret->charge = 100.0;
+	ret->update_func = update_func;
+	ret->data = SCM_BOOL_F;
 	return ret;
+}
+
+int is_weapon_firing(weapon *w)
+{
+	return w->firing;
+}
+
+double get_weapon_charge(weapon *w)
+{
+	return w->charge;
+}
+
+void set_weapon_charge(weapon *w, double c)
+{
+	w->charge = c;
+}
+
+int get_weapon_xv(weapon *w)
+{
+	return w->xv;
+}
+
+int get_weapon_yv(weapon *w)
+{
+	return w->yv;
 }
 
 void press_trigger(weapon *w, direction d)
@@ -79,34 +158,26 @@ void press_trigger(weapon *w, direction d)
 	if (w == NULL) {
 		return;
 	}
-	if (w->cooldown == 0) {
-		switch (d) {
-			case NORTH:
-				w->xv = 0;
-				w->yv = -w->speed;
-				break;
-			case SOUTH:
-				w->xv = 0;
-				w->yv = w->speed;
-				break;
-			case WEST:
-				w->xv = -w->speed;
-				w->yv = 0;
-				break;
-			case EAST:
-				w->xv = w->speed;
-				w->yv = 0;
-				break;
-		}
-		w->firing = 1;
-		if (w->isbeam) {
-			if (w->channel == -1) {
-				w->channel = Mix_PlayChannel(-1, w->sound, -1);
-			}
-		} else {
-			w->cooldown = 5;
-		}
+	switch (d) {
+		case NORTH:
+			w->xv = 0;
+			w->yv = -1;
+			break;
+		case SOUTH:
+			w->xv = 0;
+			w->yv = 1;
+			break;
+		case WEST:
+			w->xv = -1;
+			w->yv = 0;
+			break;
+		case EAST:
+			w->xv = 1;
+			w->yv = 0;
+			break;
 	}
+	w->firing = 1;
+	Mix_PlayChannel(-1, w->sound, 0);
 }
 
 void release_trigger(weapon *w)
@@ -114,11 +185,7 @@ void release_trigger(weapon *w)
 	if (w == NULL) {
 		return;
 	}
-	if (w->isbeam) {
-		w->firing = 0;
-		Mix_HaltChannel(w->channel);
-		w->channel = -1;
-	}
+	w->firing = 0;
 }
 
 void update_weapons()
@@ -128,46 +195,7 @@ void update_weapons()
 	for (c = WEAPONS->next; c->next != NULL; c = c->next) {
 		if (((weapon *) c->data) != NULL) {
 			w = (weapon *) c->data;
-			if (w->isbeam == 1) {
-				if (w->firing) {
-					if (w->charge >= 0.5) {
-						w->charge -= 0.5;
-					} else {
-						w->firing = 0;
-						continue;
-					}
-					if (abs(w->xv) > abs(w->yv)) {
-						spawn_projectile(w->c, *(w->x)+w->xoffset, *(w->y)+w->yoffset,
-								w->xv, w->yv, w->pdim*2, w->pdim, 100, w, w->damage);
-					} else {
-						spawn_projectile(w->c, *(w->x)+w->xoffset, *(w->y)+w->yoffset,
-								w->xv, w->yv, w->pdim, w->pdim*2, 100, w, w->damage);
-					}
-				} else {
-					if (w->charge <= 99.9) {
-						w->charge += 0.1;
-					}
-				}
-			} else {
-				if (w->cooldown > 0) {
-					w->cooldown--;
-				}
-				if (w->firing) {
-					if (w->charge >= 5.0) {
-						w->charge -= 5.0;
-						spawn_projectile(w->c, *(w->x)+w->xoffset, *(w->y)+w->yoffset,
-								w->xv, w->yv, w->pdim, w->pdim, 100, w, w->damage);
-						Mix_PlayChannel(-1, w->sound, 0);
-						w->firing = 0;
-					} else {
-						w->firing = 0;
-					}
-				} else {
-					if (w->charge <= 99.9) {
-						w->charge += 0.1;
-					}
-				}
-			}
+			w->data = scm_call_2(w->update_func, scm_new_smob(__api_weapon_tag, (unsigned long) w), w->data);
 		}
 	}
 }

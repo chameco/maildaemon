@@ -12,16 +12,30 @@
 #include "cuttle/utils.h"
 
 #include "utils.h"
+#include "weapon.h"
 #include "player.h"
 #include "entity.h"
 #include "level.h"
 #include "fx.h"
 
-list_node *PROJECTILES;
+static list_node *PROJECTILES;
+
+SCM __api_spawn_projectile(SCM c, SCM x, SCM y, SCM xv, SCM yv, SCM w, SCM h,
+		SCM longevity, SCM spawned_by, SCM dmg)
+{
+	color col = *((color *) SCM_SMOB_DATA(c));
+	scm_gc_free((color *) c, sizeof(color), "color");
+	weapon *sb = (weapon *) SCM_SMOB_DATA(spawned_by);
+	spawn_projectile(col, scm_to_int(x), scm_to_int(y), scm_to_int(xv), scm_to_int(yv),
+			scm_to_int(w), scm_to_int(h), scm_to_int(longevity), sb, scm_to_int(dmg));
+	return SCM_BOOL_F;
+}
 
 void initialize_projectile()
 {
 	PROJECTILES = make_list();
+
+	scm_c_define_gsubr("spawn-projectile", 10, 0, 0, __api_spawn_projectile);
 }
 
 void reset_projectile()
