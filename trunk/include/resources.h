@@ -5,11 +5,13 @@
 #include <SDL2/SDL_mixer.h>
 #include "utils.h"
 
+#define SPRITESHEET_DIM 4
+
 typedef struct resource {
 	GLuint texture;
 	int w, h;
 	int anim_x, anim_y;
-	GLuint index_handlers[16];
+	GLuint index_handlers[SPRITESHEET_DIM * SPRITESHEET_DIM];
 	GLuint vertex_handler;
 } resource;
 

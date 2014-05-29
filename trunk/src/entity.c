@@ -20,8 +20,6 @@
 #include "player.h"
 #include "weapon.h"
 
-static resource *ENTITY_RESOURCES[256] = {0};
-static int CURRENT_ENTITY_ID = 0;
 static list_node *ENTITIES;
 
 static hash_map *ENTITY_PROTOTYPES;
@@ -157,18 +155,13 @@ entity *build_entity_prototype(char *name, int w, int h,
 		int health, int speed, double expval)
 {
 	entity *e = scm_gc_malloc(sizeof(entity), "entity");
-	e->id = CURRENT_ENTITY_ID++;
-	if (ENTITY_RESOURCES[e->id] == 0) {
-		char buf[256] = "textures/entities/";
-		strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
-		strcat(buf, ".png");
-		ENTITY_RESOURCES[e->id] = load_resource(buf, w, h);
-	}
+	strcpy(e->name, name);
 	e->x = 0;
 	e->y = 0;
 	e->w = w;
 	e->h = h;
 	e->xv = e->yv = 0;
+	e->r = NULL;
 	e->weapon = NULL;
 	e->health = health;
 	e->speed = speed;
@@ -203,6 +196,10 @@ entity *make_entity(char *name, int x, int y)
 	entity *proto = get_hash(ENTITY_PROTOTYPES, name);
 	entity *ret = scm_gc_malloc(sizeof(entity), "entity");
 	memcpy(ret, proto, sizeof(entity));
+	char buf[256] = "textures/entities/";
+	strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
+	strcat(buf, ".png");
+	ret->r = load_resource(buf, ret->w, ret->h);
 	ret->x = x;
 	ret->y = y;
 	return ret;
@@ -340,7 +337,7 @@ void draw_entity()
 	for (c = ENTITIES; c->next != NULL; c = c->next) {
 		if (((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
-			draw_resource(ENTITY_RESOURCES[e->id], e->x, e->y);
+			draw_resource(e->r, e->x, e->y);
 		}
 	}
 }

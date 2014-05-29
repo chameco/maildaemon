@@ -34,11 +34,34 @@ SCM __api_draw_resource(SCM r, SCM x, SCM y)
 	return SCM_BOOL_F;
 }
 
+SCM __api_set_animation(SCM r, SCM ay)
+{
+	resource *res = (resource *) SCM_SMOB_DATA(r);
+	set_animation(res, scm_to_int(ay));
+	return SCM_BOOL_F;
+}
+
+SCM __api_get_frame(SCM r)
+{
+	resource *res = (resource *) SCM_SMOB_DATA(r);
+	return scm_from_int(get_frame(res));
+}
+
+SCM __api_set_frame(SCM r, SCM ax)
+{
+	resource *res = (resource *) SCM_SMOB_DATA(r);
+	set_frame(res, scm_to_int(ax));
+	return SCM_BOOL_F;
+}
+
 void initialize_resources()
 {
 	__api_resource_tag = scm_make_smob_type("resource", sizeof(resource));
 	scm_c_define_gsubr("load-resource", 3, 0, 0, __api_load_resource);
 	scm_c_define_gsubr("draw-resource", 3, 0, 0, __api_draw_resource);
+	scm_c_define_gsubr("set-animation", 2, 0, 0, __api_set_animation);
+	scm_c_define_gsubr("get-frame", 1, 0, 0, __api_get_frame);
+	scm_c_define_gsubr("set-frame", 2, 0, 0, __api_set_frame);
 }
 
 GLuint surface_to_texture(SDL_Surface *surface)
@@ -97,28 +120,29 @@ resource *load_resource(char *path, int w, int h)
 			index_data[1] = i * 4 + 1;
 			index_data[2] = i * 4 + 2;
 			index_data[3] = i * 4 + 3;
-			vertex_data[index_data[0]].x = cc;
-			vertex_data[index_data[0]].y = rc;
-			vertex_data[index_data[0]].s = cc/column_count;
-			vertex_data[index_data[0]].t = rc/row_count;
-
-			vertex_data[index_data[1]].x = cc + 1;
-			vertex_data[index_data[1]].y = rc;
-			vertex_data[index_data[1]].s = (cc + 1)/column_count;
-			vertex_data[index_data[1]].t = rc/row_count;
-
-			vertex_data[index_data[2]].x = cc + 1;
-			vertex_data[index_data[2]].y = rc + 1;
-			vertex_data[index_data[2]].s = (cc + 1)/column_count;
-			vertex_data[index_data[2]].t = (rc + 1)/row_count;
-
-			vertex_data[index_data[3]].x = cc;
-			vertex_data[index_data[3]].y = rc + 1;
-			vertex_data[index_data[3]].s = cc/column_count;
-			vertex_data[index_data[3]].t = (rc + 1)/row_count;
 
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret->index_handlers[i]);
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), index_data, GL_STATIC_DRAW);
+
+			vertex_data[index_data[0]].x = cc;
+			vertex_data[index_data[0]].y = rc;
+			vertex_data[index_data[0]].s = ((GLfloat) cc)/column_count;
+			vertex_data[index_data[0]].t = ((GLfloat) rc)/row_count;
+
+			vertex_data[index_data[1]].x = cc + 1;
+			vertex_data[index_data[1]].y = rc;
+			vertex_data[index_data[1]].s = ((GLfloat) (cc + 1))/column_count;
+			vertex_data[index_data[1]].t = ((GLfloat) rc)/row_count;
+
+			vertex_data[index_data[2]].x = cc + 1;
+			vertex_data[index_data[2]].y = rc + 1;
+			vertex_data[index_data[2]].s = ((GLfloat) (cc + 1))/column_count;
+			vertex_data[index_data[2]].t = ((GLfloat) (rc + 1))/row_count;
+
+			vertex_data[index_data[3]].x = cc;
+			vertex_data[index_data[3]].y = rc + 1;
+			vertex_data[index_data[3]].s = ((GLfloat) cc)/column_count;
+			vertex_data[index_data[3]].t = ((GLfloat) (rc + 1))/row_count;
 
 			++i;
 		}
@@ -148,10 +172,13 @@ void draw_resource_scale(resource *r, int x, int y, int w, int h)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glBindBuffer(GL_ARRAY_BUFFER, r->vertex_handler);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)((sizeof(vertex) * r->anim_x * r->anim_y) + (sizeof(GLfloat)*2)));
-	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(vertex) * r->anim_x * r->anim_y));
+	//glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)((sizeof(vertex) * r->anim_x * r->anim_y) + (sizeof(GLfloat)*2)));
+	//glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(vertex) * r->anim_x * r->anim_y));	
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r->index_handlers[r->anim_x * r->anim_y]);
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0x0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *((r->index_handlers) + (r->anim_y * SPRITESHEET_DIM) + (r->anim_x)));
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
