@@ -8,14 +8,20 @@
 typedef struct resource {
 	GLuint texture;
 	int w, h;
+	int anim_x, anim_y;
+	GLuint index_handlers[16];
+	GLuint vertex_handler;
 } resource;
 
 GLuint surface_to_texture(SDL_Surface *s);
 
 void initialize_resources();
 
-resource *load_resource(char *path);
+resource *load_resource(char *path, int w, int h);
 void draw_resource(resource *r, int x, int y);
 void draw_resource_scale(resource *r, int x, int y, int w, int h);
+void set_animation(resource *r, int ay);
+int get_frame(resource *r);
+void set_frame(resource *r, int ax);
 void free_resource(resource *r);
 #endif

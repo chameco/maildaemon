@@ -39,7 +39,7 @@ SCM __api_spawn_lightsource(SCM l)
 void initialize_lights()
 {
 	LIGHTS = make_list();
-	LIGHTMAP = load_resource("textures/lightmap.png");
+	LIGHTMAP = load_resource("textures/lightmap.png", 0, 0);
 
 	__api_lightsource_tag = scm_make_smob_type("lightsource", sizeof(lightsource));
 	scm_c_define_gsubr("make-lightsource", 5, 0, 0, __api_make_lightsource);

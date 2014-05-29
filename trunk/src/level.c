@@ -23,14 +23,14 @@ static resource *TILE_RESOURCES[256];
 
 void initialize_level()
 {
-	TILE_RESOURCES[VOID] = load_resource("textures/blank.png");
-	TILE_RESOURCES[SNOW] = load_resource("textures/snow.png");
-	TILE_RESOURCES[GRASS] = load_resource("textures/grass.png");
-	TILE_RESOURCES[SAND] = load_resource("textures/sand.png");
-	TILE_RESOURCES[PLANKS] = load_resource("textures/floor.png");
-	TILE_RESOURCES[STONE] = load_resource("textures/wall.png");
-	TILE_RESOURCES[SHRUB] = load_resource("textures/shrub.png");
-	TILE_RESOURCES[TORCH] = load_resource("textures/torch.png");
+	TILE_RESOURCES[VOID] = load_resource("textures/blank.png", 32, 32);
+	TILE_RESOURCES[SNOW] = load_resource("textures/snow.png", 32, 32);
+	TILE_RESOURCES[GRASS] = load_resource("textures/grass.png", 32, 32);
+	TILE_RESOURCES[SAND] = load_resource("textures/sand.png", 32, 32);
+	TILE_RESOURCES[PLANKS] = load_resource("textures/floor.png", 32, 32);
+	TILE_RESOURCES[STONE] = load_resource("textures/wall.png", 32, 32);
+	TILE_RESOURCES[SHRUB] = load_resource("textures/shrub.png", 32, 32);
+	TILE_RESOURCES[TORCH] = load_resource("textures/torch.png", 32, 32);
 }
 
 void switch_level(char *name)

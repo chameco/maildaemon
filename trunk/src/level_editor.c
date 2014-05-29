@@ -56,7 +56,7 @@ void inner_main(void *data, int argc, char *argv[])
 	scm_c_define_gsubr("set-level-name", 1, 0, 0, __api_set_level_name);
 	scm_c_define_gsubr("set-level-ambience", 1, 0, 0, __api_set_level_ambience);
 	int running = 1;
-	resource *cursor = load_resource("textures/level_editor_cursor.png");
+	resource *cursor = load_resource("textures/level_editor_cursor.png", 32, 32);
 	while (running) {
 		SDL_Delay(10);
 		SDL_Event event;

@@ -6,7 +6,7 @@
 typedef struct projectile {
 	color c;
 	int x, y, w, h;
-	int xv, yv;
+	double xv, yv;
 	int longevity;
 	weapon *spawned_by;
 	int dmg;
@@ -14,7 +14,7 @@ typedef struct projectile {
 
 void initialize_projectile();
 void reset_projectile();
-void spawn_projectile(color c, int x, int y, int xv, int yv, int w, int h,
+void spawn_projectile(color c, int x, int y, double xv, double yv, int w, int h,
 		int longevity, weapon *spawned_by, int dmg);
 void check_projectile_collisions(projectile *p);
 void destroy_projectile(projectile *p);

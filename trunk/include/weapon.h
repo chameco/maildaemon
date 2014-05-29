@@ -7,7 +7,7 @@
 typedef struct weapon {
 	int *x, *y;
 	int firing;
-	int xv, yv;
+	double xv, yv;
 	Mix_Chunk *sound;
 	double charge;
 	SCM draw_hud_func;
@@ -33,9 +33,9 @@ weapon *make_weapon(char *sfx_path, SCM update_func);
 int is_weapon_firing(weapon *w);
 double get_weapon_charge(weapon *w);
 void set_weapon_charge(weapon *w, double c);
-int get_weapon_xv(weapon *w);
-int get_weapon_yv(weapon *w);
-void press_trigger(weapon *w, direction d);
+double get_weapon_xv(weapon *w);
+double get_weapon_yv(weapon *w);
+void press_trigger(weapon *w, double xv, double yv);
 void release_trigger(weapon *w);
 void update_weapons();
 #endif

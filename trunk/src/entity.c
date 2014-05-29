@@ -21,18 +21,26 @@
 #include "weapon.h"
 
 static resource *ENTITY_RESOURCES[256] = {0};
+static int CURRENT_ENTITY_ID = 0;
 static list_node *ENTITIES;
 
 static hash_map *ENTITY_PROTOTYPES;
 
 static scm_t_bits __api_entity_tag;
 
-SCM __api_build_entity_prototype(SCM id, SCM path, SCM w, SCM h,
+SCM __api_build_entity_prototype(SCM path, SCM w, SCM h,
 		SCM health, SCM speed, SCM expval)
 {
-	entity *e = build_entity_prototype(scm_to_int(id), scm_to_locale_string(path), scm_to_int(w), scm_to_int(h),
+	entity *e = build_entity_prototype(scm_to_locale_string(path), scm_to_int(w), scm_to_int(h),
 			scm_to_int(health), scm_to_int(speed), scm_to_double(expval));
 	return scm_new_smob(__api_entity_tag, (unsigned long) e);
+}
+
+SCM __api_set_entity_init(SCM e, SCM init)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	set_entity_init(ent, init);
+	return SCM_BOOL_F;
 }
 
 SCM __api_set_entity_hit(SCM e, SCM hit)
@@ -45,14 +53,14 @@ SCM __api_set_entity_hit(SCM e, SCM hit)
 SCM __api_set_entity_collide(SCM e, SCM collide)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	set_entity_hit(ent, collide);
+	set_entity_collide(ent, collide);
 	return SCM_BOOL_F;
 }
 
 SCM __api_set_entity_update(SCM e, SCM update)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	set_entity_hit(ent, update);
+	set_entity_update(ent, update);
 	return SCM_BOOL_F;
 }
 
@@ -87,6 +95,7 @@ SCM __api_move_entity(SCM e, SCM d)
 SCM __api_smob_entity_mark(SCM e)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	scm_gc_mark(ent->init_func);
 	scm_gc_mark(ent->hit_func);
 	scm_gc_mark(ent->collide_func);
 	return ent->update_func;
@@ -100,7 +109,8 @@ void initialize_entity()
 
 	__api_entity_tag = scm_make_smob_type("entity", sizeof(entity));
 	scm_set_smob_mark(__api_entity_tag, __api_smob_entity_mark);
-	scm_c_define_gsubr("build-entity-prototype", 7, 0, 0, __api_build_entity_prototype);
+	scm_c_define_gsubr("build-entity-prototype", 6, 0, 0, __api_build_entity_prototype);
+	scm_c_define_gsubr("set-entity-init", 2, 0, 0, __api_set_entity_init);
 	scm_c_define_gsubr("set-entity-hit", 2, 0, 0, __api_set_entity_hit);
 	scm_c_define_gsubr("set-entity-collide", 2, 0, 0, __api_set_entity_collide);
 	scm_c_define_gsubr("set-entity-update", 2, 0, 0, __api_set_entity_update);
@@ -115,7 +125,7 @@ void initialize_entity()
 	if (d != NULL) {
 		while ((entry = readdir(d))) {
 			char *pos = strrchr(entry->d_name, '.') + 1;
-			if (pos != 0x0 && strcmp(pos, "scm") == 0) {
+			if (pos != NULL && strcmp(pos, "scm") == 0) {
 				strcpy(buf, "entities/");
 				strcat(buf, entry->d_name);
 				scm_c_primitive_load(buf);
@@ -143,28 +153,34 @@ void reset_entities()
 	ENTITIES = make_list();
 }
 
-entity *build_entity_prototype(int id, char *name, int w, int h,
+entity *build_entity_prototype(char *name, int w, int h,
 		int health, int speed, double expval)
 {
 	entity *e = scm_gc_malloc(sizeof(entity), "entity");
-	e->id = id;
+	e->id = CURRENT_ENTITY_ID++;
 	if (ENTITY_RESOURCES[e->id] == 0) {
 		char buf[256] = "textures/entities/";
 		strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
 		strcat(buf, ".png");
-		ENTITY_RESOURCES[e->id] = load_resource(buf);
+		ENTITY_RESOURCES[e->id] = load_resource(buf, w, h);
 	}
 	e->x = 0;
 	e->y = 0;
 	e->w = w;
 	e->h = h;
 	e->xv = e->yv = 0;
+	e->weapon = NULL;
 	e->health = health;
 	e->speed = speed;
 	e->expval = expval;
 	e->hit_func = e->collide_func = e->update_func = SCM_BOOL_F;
 	set_hash(ENTITY_PROTOTYPES, name, e);
 	return e;
+}
+
+void set_entity_init(entity *e, SCM init)
+{
+	e->init_func = init;
 }
 
 void set_entity_hit(entity *e, SCM hit)

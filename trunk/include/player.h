@@ -23,7 +23,7 @@ void hit_player(int dmg);
 void give_player_exp(double exp);
 void warp_player(int x, int y);
 void set_player_weapon_index(int i);
-void shoot_player_weapon(int pressed, direction d);
+void shoot_player_weapon(int pressed, double xv, double yv);
 void move_player_north(int pressed);
 void move_player_south(int pressed);
 void move_player_west(int pressed);

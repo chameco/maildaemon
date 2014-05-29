@@ -1,1 +1,1 @@
-(build-entity-prototype 0 "slime" 32 32 10 0 40)
+(define SLIME (build-entity-prototype "slime" 32 32 10 0 40))

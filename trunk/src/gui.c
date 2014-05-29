@@ -63,9 +63,9 @@ SCM __api_draw_meter(SCM text, SCM x, SCM y, SCM c, SCM full)
 
 void initialize_gui()
 {
-	BUTTON_BACKGROUND = load_resource("textures/gui/buttontemplate.png");
-	DIALOG_BOX_BACKGROUND = load_resource("textures/gui/dialogtemplate.png");
-	METER_BACKGROUND = load_resource("textures/gui/meter.png");
+	BUTTON_BACKGROUND = load_resource("textures/gui/buttontemplate.png", 0, 0);
+	DIALOG_BOX_BACKGROUND = load_resource("textures/gui/dialogtemplate.png", 0, 0);
+	METER_BACKGROUND = load_resource("textures/gui/meter.png", 0, 0);
 	load_bitmap_font("fonts/font.png");
 
 	scm_c_define_gsubr("render-text-bitmap", 4, 0, 0, __api_render_text_bitmap);

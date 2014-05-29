@@ -137,9 +137,9 @@ SCM __api_set_player_weapon_index(SCM i)
 	return SCM_BOOL_F;
 }
 
-SCM __api_shoot_player_weapon(SCM pressed, SCM d)
+SCM __api_shoot_player_weapon(SCM pressed, SCM xv, SCM yv)
 {
-	shoot_player_weapon(scm_to_int(pressed), scm_to_int(d));
+	shoot_player_weapon(scm_to_int(pressed), scm_to_double(xv), scm_to_double(yv));
 	return SCM_BOOL_F;
 }
 
@@ -147,15 +147,15 @@ void initialize_player()
 {
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 
-	PLAYER_RESOURCES[NORTH] = load_resource("textures/player/default/n.png");
-	PLAYER_RESOURCES[SOUTH] = load_resource("textures/player/default/s.png");
-	PLAYER_RESOURCES[WEST] = load_resource("textures/player/default/w.png");
-	PLAYER_RESOURCES[EAST] = load_resource("textures/player/default/e.png");
+	PLAYER_RESOURCES[NORTH] = load_resource("textures/player/default/n.png", 0, 0);
+	PLAYER_RESOURCES[SOUTH] = load_resource("textures/player/default/s.png", 0, 0);
+	PLAYER_RESOURCES[WEST] = load_resource("textures/player/default/w.png", 0, 0);
+	PLAYER_RESOURCES[EAST] = load_resource("textures/player/default/e.png", 0, 0);
 
-	PLAYER_ALTERNATE[NORTH] = load_resource("textures/player/default/na.png");
-	PLAYER_ALTERNATE[SOUTH] = load_resource("textures/player/default/sa.png");
-	PLAYER_ALTERNATE[WEST] = load_resource("textures/player/default/wa.png");
-	PLAYER_ALTERNATE[EAST] = load_resource("textures/player/default/ea.png");
+	PLAYER_ALTERNATE[NORTH] = load_resource("textures/player/default/na.png", 0, 0);
+	PLAYER_ALTERNATE[SOUTH] = load_resource("textures/player/default/sa.png", 0, 0);
+	PLAYER_ALTERNATE[WEST] = load_resource("textures/player/default/wa.png", 0, 0);
+	PLAYER_ALTERNATE[EAST] = load_resource("textures/player/default/ea.png", 0, 0);
 
 	/*PLAYER_WEAPONS[1] = make_weapon(COLOR_RED, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
 	PLAYER_WEAPONS[1]->x = &PLAYER_X;
@@ -181,7 +181,7 @@ void initialize_player()
 	scm_c_define_gsubr("give-player-exp", 1, 0, 0, __api_give_player_exp);
 	scm_c_define_gsubr("warp-player", 2, 0, 0, __api_warp_player);
 	scm_c_define_gsubr("set-player-weapon-index", 1, 0, 0, __api_set_player_weapon_index);
-	scm_c_define_gsubr("shoot-player-weapon", 2, 0, 0, __api_shoot_player_weapon);
+	scm_c_define_gsubr("shoot-player-weapon", 3, 0, 0, __api_shoot_player_weapon);
 
 	scm_c_primitive_load("init/player.scm");
 }
@@ -298,10 +298,10 @@ void set_player_weapon_index(int i)
 	}
 }
 
-void shoot_player_weapon(int pressed, direction d)
+void shoot_player_weapon(int pressed, double xv, double yv)
 {
 	if (pressed) {
-		press_trigger(PLAYER_WEAPONS[PLAYER_WEAPON_INDEX], d);
+		press_trigger(PLAYER_WEAPONS[PLAYER_WEAPON_INDEX], xv, yv);
 	} else {
 		release_trigger(PLAYER_WEAPONS[PLAYER_WEAPON_INDEX]);
 	}

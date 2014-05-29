@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -211,7 +212,7 @@ int draw_title_loop()
 	static int ticks = 0;
 	static resource *title_image;
 	if (!title_image) {
-		title_image = load_resource("textures/title.png");
+		title_image = load_resource("textures/title.png", 0, 0);
 	}
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 50) {
@@ -238,7 +239,7 @@ int draw_main_menu_loop()
 	if (!loaded) {
 		loaded = 1;
 		Mix_PlayChannel(-1, Mix_LoadWAV("sfx/mail.wav"), 0);
-		ampersand = load_resource("textures/ampersand.png");
+		ampersand = load_resource("textures/ampersand.png", 0, 0);
 		button_enter_rect.w = 200;
 		button_enter_rect.h = 50;
 		button_enter_rect.x = SCREEN_WIDTH/2 - button_enter_rect.w/2;
@@ -300,6 +301,8 @@ int draw_main_loop()
 	//counted_frames++;
 
 	int pressed;
+	double theta;
+	int centerx, centery;
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		pressed = 0;
@@ -319,14 +322,6 @@ int draw_main_loop()
 						move_player_west(pressed);
 					} else if (event.key.keysym.sym == SDLK_d) {
 						move_player_east(pressed);
-					} else if (event.key.keysym.sym == SDLK_UP) {
-						shoot_player_weapon(pressed, NORTH);
-					} else if (event.key.keysym.sym == SDLK_DOWN) {
-						shoot_player_weapon(pressed, SOUTH);
-					} else if (event.key.keysym.sym == SDLK_LEFT) {
-						shoot_player_weapon(pressed, WEST);
-					} else if (event.key.keysym.sym == SDLK_RIGHT) {
-						shoot_player_weapon(pressed, EAST);
 					} else if (event.key.keysym.sym == SDLK_SPACE) {
 						if (pressed && get_current_dialog() != NULL) {
 							set_current_dialog(NULL);
@@ -359,6 +354,22 @@ int draw_main_loop()
 						set_player_weapon_index(9);
 					}
 				}
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				centerx = SCREEN_WIDTH/2 + get_player_w()/2;
+				centery = SCREEN_HEIGHT/2 + get_player_h()/2;
+				if (event.button.x > centerx) {
+					theta = atan((double) (event.button.y - centery)
+							/ (double) (event.button.x - centerx));
+				} else {
+					theta = atan((double) (event.button.y - centery)
+							/ (double) (event.button.x - centerx))
+						+ 3.141592654;
+				}
+				shoot_player_weapon(1, cos(theta), sin(theta));
+				break;
+			case SDL_MOUSEBUTTONUP:
+				shoot_player_weapon(0, 0.0, 0.0);
 				break;
 			case SDL_QUIT:
 				return 0;
@@ -416,7 +427,7 @@ int draw_game_over_loop()
 	static SDL_Rect button_quit_rect;
 	if (!loaded) {
 		loaded = 1;
-		game_over_text = load_resource("textures/gameover.png");
+		game_over_text = load_resource("textures/gameover.png", 0, 0);
 		button_respawn_rect.w = 200;
 		button_respawn_rect.h = 50;
 		button_respawn_rect.x = SCREEN_WIDTH/2 - 250;

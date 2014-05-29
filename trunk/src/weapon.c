@@ -49,13 +49,13 @@ SCM __api_set_weapon_charge(SCM w, SCM c)
 SCM __api_get_weapon_xv(SCM w)
 {
 	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
-	return scm_from_int(get_weapon_xv(weap));
+	return scm_from_double(get_weapon_xv(weap));
 }
 
 SCM __api_get_weapon_yv(SCM w)
 {
 	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
-	return scm_from_int(get_weapon_yv(weap));
+	return scm_from_double(get_weapon_yv(weap));
 }
 
 SCM __api_get_weapon_x(SCM w)
@@ -70,10 +70,10 @@ SCM __api_get_weapon_y(SCM w)
 	return scm_from_int(*(weap->y));
 }
 
-SCM __api_press_trigger(SCM w, SCM d)
+SCM __api_press_trigger(SCM w, SCM xv, SCM yv)
 {
 	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
-	press_trigger(weap, scm_to_int(d));
+	press_trigger(weap, scm_to_double(xv), scm_to_double(yv));
 	return SCM_BOOL_F;
 }
 
@@ -104,7 +104,7 @@ void initialize_weapons()
 	scm_c_define_gsubr("get-weapon-yv", 1, 0, 0, __api_get_weapon_yv);
 	scm_c_define_gsubr("get-weapon-x", 1, 0, 0, __api_get_weapon_x);
 	scm_c_define_gsubr("get-weapon-y", 1, 0, 0, __api_get_weapon_y);
-	scm_c_define_gsubr("press-trigger", 2, 0, 0, __api_press_trigger);
+	scm_c_define_gsubr("press-trigger", 3, 0, 0, __api_press_trigger);
 	scm_c_define_gsubr("release-trigger", 1, 0, 0, __api_release_trigger);
 }
 
@@ -143,39 +143,23 @@ void set_weapon_charge(weapon *w, double c)
 	w->charge = c;
 }
 
-int get_weapon_xv(weapon *w)
+double get_weapon_xv(weapon *w)
 {
 	return w->xv;
 }
 
-int get_weapon_yv(weapon *w)
+double get_weapon_yv(weapon *w)
 {
 	return w->yv;
 }
 
-void press_trigger(weapon *w, direction d)
+void press_trigger(weapon *w, double xv, double yv)
 {
 	if (w == NULL) {
 		return;
 	}
-	switch (d) {
-		case NORTH:
-			w->xv = 0;
-			w->yv = -1;
-			break;
-		case SOUTH:
-			w->xv = 0;
-			w->yv = 1;
-			break;
-		case WEST:
-			w->xv = -1;
-			w->yv = 0;
-			break;
-		case EAST:
-			w->xv = 1;
-			w->yv = 0;
-			break;
-	}
+	w->xv = xv;
+	w->yv = yv;
 	w->firing = 1;
 	Mix_PlayChannel(-1, w->sound, 0);
 }
