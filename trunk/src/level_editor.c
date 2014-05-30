@@ -13,12 +13,12 @@
 #include "cuttle/utils.h"
 
 #include "utils.h"
-#include "resources.h"
+#include "texture.h"
 #include "repl.h"
 #include "entity.h"
 #include "weapon.h"
 #include "level.h"
-#include "lights.h"
+#include "lightsource.h"
 #include "player.h"
 #include "projectile.h"
 #include "gui.h"
@@ -56,7 +56,7 @@ void inner_main(void *data, int argc, char *argv[])
 	scm_c_define_gsubr("set-level-name", 1, 0, 0, __api_set_level_name);
 	scm_c_define_gsubr("set-level-ambience", 1, 0, 0, __api_set_level_ambience);
 	int running = 1;
-	resource *cursor = load_resource("textures/level_editor_cursor.png", 32, 32);
+	texture *cursor = load_texture("textures/level_editor_cursor.png", 32, 32);
 	while (running) {
 		SDL_Delay(10);
 		SDL_Event event;
@@ -104,9 +104,9 @@ void inner_main(void *data, int argc, char *argv[])
 		draw_player();
 		draw_projectile();
 		draw_fx();
-		draw_lights();
+		draw_lightsource();
 
-		draw_resource(cursor, CURSOR_X * TILE_DIM, CURSOR_Y * TILE_DIM);
+		draw_texture(cursor, CURSOR_X * TILE_DIM, CURSOR_Y * TILE_DIM);
 
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();

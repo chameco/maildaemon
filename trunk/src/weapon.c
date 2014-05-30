@@ -90,7 +90,7 @@ SCM __api_smob_weapon_mark(SCM w)
 	return wep->update_func;
 }
 
-void initialize_weapons()
+void initialize_weapon()
 {
 	WEAPONS = make_list();
 

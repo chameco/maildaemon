@@ -11,26 +11,21 @@
 #include "cuttle/utils.h"
 
 #include "utils.h"
-#include "resources.h"
-#include "lights.h"
-#include "entity.h"
-#include "player.h"
-#include "projectile.h"
-#include "fx.h"
+#include "texture.h"
 
 static level *CURRENT_LEVEL = NULL;
-static resource *TILE_RESOURCES[256];
+static texture *TILE_RESOURCES[256];
 
 void initialize_level()
 {
-	TILE_RESOURCES[VOID] = load_resource("textures/blank.png", 32, 32);
-	TILE_RESOURCES[SNOW] = load_resource("textures/snow.png", 32, 32);
-	TILE_RESOURCES[GRASS] = load_resource("textures/grass.png", 32, 32);
-	TILE_RESOURCES[SAND] = load_resource("textures/sand.png", 32, 32);
-	TILE_RESOURCES[PLANKS] = load_resource("textures/floor.png", 32, 32);
-	TILE_RESOURCES[STONE] = load_resource("textures/wall.png", 32, 32);
-	TILE_RESOURCES[SHRUB] = load_resource("textures/shrub.png", 32, 32);
-	TILE_RESOURCES[TORCH] = load_resource("textures/torch.png", 32, 32);
+	TILE_RESOURCES[VOID] = load_texture("textures/blank.png", 32, 32);
+	TILE_RESOURCES[SNOW] = load_texture("textures/snow.png", 32, 32);
+	TILE_RESOURCES[GRASS] = load_texture("textures/grass.png", 32, 32);
+	TILE_RESOURCES[SAND] = load_texture("textures/sand.png", 32, 32);
+	TILE_RESOURCES[PLANKS] = load_texture("textures/floor.png", 32, 32);
+	TILE_RESOURCES[STONE] = load_texture("textures/wall.png", 32, 32);
+	TILE_RESOURCES[SHRUB] = load_texture("textures/shrub.png", 32, 32);
+	TILE_RESOURCES[TORCH] = load_texture("textures/torch.png", 32, 32);
 }
 
 void switch_level(char *name)
@@ -92,7 +87,7 @@ void draw_level()
 	int x, y;
 	for (x = 0; x < LEVEL_MAX_DIM; x++) {
 		for (y = 0; y < LEVEL_MAX_DIM; y++) {
-			draw_resource(TILE_RESOURCES[CURRENT_LEVEL->tiles[x][y]],
+			draw_texture(TILE_RESOURCES[CURRENT_LEVEL->tiles[x][y]],
 					x*TILE_DIM,
 					y*TILE_DIM);
 		}

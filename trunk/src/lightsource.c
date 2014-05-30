@@ -1,4 +1,4 @@
-#include "lights.h"
+#include "lightsource.h"
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -12,12 +12,12 @@
 #include <cuttle/utils.h>
 
 #include "utils.h"
-#include "resources.h"
+#include "texture.h"
 #include "level.h"
 
 static list_node *LIGHTS;
 
-static resource *LIGHTMAP;
+static texture *LIGHTMAP;
 
 static scm_t_bits __api_lightsource_tag;
 
@@ -36,17 +36,17 @@ SCM __api_spawn_lightsource(SCM l)
 	return SCM_BOOL_F;
 }
 
-void initialize_lights()
+void initialize_lightsource()
 {
 	LIGHTS = make_list();
-	LIGHTMAP = load_resource("textures/lightmap.png", 0, 0);
+	LIGHTMAP = load_texture("textures/lightmap.png", 0, 0);
 
 	__api_lightsource_tag = scm_make_smob_type("lightsource", sizeof(lightsource));
 	scm_c_define_gsubr("make-lightsource", 5, 0, 0, __api_make_lightsource);
 	scm_c_define_gsubr("spawn-lightsource", 1, 0, 0, __api_spawn_lightsource);
 }
 
-void reset_lights()
+void reset_lightsource()
 {
 	list_node *c;
 	for (c = LIGHTS->next; c->next != NULL; c = c->next, free(c->prev)) {
@@ -73,7 +73,7 @@ void spawn_lightsource(lightsource *l)
 	insert_list(LIGHTS, (void *) l);
 }
 
-void draw_lights()
+void draw_lightsource()
 {
 	int w, h;
 	w = LEVEL_MAX_DIM * TILE_DIM + 128;

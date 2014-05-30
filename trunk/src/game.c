@@ -16,12 +16,12 @@
 #include "cuttle/utils.h"
 
 #include "utils.h"
-#include "resources.h"
+#include "texture.h"
 #include "repl.h"
 #include "entity.h"
 #include "weapon.h"
 #include "level.h"
-#include "lights.h"
+#include "lightsource.h"
 #include "player.h"
 #include "projectile.h"
 #include "gui.h"
@@ -78,10 +78,10 @@ void initialize_game()
 	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
 
 	initialize_utils();
-	initialize_resources();
+	initialize_texture();
 	initialize_level();
-	initialize_weapons();
-	initialize_lights();
+	initialize_weapon();
+	initialize_lightsource();
 	initialize_entity();
 	initialize_player();
 	initialize_projectile();
@@ -178,7 +178,7 @@ void set_mode(mode m)
 
 void reset_game()
 {
-	reset_lights();
+	reset_lightsource();
 	reset_entities();
 	reset_player();
 	reset_projectile();
@@ -210,16 +210,16 @@ void main_game_loop()
 int draw_title_loop()
 {
 	static int ticks = 0;
-	static resource *title_image;
+	static texture *title_image;
 	if (!title_image) {
-		title_image = load_resource("textures/title.png", 0, 0);
+		title_image = load_texture("textures/title.png", 0, 0);
 	}
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 50) {
 		if (ticks <= 100) {
 			glClear(GL_COLOR_BUFFER_BIT);
 
-			draw_resource(title_image, SCREEN_WIDTH/2 - 200, SCREEN_HEIGHT/2 - 200);
+			draw_texture(title_image, SCREEN_WIDTH/2 - 200, SCREEN_HEIGHT/2 - 200);
 
 			SDL_GL_SwapWindow(SCREEN);
 			ticks++;
@@ -233,13 +233,13 @@ int draw_title_loop()
 int draw_main_menu_loop()
 {
 	static int loaded = 0;
-	static resource *ampersand;
+	static texture *ampersand;
 	static SDL_Rect button_enter_rect;
 	static SDL_Rect button_quit_rect;
 	if (!loaded) {
 		loaded = 1;
 		Mix_PlayChannel(-1, Mix_LoadWAV("sfx/mail.wav"), 0);
-		ampersand = load_resource("textures/ampersand.png", 0, 0);
+		ampersand = load_texture("textures/ampersand.png", 0, 0);
 		button_enter_rect.w = 200;
 		button_enter_rect.h = 50;
 		button_enter_rect.x = SCREEN_WIDTH/2 - button_enter_rect.w/2;
@@ -281,8 +281,8 @@ int draw_main_menu_loop()
 
 	render_text_bitmap(SCREEN_WIDTH/2 - 640, 100, "maildaemon", 16.0);
 
-	draw_resource(ampersand, button_enter_rect.x - 500, button_enter_rect.y);
-	draw_resource(ampersand, button_enter_rect.x + button_enter_rect.w + 180, button_enter_rect.y);
+	draw_texture(ampersand, button_enter_rect.x - 500, button_enter_rect.y);
+	draw_texture(ampersand, button_enter_rect.x + button_enter_rect.w + 180, button_enter_rect.y);
 
 	draw_button("Enter Game", button_enter_rect.x, button_enter_rect.y);
 	draw_button("Quit", button_quit_rect.x, button_quit_rect.y);
@@ -404,7 +404,7 @@ int draw_main_loop()
 	draw_player();
 	draw_projectile();
 	draw_fx();
-	draw_lights();
+	draw_lightsource();
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -422,12 +422,12 @@ int draw_main_loop()
 int draw_game_over_loop()
 {
 	static int loaded = 0;
-	static resource *game_over_text;
+	static texture *game_over_text;
 	static SDL_Rect button_respawn_rect;
 	static SDL_Rect button_quit_rect;
 	if (!loaded) {
 		loaded = 1;
-		game_over_text = load_resource("textures/gameover.png", 0, 0);
+		game_over_text = load_texture("textures/gameover.png", 0, 0);
 		button_respawn_rect.w = 200;
 		button_respawn_rect.h = 50;
 		button_respawn_rect.x = SCREEN_WIDTH/2 - 250;
@@ -465,7 +465,7 @@ int draw_game_over_loop()
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	draw_resource(game_over_text, SCREEN_WIDTH/2 - 350, SCREEN_HEIGHT/2 - 100);
+	draw_texture(game_over_text, SCREEN_WIDTH/2 - 350, SCREEN_HEIGHT/2 - 100);
 
 	draw_button("Main Menu", button_respawn_rect.x, button_respawn_rect.y);
 	draw_button("Quit", button_quit_rect.x, button_quit_rect.y);

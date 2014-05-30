@@ -1,13 +1,14 @@
-mxe
 *.o
 *.pyc
 a.out
+build_*
 level_editor
 maildaemon
 *.exe
 *.dll
+*.so
+steam-runtime*
 session.vim
 tags
-world_save
 *.swp
 *.swo

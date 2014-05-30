@@ -14,13 +14,13 @@
 #include "cuttle/utils.h"
 
 #include "utils.h"
-#include "resources.h"
+#include "texture.h"
 #include "level.h"
 #include "player.h"
 
-static resource *BUTTON_BACKGROUND;
-static resource *DIALOG_BOX_BACKGROUND;
-static resource *METER_BACKGROUND;
+static texture *BUTTON_BACKGROUND;
+static texture *DIALOG_BOX_BACKGROUND;
+static texture *METER_BACKGROUND;
 static char CURRENT_PLAYER_LEVEL_TEXT[256];
 static char CURRENT_LEVEL_TEXT[256];
 static int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
@@ -63,9 +63,9 @@ SCM __api_draw_meter(SCM text, SCM x, SCM y, SCM c, SCM full)
 
 void initialize_gui()
 {
-	BUTTON_BACKGROUND = load_resource("textures/gui/buttontemplate.png", 0, 0);
-	DIALOG_BOX_BACKGROUND = load_resource("textures/gui/dialogtemplate.png", 0, 0);
-	METER_BACKGROUND = load_resource("textures/gui/meter.png", 0, 0);
+	BUTTON_BACKGROUND = load_texture("textures/gui/buttontemplate.png", 0, 0);
+	DIALOG_BOX_BACKGROUND = load_texture("textures/gui/dialogtemplate.png", 0, 0);
+	METER_BACKGROUND = load_texture("textures/gui/meter.png", 0, 0);
 	load_bitmap_font("fonts/font.png");
 
 	scm_c_define_gsubr("render-text-bitmap", 4, 0, 0, __api_render_text_bitmap);
@@ -218,21 +218,21 @@ void update_gui()
 
 void draw_button(char *text, int x, int y)
 {
-	draw_resource(BUTTON_BACKGROUND, x, y);
+	draw_texture(BUTTON_BACKGROUND, x, y);
 
 	render_text_bitmap(x + 10, y + 10, text, 2);
 }
 
 void draw_dialog_box(char *text, int x, int y)
 {
-	draw_resource(DIALOG_BOX_BACKGROUND, x, y);
+	draw_texture(DIALOG_BOX_BACKGROUND, x, y);
 
 	render_text_bitmap(x + 10, y + 10, text, 2);
 }
 
 void draw_meter(char *text, int x, int y, color c, int full)
 {
-	draw_resource(METER_BACKGROUND, x, y);
+	draw_texture(METER_BACKGROUND, x, y);
 
 	glPushMatrix();
 

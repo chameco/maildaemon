@@ -3,14 +3,14 @@
 #include <cuttle/utils.h>
 #include <libguile.h>
 #include "utils.h"
-#include "resources.h"
+#include "texture.h"
 #include "weapon.h"
 
 typedef struct entity {
 	char name[256];
 	int x, y, w, h;
 	int xv, yv;
-	resource *r;
+	texture *r;
 	weapon *weapon;
 	int health, speed;
 	double expval;

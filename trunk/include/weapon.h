@@ -27,7 +27,7 @@ typedef struct weapon {
 	int channel;*/
 } weapon;
 
-void initialize_weapons();
+void initialize_weapon();
 scm_t_bits get_weapon_tag();
 weapon *make_weapon(char *sfx_path, SCM update_func);
 int is_weapon_firing(weapon *w);

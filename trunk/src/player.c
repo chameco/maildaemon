@@ -14,13 +14,11 @@
 #include "cuttle/utils.h"
 
 #include "utils.h"
-#include "resources.h"
+#include "texture.h"
 #include "entity.h"
 #include "weapon.h"
 #include "game.h"
 #include "level.h"
-#include "projectile.h"
-#include "lights.h"
 
 static int PLAYER_X = 0;
 static int PLAYER_Y = 0;
@@ -39,8 +37,8 @@ static int PLAYER_LEVEL = 0;
 static double PLAYER_MAX_HEALTH = 100;
 static double PLAYER_HEALTH;
 static double PLAYER_REGEN = 0.1;
-static resource *PLAYER_RESOURCES[4];
-static resource *PLAYER_ALTERNATE[4];
+static texture *PLAYER_RESOURCES[4];
+static texture *PLAYER_ALTERNATE[4];
 static const int PLAYER_ANIM_STEP_TIMING = 8;
 static int PLAYER_ANIM_STEP = 0;
 static weapon *PLAYER_WEAPONS[10] = {NULL};
@@ -147,15 +145,15 @@ void initialize_player()
 {
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 
-	PLAYER_RESOURCES[NORTH] = load_resource("textures/player/default/n.png", 0, 0);
-	PLAYER_RESOURCES[SOUTH] = load_resource("textures/player/default/s.png", 0, 0);
-	PLAYER_RESOURCES[WEST] = load_resource("textures/player/default/w.png", 0, 0);
-	PLAYER_RESOURCES[EAST] = load_resource("textures/player/default/e.png", 0, 0);
+	PLAYER_RESOURCES[NORTH] = load_texture("textures/player/default/n.png", 0, 0);
+	PLAYER_RESOURCES[SOUTH] = load_texture("textures/player/default/s.png", 0, 0);
+	PLAYER_RESOURCES[WEST] = load_texture("textures/player/default/w.png", 0, 0);
+	PLAYER_RESOURCES[EAST] = load_texture("textures/player/default/e.png", 0, 0);
 
-	PLAYER_ALTERNATE[NORTH] = load_resource("textures/player/default/na.png", 0, 0);
-	PLAYER_ALTERNATE[SOUTH] = load_resource("textures/player/default/sa.png", 0, 0);
-	PLAYER_ALTERNATE[WEST] = load_resource("textures/player/default/wa.png", 0, 0);
-	PLAYER_ALTERNATE[EAST] = load_resource("textures/player/default/ea.png", 0, 0);
+	PLAYER_ALTERNATE[NORTH] = load_texture("textures/player/default/na.png", 0, 0);
+	PLAYER_ALTERNATE[SOUTH] = load_texture("textures/player/default/sa.png", 0, 0);
+	PLAYER_ALTERNATE[WEST] = load_texture("textures/player/default/wa.png", 0, 0);
+	PLAYER_ALTERNATE[EAST] = load_texture("textures/player/default/ea.png", 0, 0);
 
 	/*PLAYER_WEAPONS[1] = make_weapon(COLOR_RED, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
 	PLAYER_WEAPONS[1]->x = &PLAYER_X;
@@ -487,8 +485,8 @@ void update_player()
 void draw_player()
 {
 	if (PLAYER_ANIM_STEP < PLAYER_ANIM_STEP_TIMING / 2) {
-		draw_resource(PLAYER_RESOURCES[PLAYER_FACING], PLAYER_X, PLAYER_Y);
+		draw_texture(PLAYER_RESOURCES[PLAYER_FACING], PLAYER_X, PLAYER_Y);
 	} else {
-		draw_resource(PLAYER_ALTERNATE[PLAYER_FACING], PLAYER_X, PLAYER_Y);
+		draw_texture(PLAYER_ALTERNATE[PLAYER_FACING], PLAYER_X, PLAYER_Y);
 	}
 }
