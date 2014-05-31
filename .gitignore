@@ -7,7 +7,7 @@ maildaemon
 *.exe
 *.dll
 *.so
-.ycm_extra_config.py
+.ycm_extra_conf.py
 steam-runtime*
 session.vim
 tags
