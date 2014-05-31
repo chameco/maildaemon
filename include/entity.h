@@ -1,5 +1,5 @@
-#ifndef PURGE_ENTITY_H
-#define PURGE_ENTITY_H
+#pragma once
+
 #include <cuttle/utils.h>
 #include <libguile.h>
 #include "utils.h"
@@ -37,4 +37,3 @@ void give_entity_weapon(entity *e, weapon *w);
 void move_entity(entity *e, direction d);
 void update_entity();
 void draw_entity();
-#endif

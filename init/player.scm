@@ -5,7 +5,7 @@
                                        (if (> c 10)
                                          (begin
                                            (spawn-projectile (make-color 1 0 0 1)
-                                                             (+ (get-weapon-x w) 12) (+ (get-weapon-y w) 12)
+                                                             (+ (get-weapon-x w) 12) (get-weapon-y w)
                                                              (* (get-weapon-xv w) 16) (* (get-weapon-yv w) 16)
                                                              8 8
                                                              100
@@ -29,7 +29,7 @@
                                            (call-with-values (lambda () (determine-beam-dims (get-weapon-xv w) (get-weapon-yv w)))
                                                              (lambda (width height)
                                                                (spawn-projectile (make-color 1 1 1 1)
-                                                                                 (+ (get-weapon-x w) 12) (+ (get-weapon-y w) 12)
+                                                                                 (+ (get-weapon-x w) 12) (get-weapon-y w)
                                                                                  (* (get-weapon-xv w) 16) (* (get-weapon-yv w) 16)
                                                                                  width height
                                                                                  100

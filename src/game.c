@@ -29,6 +29,7 @@
 
 static SDL_Window *SCREEN;
 static SDL_GLContext *CONTEXT;
+static const GLfloat CAMERA_SCALE = 1.0;
 static int SCREEN_WIDTH = 0;
 static int SCREEN_HEIGHT = 0;
 static mode CURRENT_MODE = MAIN_MENU_MODE;
@@ -356,8 +357,8 @@ int draw_main_loop()
 				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				centerx = SCREEN_WIDTH/2 + get_player_w()/2;
-				centery = SCREEN_HEIGHT/2 + get_player_h()/2;
+				centerx = SCREEN_WIDTH/2;
+				centery = SCREEN_HEIGHT/2;
 				if (event.button.x > centerx) {
 					theta = atan((double) (event.button.y - centery)
 							/ (double) (event.button.x - centerx));
@@ -392,7 +393,9 @@ int draw_main_loop()
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 
-	glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
+	//glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
+	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_w()/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_h()/2) * CAMERA_SCALE, 0);
+	glScalef(CAMERA_SCALE, CAMERA_SCALE, 1.0);
 
 	apply_global_fx();
 

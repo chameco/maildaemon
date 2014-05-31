@@ -1,5 +1,5 @@
-#ifndef PURGE_LIGHTS_H
-#define PURGE_LIGHTS_H
+#pragma once
+
 #include "utils.h"
 
 typedef struct lightsource {
@@ -15,5 +15,3 @@ lightsource *make_lightsource(int x, int y, int dim, int intensity, color c);
 void spawn_lightsource(lightsource *l);
 
 void draw_lightsource();
-
-#endif

@@ -28,8 +28,8 @@ static int WEST_PRESSED = 0;
 static int EAST_PRESSED = 0;
 static const int PLAYER_MOVE_SPEED = 6; //Pixels per second
 static const int DIAG_SPEED = 5;
-static const int PLAYER_WIDTH = 32;
-static const int PLAYER_HEIGHT = 32;
+static const int PLAYER_WIDTH = TILE_DIM;
+static const int PLAYER_HEIGHT = TILE_DIM;
 static direction PLAYER_FACING = 0;
 static double PLAYER_EXP = 0;
 static double PLAYER_EXP_TO_NEXT = 100;
@@ -37,8 +37,7 @@ static int PLAYER_LEVEL = 0;
 static double PLAYER_MAX_HEALTH = 100;
 static double PLAYER_HEALTH;
 static double PLAYER_REGEN = 0.1;
-static texture *PLAYER_RESOURCES[4];
-static texture *PLAYER_ALTERNATE[4];
+static texture *PLAYER_TEXTURE;
 static const int PLAYER_ANIM_STEP_TIMING = 8;
 static int PLAYER_ANIM_STEP = 0;
 static weapon *PLAYER_WEAPONS[10] = {NULL};
@@ -145,15 +144,7 @@ void initialize_player()
 {
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 
-	PLAYER_RESOURCES[NORTH] = load_texture("textures/player/default/n.png", 0, 0);
-	PLAYER_RESOURCES[SOUTH] = load_texture("textures/player/default/s.png", 0, 0);
-	PLAYER_RESOURCES[WEST] = load_texture("textures/player/default/w.png", 0, 0);
-	PLAYER_RESOURCES[EAST] = load_texture("textures/player/default/e.png", 0, 0);
-
-	PLAYER_ALTERNATE[NORTH] = load_texture("textures/player/default/na.png", 0, 0);
-	PLAYER_ALTERNATE[SOUTH] = load_texture("textures/player/default/sa.png", 0, 0);
-	PLAYER_ALTERNATE[WEST] = load_texture("textures/player/default/wa.png", 0, 0);
-	PLAYER_ALTERNATE[EAST] = load_texture("textures/player/default/ea.png", 0, 0);
+	PLAYER_TEXTURE = load_texture("textures/player.png", 8, 8);
 
 	/*PLAYER_WEAPONS[1] = make_weapon(COLOR_RED, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
 	PLAYER_WEAPONS[1]->x = &PLAYER_X;
@@ -310,6 +301,7 @@ void move_player_north(int pressed)
 	if (pressed) {
 		NORTH_PRESSED = 1;
 		PLAYER_FACING = NORTH;
+		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
 	} else {
 		NORTH_PRESSED = 0;
 	}
@@ -320,6 +312,7 @@ void move_player_south(int pressed)
 	if (pressed) {
 		SOUTH_PRESSED = 1;
 		PLAYER_FACING = SOUTH;
+		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
 	} else {
 		SOUTH_PRESSED = 0;
 	}
@@ -330,6 +323,7 @@ void move_player_west(int pressed)
 	if (pressed) {
 		WEST_PRESSED = 1;
 		PLAYER_FACING = WEST;
+		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
 	} else {
 		WEST_PRESSED = 0;
 	}
@@ -340,6 +334,7 @@ void move_player_east(int pressed)
 	if (pressed) {
 		EAST_PRESSED = 1;
 		PLAYER_FACING = EAST;
+		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
 	} else {
 		EAST_PRESSED = 0;
 	}
@@ -354,6 +349,11 @@ void update_player()
 
 	if (NORTH_PRESSED || SOUTH_PRESSED || WEST_PRESSED || EAST_PRESSED) {
 		PLAYER_ANIM_STEP = ((PLAYER_ANIM_STEP + 1) % PLAYER_ANIM_STEP_TIMING);
+		if (PLAYER_ANIM_STEP == 0) {
+			set_sheet_column(PLAYER_TEXTURE, (get_sheet_column(PLAYER_TEXTURE) % 2) + 1);
+		}
+	} else {
+		set_sheet_column(PLAYER_TEXTURE, 0);
 	}
 
 	if (PLAYER_HEALTH <= PLAYER_MAX_HEALTH-PLAYER_REGEN) {
@@ -484,9 +484,5 @@ void update_player()
 
 void draw_player()
 {
-	if (PLAYER_ANIM_STEP < PLAYER_ANIM_STEP_TIMING / 2) {
-		draw_texture(PLAYER_RESOURCES[PLAYER_FACING], PLAYER_X, PLAYER_Y);
-	} else {
-		draw_texture(PLAYER_ALTERNATE[PLAYER_FACING], PLAYER_X, PLAYER_Y);
-	}
+	draw_texture_scale(PLAYER_TEXTURE, PLAYER_X, PLAYER_Y, PLAYER_WIDTH, PLAYER_HEIGHT);
 }

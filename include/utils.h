@@ -1,10 +1,7 @@
-#ifndef PURGE_UTILS_H
-#define PURGE_UTILS_H
+#pragma once
+
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
-#ifndef DATADIR
-#define DATADIR ""
-#endif
 
 typedef enum direction {
 	NORTH,
@@ -33,4 +30,3 @@ void initialize_utils();
 GLuint get_standard_indices_handler();
 GLuint get_standard_vertices_handler();
 int check_collision(SDL_Rect A, SDL_Rect B);
-#endif

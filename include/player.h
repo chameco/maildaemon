@@ -1,5 +1,5 @@
-#ifndef PURGE_CHARACTER_H
-#define PURGE_CHARACTER_H
+#pragma once
+
 #include "utils.h"
 #include "weapon.h"
 #include "game.h"
@@ -30,4 +30,3 @@ void move_player_west(int pressed);
 void move_player_east(int pressed);
 void update_player();
 void draw_player();
-#endif

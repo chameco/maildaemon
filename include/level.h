@@ -1,5 +1,5 @@
-#ifndef PURGE_LEVEL_H
-#define PURGE_LEVEL_H
+#pragma once
+
 #include "utils.h"
 
 #define TILE_DIM 32
@@ -29,4 +29,3 @@ void save_level(level *l);
 level *get_current_level();
 int is_solid_tile(int x, int y);
 void draw_level();
-#endif

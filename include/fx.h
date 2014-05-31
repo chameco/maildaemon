@@ -1,5 +1,5 @@
-#ifndef PURGE_FX_H
-#define PURGE_FX_H
+#pragma once
+
 #include "utils.h"
 
 typedef enum etype {
@@ -44,4 +44,3 @@ void draw_particle(effect *e, int xdiff, int ydiff);
 void draw_smoke_particle(effect *e, int xdiff, int ydiff);
 void draw_one_fx(effect *e);
 void draw_fx();
-#endif

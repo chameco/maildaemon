@@ -1,5 +1,5 @@
-#ifndef PURGE_PROJECTILE_H
-#define PURGE_PROJECTILE_H
+#pragma once
+
 #include "utils.h"
 #include "weapon.h"
 
@@ -21,4 +21,3 @@ void destroy_projectile(projectile *p);
 void update_projectile();
 void draw_one_projectile(projectile *p);
 void draw_projectile();
-#endif

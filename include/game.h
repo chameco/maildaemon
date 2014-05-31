@@ -1,5 +1,4 @@
-#ifndef PURGE_GAME_H
-#define PURGE_GAME_H
+#pragma once
 
 #include <SDL2/SDL.h>
 
@@ -25,4 +24,3 @@ int draw_title_loop();
 int draw_main_menu_loop();
 int draw_main_loop();
 int draw_game_over_loop();
-#endif

@@ -36,23 +36,29 @@ SCM __api_draw_texture(SCM r, SCM x, SCM y)
 	return SCM_BOOL_F;
 }
 
-SCM __api_set_animation(SCM r, SCM ay)
+SCM __api_get_sheet_row(SCM r)
 {
 	texture *res = (texture *) SCM_SMOB_DATA(r);
-	set_animation(res, scm_to_int(ay));
+	return scm_from_int(get_sheet_row(res));
+}
+
+SCM __api_set_sheet_row(SCM r, SCM ay)
+{
+	texture *res = (texture *) SCM_SMOB_DATA(r);
+	set_sheet_column(res, scm_to_int(ay));
 	return SCM_BOOL_F;
 }
 
-SCM __api_get_frame(SCM r)
+SCM __api_get_sheet_column(SCM r)
 {
 	texture *res = (texture *) SCM_SMOB_DATA(r);
-	return scm_from_int(get_frame(res));
+	return scm_from_int(get_sheet_column(res));
 }
 
-SCM __api_set_frame(SCM r, SCM ax)
+SCM __api_set_sheet_column(SCM r, SCM ax)
 {
 	texture *res = (texture *) SCM_SMOB_DATA(r);
-	set_frame(res, scm_to_int(ax));
+	set_sheet_column(res, scm_to_int(ax));
 	return SCM_BOOL_F;
 }
 
@@ -63,9 +69,10 @@ void initialize_texture()
 	__api_texture_tag = scm_make_smob_type("texture", sizeof(texture));
 	scm_c_define_gsubr("load-texture", 3, 0, 0, __api_load_texture);
 	scm_c_define_gsubr("draw-texture", 3, 0, 0, __api_draw_texture);
-	scm_c_define_gsubr("set-animation", 2, 0, 0, __api_set_animation);
-	scm_c_define_gsubr("get-frame", 1, 0, 0, __api_get_frame);
-	scm_c_define_gsubr("set-frame", 2, 0, 0, __api_set_frame);
+	scm_c_define_gsubr("get-sheet-row", 1, 0, 0, __api_get_sheet_row);
+	scm_c_define_gsubr("set-sheet-row", 2, 0, 0, __api_set_sheet_row);
+	scm_c_define_gsubr("get-sheet-column", 1, 0, 0, __api_get_sheet_column);
+	scm_c_define_gsubr("set-sheet-column", 2, 0, 0, __api_set_sheet_column);
 }
 
 GLuint surface_to_texture(SDL_Surface *surface)
@@ -174,7 +181,7 @@ void draw_texture(texture *r, int x, int y)
 void draw_texture_scale(texture *r, int x, int y, int w, int h)
 {
 	glPushMatrix();
-	glTranslatef(x, y, 0);
+	glTranslatef(x-(r->anim_x * w), y-(r->anim_y * h), 0);
 	glScalef(w, h, 1);
 
 	glColor3f(1.0, 1.0, 1.0);
@@ -199,17 +206,22 @@ void draw_texture_scale(texture *r, int x, int y, int w, int h)
 	glPopMatrix();
 }
 
-void set_animation(texture *r, int ay)
+int get_sheet_row(texture *r)
+{
+	return r->anim_y;
+}
+
+void set_sheet_row(texture *r, int ay)
 {
 	r->anim_y = ay;
 }
 
-int get_frame(texture *r)
+int get_sheet_column(texture *r)
 {
 	return r->anim_x;
 }
 
-void set_frame(texture *r, int ax)
+void set_sheet_column(texture *r, int ax)
 {
 	r->anim_x = ax;
 }

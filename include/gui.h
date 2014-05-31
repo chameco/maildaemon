@@ -1,5 +1,5 @@
-#ifndef PURGE_GUI_H
-#define PURGE_GUI_H
+#pragma once
+
 #include "utils.h"
 
 void initialize_gui();
@@ -14,4 +14,3 @@ void draw_button(char *text, int x, int y);
 void draw_dialog_box(char *text, int x, int y);
 void draw_meter(char *text, int x, int y, color c, int full);
 void draw_gui();
-#endif

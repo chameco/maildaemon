@@ -1,5 +1,5 @@
-#ifndef PURGE_WEAPON_H
-#define PURGE_WEAPON_H
+#pragma once
+
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 #include "utils.h"
@@ -38,4 +38,3 @@ double get_weapon_yv(weapon *w);
 void press_trigger(weapon *w, double xv, double yv);
 void release_trigger(weapon *w);
 void update_weapons();
-#endif

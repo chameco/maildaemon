@@ -199,7 +199,7 @@ entity *make_entity(char *name, int x, int y)
 	char buf[256] = "textures/entities/";
 	strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
 	strcat(buf, ".png");
-	ret->r = load_texture(buf, ret->w, ret->h);
+	ret->r = load_texture(buf, 8, 8);
 	ret->x = x;
 	ret->y = y;
 	return ret;
@@ -337,7 +337,7 @@ void draw_entity()
 	for (c = ENTITIES; c->next != NULL; c = c->next) {
 		if (((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
-			draw_texture(e->r, e->x, e->y);
+			draw_texture_scale(e->r, e->x, e->y, e->w, e->h);
 		}
 	}
 }
