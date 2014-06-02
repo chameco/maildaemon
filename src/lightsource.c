@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include <GL/glew.h>
@@ -25,14 +26,15 @@ SCM __api_make_lightsource(SCM x, SCM y, SCM dim, SCM intensity, SCM c)
 {
 	color *col = (color *) SCM_SMOB_DATA(c);
 	lightsource *l = make_lightsource(scm_to_int(x), scm_to_int(y), scm_to_int(dim), scm_to_int(intensity), *col);
-	return scm_new_smob(__api_lightsource_tag, (unsigned long) l);
+	SCM ret = scm_new_smob(__api_lightsource_tag, (unsigned long) l);
+	scm_gc_protect_object(ret);
+	return ret;
 }
 
 SCM __api_spawn_lightsource(SCM l)
 {
 	lightsource *light = (lightsource *) SCM_SMOB_DATA(l);
 	spawn_lightsource(light);
-	scm_gc_protect_object(l);
 	return SCM_BOOL_F;
 }
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include <libguile.h>
@@ -14,18 +15,16 @@
 #include "texture.h"
 
 static level *CURRENT_LEVEL = NULL;
-static texture *TILE_RESOURCES[256];
+static texture *TILE_SHEET = NULL;
 
 void initialize_level()
 {
-	TILE_RESOURCES[PLANKS] = load_texture("textures/tiles/floor.png", 8, 8);
-	TILE_RESOURCES[VOID] = load_texture("textures/blank.png", 8, 8);
-	TILE_RESOURCES[SNOW] = load_texture("textures/tiles/snow.png", 8, 8);
-	TILE_RESOURCES[GRASS] = load_texture("textures/tiles/grass.png", 8, 8);
-	TILE_RESOURCES[SAND] = load_texture("textures/tiles/sand.png", 8, 8);
-	TILE_RESOURCES[STONE] = load_texture("textures/tiles/wall.png", 8, 8);
-	TILE_RESOURCES[SHRUB] = load_texture("textures/tiles/shrub.png", 8, 8);
-	TILE_RESOURCES[TORCH] = load_texture("textures/torch.png", 8, 8);
+	TILE_SHEET = load_texture("textures/tiles/sheet.png", 8, 8);
+}
+
+void reset_level()
+{
+	switch_level(CURRENT_LEVEL->name);
 }
 
 void switch_level(char *name)
@@ -49,14 +48,16 @@ level *load_level(char *name)
 				ret->tiles[x][y] = PLANKS;
 			}
 		}
-		strcpy(ret->name, "new");
+		strcpy(ret->name, name);
 		ret->ambience = 0.75;
 	} else {
 		fread(ret, sizeof(level), 1, f);
 		fclose(f);
 		buf[bare] = 0x0;
 		strcat(buf, ".scm");
-		scm_c_primitive_load(buf);
+		char sbuf[256] = "script/";
+		strcat(sbuf, buf);
+		scm_c_primitive_load(sbuf);
 	}
 	return ret;
 }
@@ -87,11 +88,9 @@ void draw_level()
 	int x, y;
 	for (x = 0; x < LEVEL_MAX_DIM; x++) {
 		for (y = 0; y < LEVEL_MAX_DIM; y++) {
-			draw_texture_scale(TILE_RESOURCES[CURRENT_LEVEL->tiles[x][y]],
-					x*TILE_DIM,
-					y*TILE_DIM,
-					TILE_DIM,
-					TILE_DIM);
+			set_sheet_row(TILE_SHEET, CURRENT_LEVEL->tiles[x][y]/8);
+			set_sheet_column(TILE_SHEET, CURRENT_LEVEL->tiles[x][y]%8);
+			draw_texture_scale(TILE_SHEET, x*TILE_DIM, y*TILE_DIM, TILE_DIM, TILE_DIM);
 		}
 	}
 }

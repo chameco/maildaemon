@@ -1,7 +1,9 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "utils.h"
-#include "weapon.h"
+#include "item.h"
 #include "game.h"
 
 void initialize_player();
@@ -16,17 +18,14 @@ double get_player_max_health();
 double get_player_charge_percent();
 double get_player_exp();
 double get_player_exp_to_next();
-void set_player_weapon(int i, weapon *w);
-weapon *get_player_weapon();
+void set_player_item(int i, item *it);
+item *get_player_item();
 int get_player_level();
 void hit_player(int dmg);
 void give_player_exp(double exp);
 void warp_player(int x, int y);
-void set_player_weapon_index(int i);
-void shoot_player_weapon(int pressed, double xv, double yv);
-void move_player_north(int pressed);
-void move_player_south(int pressed);
-void move_player_west(int pressed);
-void move_player_east(int pressed);
+void set_player_item_index(int i);
+void use_player_item(bool pressed, double xv, double yv);
+void set_player_movement(bool pressed, direction d);
 void update_player();
 void draw_player();

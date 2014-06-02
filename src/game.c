@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 
@@ -10,6 +11,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_net.h>
 #include <libguile.h>
 
 #include "cuttle/debug.h"
@@ -19,7 +21,7 @@
 #include "texture.h"
 #include "repl.h"
 #include "entity.h"
-#include "weapon.h"
+#include "item.h"
 #include "level.h"
 #include "lightsource.h"
 #include "player.h"
@@ -38,8 +40,17 @@ static int CURRENT_TIME = 0;
 static char *CURRENT_DIALOG = NULL;
 static Mix_Chunk *BLIP_SOUND;
 
+void __api_load_module(SCM path)
+{
+	char *t = scm_to_locale_string(path);
+	scm_c_primitive_load(t);
+	free(t);
+}
+
 void initialize_game()
 {
+	scm_c_define_gsubr("load-module", 1, 0, 0, __api_load_module);
+
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		log_err("Failed to initialize SDL");    
 	}
@@ -74,6 +85,8 @@ void initialize_game()
 	
 	initGL();
 	IMG_Init(IMG_INIT_PNG);
+	Mix_Init(MIX_INIT_OGG);
+	SDLNet_Init();
 
 	Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
 	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
@@ -81,7 +94,7 @@ void initialize_game()
 	initialize_utils();
 	initialize_texture();
 	initialize_level();
-	initialize_weapon();
+	initialize_item();
 	initialize_lightsource();
 	initialize_entity();
 	initialize_player();
@@ -92,6 +105,8 @@ void initialize_game()
 	initialize_repl();
 
 	set_current_dialog("Hello");
+
+	Mix_PlayMusic(Mix_LoadMUS("music/menu.ogg"), -1);
 }
 
 void initGL()
@@ -180,10 +195,12 @@ void set_mode(mode m)
 void reset_game()
 {
 	reset_lightsource();
-	reset_entities();
-	reset_player();
+	reset_item();
+	reset_entity();
 	reset_projectile();
 	reset_fx();
+	reset_level();
+	reset_player();
 }
 
 void main_game_loop()
@@ -280,7 +297,7 @@ int draw_main_menu_loop()
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	render_text_bitmap(SCREEN_WIDTH/2 - 640, 100, "maildaemon", 16.0);
+	render_text_bitmap("maildaemon", SCREEN_WIDTH/2 - 640, 100, 16.0);
 
 	draw_texture(ampersand, button_enter_rect.x - 500, button_enter_rect.y);
 	draw_texture(ampersand, button_enter_rect.x + button_enter_rect.w + 180, button_enter_rect.y);
@@ -316,13 +333,13 @@ int draw_main_loop()
 					if (event.key.keysym.sym == SDLK_F2) {
 						take_screenshot("screenshot.png");
 					} else if (event.key.keysym.sym == SDLK_w) {
-						move_player_north(pressed);
+						set_player_movement(pressed, NORTH);
 					} else if (event.key.keysym.sym == SDLK_s) {
-						move_player_south(pressed);
+						set_player_movement(pressed, SOUTH);
 					} else if (event.key.keysym.sym == SDLK_a) {
-						move_player_west(pressed);
+						set_player_movement(pressed, WEST);
 					} else if (event.key.keysym.sym == SDLK_d) {
-						move_player_east(pressed);
+						set_player_movement(pressed, EAST);
 					} else if (event.key.keysym.sym == SDLK_SPACE) {
 						if (pressed && get_current_dialog() != NULL) {
 							set_current_dialog(NULL);
@@ -334,25 +351,25 @@ int draw_main_loop()
 					} else if (event.key.keysym.sym == SDLK_m) {
 						hit_player(1000);
 					} else if (event.key.keysym.sym == SDLK_0) {
-						set_player_weapon_index(0);
+						set_player_item_index(0);
 					} else if (event.key.keysym.sym == SDLK_1) {
-						set_player_weapon_index(1);
+						set_player_item_index(1);
 					} else if (event.key.keysym.sym == SDLK_2) {
-						set_player_weapon_index(2);
+						set_player_item_index(2);
 					} else if (event.key.keysym.sym == SDLK_3) {
-						set_player_weapon_index(3);
+						set_player_item_index(3);
 					} else if (event.key.keysym.sym == SDLK_4) {
-						set_player_weapon_index(4);
+						set_player_item_index(4);
 					} else if (event.key.keysym.sym == SDLK_5) {
-						set_player_weapon_index(5);
+						set_player_item_index(5);
 					} else if (event.key.keysym.sym == SDLK_6) {
-						set_player_weapon_index(6);
+						set_player_item_index(6);
 					} else if (event.key.keysym.sym == SDLK_7) {
-						set_player_weapon_index(7);
+						set_player_item_index(7);
 					} else if (event.key.keysym.sym == SDLK_8) {
-						set_player_weapon_index(8);
+						set_player_item_index(8);
 					} else if (event.key.keysym.sym == SDLK_9) {
-						set_player_weapon_index(9);
+						set_player_item_index(9);
 					}
 				}
 				break;
@@ -367,10 +384,10 @@ int draw_main_loop()
 							/ (double) (event.button.x - centerx))
 						+ 3.141592654;
 				}
-				shoot_player_weapon(1, cos(theta), sin(theta));
+				use_player_item(1, cos(theta), sin(theta));
 				break;
 			case SDL_MOUSEBUTTONUP:
-				shoot_player_weapon(0, 0.0, 0.0);
+				use_player_item(0, 0.0, 0.0);
 				break;
 			case SDL_QUIT:
 				return 0;
@@ -382,7 +399,7 @@ int draw_main_loop()
 		update_repl();
 		update_player();
 		update_entity();
-		update_weapons();
+		update_item();
 		update_projectile();
 		update_fx();
 		update_gui();
@@ -425,12 +442,10 @@ int draw_main_loop()
 int draw_game_over_loop()
 {
 	static int loaded = 0;
-	static texture *game_over_text;
 	static SDL_Rect button_respawn_rect;
 	static SDL_Rect button_quit_rect;
 	if (!loaded) {
 		loaded = 1;
-		game_over_text = load_texture("textures/gameover.png", 0, 0);
 		button_respawn_rect.w = 200;
 		button_respawn_rect.h = 50;
 		button_respawn_rect.x = SCREEN_WIDTH/2 - 250;
@@ -468,7 +483,7 @@ int draw_game_over_loop()
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	draw_texture(game_over_text, SCREEN_WIDTH/2 - 350, SCREEN_HEIGHT/2 - 100);
+	render_text_bitmap("Game Over", SCREEN_WIDTH/2 - 576, 100, 16.0);
 
 	draw_button("Main Menu", button_respawn_rect.x, button_respawn_rect.y);
 	draw_button("Quit", button_quit_rect.x, button_quit_rect.y);

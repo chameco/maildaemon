@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 #include <dirent.h>
@@ -18,7 +19,7 @@
 #include "level.h"
 #include "fx.h"
 #include "player.h"
-#include "weapon.h"
+#include "item.h"
 
 static list_node *ENTITIES;
 
@@ -29,8 +30,10 @@ static scm_t_bits __api_entity_tag;
 SCM __api_build_entity_prototype(SCM path, SCM w, SCM h,
 		SCM health, SCM speed, SCM expval)
 {
-	entity *e = build_entity_prototype(scm_to_locale_string(path), scm_to_int(w), scm_to_int(h),
+	char *t = scm_to_locale_string(path);
+	entity *e = build_entity_prototype(t, scm_to_int(w), scm_to_int(h),
 			scm_to_int(health), scm_to_int(speed), scm_to_double(expval));
+	free(t);
 	return scm_new_smob(__api_entity_tag, (unsigned long) e);
 }
 
@@ -64,22 +67,26 @@ SCM __api_set_entity_update(SCM e, SCM update)
 
 SCM __api_make_entity(SCM name, SCM x, SCM y)
 {
-	return scm_new_smob(__api_entity_tag, (unsigned long) make_entity(scm_to_locale_string(name), scm_to_int(x), scm_to_int(y)));
+	char *t = scm_to_locale_string(name);
+	entity *e = make_entity(t, scm_to_int(x), scm_to_int(y));
+	free(t);
+	SCM ret = scm_new_smob(__api_entity_tag, (unsigned long) e);
+	scm_gc_protect_object(ret);
+	return ret;
 }
 
 SCM __api_spawn_entity(SCM e)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
 	spawn_entity(ent);
-	scm_gc_protect_object(e);
 	return SCM_BOOL_F;
 }
 
-SCM __api_give_entity_weapon(SCM e, SCM w)
+SCM __api_give_entity_item(SCM e, SCM w)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
-	give_entity_weapon(ent, weap);
+	item *weap = (item *) SCM_SMOB_DATA(w);
+	give_entity_item(ent, weap);
 	return SCM_BOOL_F;
 }
 
@@ -114,24 +121,25 @@ void initialize_entity()
 	scm_c_define_gsubr("set-entity-update", 2, 0, 0, __api_set_entity_update);
 	scm_c_define_gsubr("make-entity", 3, 0, 0, __api_make_entity);
 	scm_c_define_gsubr("spawn-entity", 1, 0, 0, __api_spawn_entity);
-	scm_c_define_gsubr("give-entity-weapon", 2, 0, 0, __api_give_entity_weapon);
+	scm_c_define_gsubr("give-entity-item", 2, 0, 0, __api_give_entity_item);
 	scm_c_define_gsubr("move-entity", 2, 0, 0, __api_move_entity);
 
-	DIR *d = opendir("entities");
+	DIR *d = opendir("script/entities");
 	struct dirent *entry;
 	char buf[256];
 	if (d != NULL) {
 		while ((entry = readdir(d))) {
 			char *pos = strrchr(entry->d_name, '.') + 1;
 			if (pos != NULL && strcmp(pos, "scm") == 0) {
-				strcpy(buf, "entities/");
+				strcpy(buf, "script/entities/");
 				strcat(buf, entry->d_name);
 				scm_c_primitive_load(buf);
 			}
 		}
 		closedir(d);
 	} else {
-		log_err("Directory \"entities\" does not exist");
+		log_err("Directory \"script/entities\" does not exist");
+		exit(1);
 	}
 }
 
@@ -140,34 +148,43 @@ list_node *get_entities()
 	return ENTITIES;
 }
 
-void reset_entities()
+void reset_entity()
 {
 	list_node *c;
 	for (c = ENTITIES->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((entity *) c->data) != NULL) {
-			scm_gc_free((entity *) c->data, sizeof(entity), "entity");
+			free_entity((entity *) c->data);
 		}
 	}
 	ENTITIES = make_list();
 }
 
+void free_entity(entity *e)
+{
+	if (e != NULL) {
+		free_item(e->item);
+		free_texture(e->t);
+		scm_gc_free(e, sizeof(entity), "entity");
+	}
+}
+
 entity *build_entity_prototype(char *name, int w, int h,
 		int health, int speed, double expval)
 {
-	entity *e = scm_gc_malloc(sizeof(entity), "entity");
+	entity *e = malloc(sizeof(entity));
 	strcpy(e->name, name);
 	e->x = 0;
 	e->y = 0;
 	e->w = w;
 	e->h = h;
 	e->xv = e->yv = 0;
-	e->r = NULL;
-	e->weapon = NULL;
+	e->t = NULL;
+	e->item = NULL;
 	e->health = health;
 	e->speed = speed;
 	e->expval = expval;
 	e->hit_func = e->collide_func = e->update_func = SCM_BOOL_F;
-	set_hash(ENTITY_PROTOTYPES, name, e);
+	set_hash(ENTITY_PROTOTYPES, name, (void *) e);
 	return e;
 }
 
@@ -193,13 +210,17 @@ void set_entity_update(entity *e, SCM update)
 
 entity *make_entity(char *name, int x, int y)
 {
-	entity *proto = get_hash(ENTITY_PROTOTYPES, name);
+	entity *proto = (entity *) get_hash(ENTITY_PROTOTYPES, name);
+	if (proto == NULL) {
+		log_err("Entity prototype \"%s\" does not exist", name);
+		exit(1);
+	}
 	entity *ret = scm_gc_malloc(sizeof(entity), "entity");
 	memcpy(ret, proto, sizeof(entity));
 	char buf[256] = "textures/entities/";
 	strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
 	strcat(buf, ".png");
-	ret->r = load_texture(buf, 8, 8);
+	ret->t = load_texture(buf, 8, 8);
 	ret->x = x;
 	ret->y = y;
 	return ret;
@@ -233,11 +254,11 @@ void collide_entity(entity *e)
 	}
 }
 
-void give_entity_weapon(entity *e, weapon *w)
+void give_entity_item(entity *e, item *i)
 {
-	w->x = &(e->x);
-	w->y = &(e->y);
-	e->weapon = w;
+	i->x = &(e->x);
+	i->y = &(e->y);
+	e->item = i;
 }
 
 void move_entity(entity *e, direction d)
@@ -337,7 +358,7 @@ void draw_entity()
 	for (c = ENTITIES; c->next != NULL; c = c->next) {
 		if (((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
-			draw_texture_scale(e->r, e->x, e->y, e->w, e->h);
+			draw_texture_scale(e->t, e->x, e->y, e->w, e->h);
 		}
 	}
 }

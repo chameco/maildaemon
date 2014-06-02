@@ -16,7 +16,7 @@
 #include "texture.h"
 #include "repl.h"
 #include "entity.h"
-#include "weapon.h"
+#include "item.h"
 #include "level.h"
 #include "lightsource.h"
 #include "player.h"

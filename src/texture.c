@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <math.h>
 
@@ -105,72 +106,70 @@ GLuint surface_to_texture(SDL_Surface *surface)
 
 texture *load_texture(char *path, int w, int h)
 {
-	texture *ret = scm_gc_malloc(sizeof(texture), "texture");
 	if (get_hash(TEXTURE_CACHE, path) == NULL) {
+		texture *cached = (texture *) malloc(sizeof(texture));
 		SDL_Surface *surface = IMG_Load(path);
 		if (surface == NULL) {
 			log_err("File %s does not exist", path);
 			exit(1);
 		}
-		ret->texture = surface_to_texture(surface);
-		ret->w = w == 0 ? surface->w : w;
-		ret->h = h == 0 ? surface->h : h;
-		ret->anim_x = ret->anim_y = 0;
+		cached->texture = surface_to_texture(surface);
+		cached->w = (w == 0) ? surface->w : w;
+		cached->h = (h == 0) ? surface->h : h;
+		cached->anim_x = cached->anim_y = 0;
 
 		GLuint index_data[4];
-		vertex vertex_data[64];
-		int row_count = surface->h / ret->h;
-		int column_count = surface->w / ret->w;
+		vertex vertex_data[4 * SPRITESHEET_DIM * SPRITESHEET_DIM];
+		cached->row_count = surface->h / cached->h;
+		cached->column_count = surface->w / cached->w;
 
-		glGenBuffers(1, &(ret->vertex_handler));
-		glGenBuffers(row_count * column_count, ret->index_handlers);
+		glGenBuffers(1, &(cached->vertex_handler));
+		glGenBuffers(cached->row_count * cached->column_count, cached->index_handlers);
 
 		int i = 0;
-		for (int rc = 0; rc < row_count; ++rc) {
-			for (int cc = 0; cc < column_count; ++cc) {
+		for (int rc = 0; rc < cached->row_count; ++rc) {
+			for (int cc = 0; cc < cached->column_count; ++cc) {
 				index_data[0] = i * 4 + 0;
 				index_data[1] = i * 4 + 1;
 				index_data[2] = i * 4 + 2;
 				index_data[3] = i * 4 + 3;
 
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret->index_handlers[i]);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cached->index_handlers[i]);
 				glBufferData(GL_ELEMENT_ARRAY_BUFFER, 4 * sizeof(GLuint), index_data, GL_STATIC_DRAW);
 
 				vertex_data[index_data[0]].x = cc;
 				vertex_data[index_data[0]].y = rc;
-				vertex_data[index_data[0]].s = ((GLfloat) cc)/column_count;
-				vertex_data[index_data[0]].t = ((GLfloat) rc)/row_count;
+				vertex_data[index_data[0]].s = ((GLfloat) cc)/cached->column_count;
+				vertex_data[index_data[0]].t = ((GLfloat) rc)/cached->row_count;
 
 				vertex_data[index_data[1]].x = cc + 1;
 				vertex_data[index_data[1]].y = rc;
-				vertex_data[index_data[1]].s = ((GLfloat) (cc + 1))/column_count;
-				vertex_data[index_data[1]].t = ((GLfloat) rc)/row_count;
+				vertex_data[index_data[1]].s = ((GLfloat) (cc + 1))/cached->column_count;
+				vertex_data[index_data[1]].t = ((GLfloat) rc)/cached->row_count;
 
 				vertex_data[index_data[2]].x = cc + 1;
 				vertex_data[index_data[2]].y = rc + 1;
-				vertex_data[index_data[2]].s = ((GLfloat) (cc + 1))/column_count;
-				vertex_data[index_data[2]].t = ((GLfloat) (rc + 1))/row_count;
+				vertex_data[index_data[2]].s = ((GLfloat) (cc + 1))/cached->column_count;
+				vertex_data[index_data[2]].t = ((GLfloat) (rc + 1))/cached->row_count;
 
 				vertex_data[index_data[3]].x = cc;
 				vertex_data[index_data[3]].y = rc + 1;
-				vertex_data[index_data[3]].s = ((GLfloat) cc)/column_count;
-				vertex_data[index_data[3]].t = ((GLfloat) (rc + 1))/row_count;
+				vertex_data[index_data[3]].s = ((GLfloat) cc)/cached->column_count;
+				vertex_data[index_data[3]].t = ((GLfloat) (rc + 1))/cached->row_count;
 
 				++i;
 			}
 		}
 
-		glBindBuffer(GL_ARRAY_BUFFER, ret->vertex_handler);
-		glBufferData(GL_ARRAY_BUFFER, row_count * column_count * 4 * sizeof(vertex), vertex_data, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, cached->vertex_handler);
+		glBufferData(GL_ARRAY_BUFFER, cached->row_count * cached->column_count * 4 * sizeof(vertex), vertex_data, GL_STATIC_DRAW);
 
-		set_hash(TEXTURE_CACHE, path, (void *) ret);
-
-		return ret;
-	} else {
-		texture *ret = scm_gc_malloc(sizeof(texture), "texture");
-		memcpy(ret, (texture *) get_hash(TEXTURE_CACHE, path), sizeof(texture));
-		return ret;
+		set_hash(TEXTURE_CACHE, path, (void *) cached);
 	}
+
+	texture *ret = scm_gc_malloc(sizeof(texture), "texture");
+	memcpy(ret, (texture *) get_hash(TEXTURE_CACHE, path), sizeof(texture));
+	return ret;
 }
 
 void draw_texture(texture *r, int x, int y)
@@ -191,13 +190,11 @@ void draw_texture_scale(texture *r, int x, int y, int w, int h)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glBindBuffer(GL_ARRAY_BUFFER, r->vertex_handler);
-	//glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)((sizeof(vertex) * r->anim_x * r->anim_y) + (sizeof(GLfloat)*2)));
-	//glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(vertex) * r->anim_x * r->anim_y));	
 
 	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
 	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0x0);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *((r->index_handlers) + (r->anim_y * SPRITESHEET_DIM) + (r->anim_x)));
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *((r->index_handlers) + (r->anim_y * r->column_count) + (r->anim_x)));
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);

@@ -5,11 +5,12 @@
 #include <SDL2/SDL_mixer.h>
 #include "utils.h"
 
-#define SPRITESHEET_DIM 4
+#define SPRITESHEET_DIM 8
 
 typedef struct texture {
 	GLuint texture;
 	int w, h;
+	int row_count, column_count;
 	int anim_x, anim_y;
 	GLuint index_handlers[SPRITESHEET_DIM * SPRITESHEET_DIM];
 	GLuint vertex_handler;

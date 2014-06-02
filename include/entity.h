@@ -4,14 +4,14 @@
 #include <libguile.h>
 #include "utils.h"
 #include "texture.h"
-#include "weapon.h"
+#include "item.h"
 
 typedef struct entity {
 	char name[256];
 	int x, y, w, h;
 	int xv, yv;
-	texture *r;
-	weapon *weapon;
+	texture *t;
+	item *item;
 	int health, speed;
 	double expval;
 	SCM init_func;
@@ -22,7 +22,8 @@ typedef struct entity {
 
 void initialize_entity();
 list_node *get_entities();
-void reset_entities();
+void reset_entity();
+void free_entity(entity *e);
 entity *build_entity_prototype(char *name, int w, int h,
 		int health, int speed, double expval);
 void set_entity_init(entity *e, SCM init);
@@ -33,7 +34,7 @@ entity *make_entity(char *name, int x, int y);
 void spawn_entity(entity *e);
 void hit_entity(entity *e, int dmg);
 void collide_entity(entity *e);
-void give_entity_weapon(entity *e, weapon *w);
+void give_entity_item(entity *e, item *i);
 void move_entity(entity *e, direction d);
 void update_entity();
 void draw_entity();

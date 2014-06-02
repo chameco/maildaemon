@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include <GL/glew.h>
@@ -16,16 +17,13 @@
 #include "utils.h"
 #include "texture.h"
 #include "entity.h"
-#include "weapon.h"
+#include "item.h"
 #include "game.h"
 #include "level.h"
 
 static int PLAYER_X = 0;
 static int PLAYER_Y = 0;
-static int NORTH_PRESSED = 0;
-static int SOUTH_PRESSED = 0;
-static int WEST_PRESSED = 0;
-static int EAST_PRESSED = 0;
+static bool PLAYER_PRESSED[4] = {0};
 static const int PLAYER_MOVE_SPEED = 6; //Pixels per second
 static const int DIAG_SPEED = 5;
 static const int PLAYER_WIDTH = TILE_DIM;
@@ -40,8 +38,8 @@ static double PLAYER_REGEN = 0.1;
 static texture *PLAYER_TEXTURE;
 static const int PLAYER_ANIM_STEP_TIMING = 8;
 static int PLAYER_ANIM_STEP = 0;
-static weapon *PLAYER_WEAPONS[10] = {NULL};
-static int PLAYER_WEAPON_INDEX = 0;
+static item *PLAYER_ITEMS[10] = {NULL};
+static int PLAYER_ITEM_INDEX = 0;
 
 SCM __api_get_player_x()
 {
@@ -93,16 +91,16 @@ SCM __api_get_player_exp_to_next()
 	return scm_from_double(get_player_exp_to_next());
 }
 
-SCM __api_set_player_weapon(SCM i, SCM w)
+SCM __api_set_player_item(SCM i, SCM w)
 {
-	weapon *weap = (weapon *) SCM_SMOB_DATA(w);
-	set_player_weapon(scm_to_int(i), weap);
+	item *weap = (item *) SCM_SMOB_DATA(w);
+	set_player_item(scm_to_int(i), weap);
 	return SCM_BOOL_F;
 }
 
-SCM __api_get_player_weapon()
+SCM __api_get_player_item()
 {
-	return scm_new_smob(get_weapon_tag(), (unsigned long) get_player_weapon());
+	return scm_new_smob(get_item_tag(), (unsigned long) get_player_item());
 }
 
 SCM __api_get_player_level()
@@ -128,15 +126,15 @@ SCM __api_warp_player(SCM x, SCM y)
 	return SCM_BOOL_F;
 }
 
-SCM __api_set_player_weapon_index(SCM i)
+SCM __api_set_player_item_index(SCM i)
 {
-	set_player_weapon_index(scm_to_int(i));
+	set_player_item_index(scm_to_int(i));
 	return SCM_BOOL_F;
 }
 
-SCM __api_shoot_player_weapon(SCM pressed, SCM xv, SCM yv)
+SCM __api_use_player_item(SCM pressed, SCM xv, SCM yv)
 {
-	shoot_player_weapon(scm_to_int(pressed), scm_to_double(xv), scm_to_double(yv));
+	use_player_item(scm_to_int(pressed), scm_to_double(xv), scm_to_double(yv));
 	return SCM_BOOL_F;
 }
 
@@ -145,13 +143,6 @@ void initialize_player()
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 
 	PLAYER_TEXTURE = load_texture("textures/player.png", 8, 8);
-
-	/*PLAYER_WEAPONS[1] = make_weapon(COLOR_RED, 8, 8, 16, 8, 100.0, 0, 1, 8, "sfx/laser.wav");
-	PLAYER_WEAPONS[1]->x = &PLAYER_X;
-	PLAYER_WEAPONS[1]->y = &PLAYER_Y;
-	PLAYER_WEAPONS[2] = make_weapon(COLOR_BLUE, 8, 8, 16, 2, 100.0, 1, 1, 8, "sfx/beam.wav");
-	PLAYER_WEAPONS[2]->x = &PLAYER_X;
-	PLAYER_WEAPONS[2]->y = &PLAYER_Y;*/
 
 	scm_c_define_gsubr("get-player-x", 0, 0, 0, __api_get_player_x);
 	scm_c_define_gsubr("get-player-y", 0, 0, 0, __api_get_player_y);
@@ -163,22 +154,22 @@ void initialize_player()
 	scm_c_define_gsubr("get-player-charge-percent", 0, 0, 0, __api_get_player_charge_percent);
 	scm_c_define_gsubr("get-player-exp", 0, 0, 0, __api_get_player_exp);
 	scm_c_define_gsubr("get-player-exp-to-next", 0, 0, 0, __api_get_player_exp_to_next);
-	scm_c_define_gsubr("set-player-weapon", 2, 0, 0, __api_set_player_weapon);
-	scm_c_define_gsubr("get-player-weapon", 0, 0, 0, __api_get_player_weapon);
+	scm_c_define_gsubr("set-player-item", 2, 0, 0, __api_set_player_item);
+	scm_c_define_gsubr("get-player-item", 0, 0, 0, __api_get_player_item);
 	scm_c_define_gsubr("get-player-level", 0, 0, 0, __api_get_player_level);
 	scm_c_define_gsubr("hit-player", 1, 0, 0, __api_hit_player);
 	scm_c_define_gsubr("give-player-exp", 1, 0, 0, __api_give_player_exp);
 	scm_c_define_gsubr("warp-player", 2, 0, 0, __api_warp_player);
-	scm_c_define_gsubr("set-player-weapon-index", 1, 0, 0, __api_set_player_weapon_index);
-	scm_c_define_gsubr("shoot-player-weapon", 3, 0, 0, __api_shoot_player_weapon);
+	scm_c_define_gsubr("set-player-item-index", 1, 0, 0, __api_set_player_item_index);
+	scm_c_define_gsubr("use-player-item", 3, 0, 0, __api_use_player_item);
 
-	scm_c_primitive_load("init/player.scm");
+	scm_c_primitive_load("script/init/player.scm");
 }
 
 void reset_player()
 {
 	
-	NORTH_PRESSED = SOUTH_PRESSED = WEST_PRESSED = EAST_PRESSED = 0;
+	memset(PLAYER_PRESSED, 0, sizeof(PLAYER_PRESSED));
 	PLAYER_X = PLAYER_Y = 0;
 	PLAYER_FACING = 0;
 	PLAYER_EXP = 0;
@@ -186,7 +177,9 @@ void reset_player()
 	PLAYER_LEVEL = 0;
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 	PLAYER_ANIM_STEP = 0;
-	PLAYER_WEAPON_INDEX = 0;
+	PLAYER_ITEM_INDEX = 0;
+
+	scm_c_primitive_load("script/init/player.scm");
 }
 
 int get_player_x()
@@ -226,7 +219,7 @@ double get_player_max_health()
 
 double get_player_charge_percent()
 {
-	return PLAYER_WEAPONS[PLAYER_WEAPON_INDEX]->charge;
+	return PLAYER_ITEMS[PLAYER_ITEM_INDEX]->charge;
 }
 
 double get_player_exp()
@@ -244,16 +237,16 @@ int get_player_level()
 	return PLAYER_LEVEL;
 }
 
-void set_player_weapon(int i, weapon *w)
+void set_player_item(int i, item *it)
 {
-	PLAYER_WEAPONS[i] = w;
-	w->x = &PLAYER_X;
-	w->y = &PLAYER_Y;
+	PLAYER_ITEMS[i] = it;
+	it->x = &PLAYER_X;
+	it->y = &PLAYER_Y;
 }
 
-weapon *get_player_weapon()
+item *get_player_item()
 {
-	return PLAYER_WEAPONS[PLAYER_WEAPON_INDEX];
+	return PLAYER_ITEMS[PLAYER_ITEM_INDEX];
 }
 
 void hit_player(int dmg)
@@ -276,67 +269,34 @@ void warp_player(int x, int y)
 {
 	PLAYER_X = x;
 	PLAYER_Y = y;
-	//NORTH_PRESSED = SOUTH_PRESSED = WEST_PRESSED = EAST_PRESSED = 0;
+	//PLAYER_PRESSED[NORTH] = PLAYER_PRESSED[SOUTH] = PLAYER_PRESSED[WEST] = PLAYER_PRESSED[EAST] = 0;
 }
 
-void set_player_weapon_index(int i)
+void set_player_item_index(int i)
 {
-	release_trigger(PLAYER_WEAPONS[PLAYER_WEAPON_INDEX]);
-	if (PLAYER_WEAPONS[i] != NULL) {
-		PLAYER_WEAPON_INDEX = i;
+	deactivate_item(PLAYER_ITEMS[PLAYER_ITEM_INDEX]);
+	if (PLAYER_ITEMS[i] != NULL) {
+		PLAYER_ITEM_INDEX = i;
 	}
 }
 
-void shoot_player_weapon(int pressed, double xv, double yv)
+void use_player_item(bool pressed, double xv, double yv)
 {
 	if (pressed) {
-		press_trigger(PLAYER_WEAPONS[PLAYER_WEAPON_INDEX], xv, yv);
+		activate_item(PLAYER_ITEMS[PLAYER_ITEM_INDEX], xv, yv);
 	} else {
-		release_trigger(PLAYER_WEAPONS[PLAYER_WEAPON_INDEX]);
+		deactivate_item(PLAYER_ITEMS[PLAYER_ITEM_INDEX]);
 	}
 }
 
-void move_player_north(int pressed)
+void set_player_movement(bool pressed, direction d)
 {
 	if (pressed) {
-		NORTH_PRESSED = 1;
-		PLAYER_FACING = NORTH;
-		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
+		PLAYER_PRESSED[d] = true;
+		PLAYER_FACING = d;
+		set_sheet_row(PLAYER_TEXTURE, d);
 	} else {
-		NORTH_PRESSED = 0;
-	}
-}
-
-void move_player_south(int pressed)
-{
-	if (pressed) {
-		SOUTH_PRESSED = 1;
-		PLAYER_FACING = SOUTH;
-		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
-	} else {
-		SOUTH_PRESSED = 0;
-	}
-}
-
-void move_player_west(int pressed)
-{
-	if (pressed) {
-		WEST_PRESSED = 1;
-		PLAYER_FACING = WEST;
-		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
-	} else {
-		WEST_PRESSED = 0;
-	}
-}
-
-void move_player_east(int pressed)
-{
-	if (pressed) {
-		EAST_PRESSED = 1;
-		PLAYER_FACING = EAST;
-		set_sheet_row(PLAYER_TEXTURE, PLAYER_FACING);
-	} else {
-		EAST_PRESSED = 0;
+		PLAYER_PRESSED[d] = false;
 	}
 }
 
@@ -347,7 +307,7 @@ void update_player()
 		return;
 	}
 
-	if (NORTH_PRESSED || SOUTH_PRESSED || WEST_PRESSED || EAST_PRESSED) {
+	if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH] || PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
 		PLAYER_ANIM_STEP = ((PLAYER_ANIM_STEP + 1) % PLAYER_ANIM_STEP_TIMING);
 		if (PLAYER_ANIM_STEP == 0) {
 			set_sheet_column(PLAYER_TEXTURE, (get_sheet_column(PLAYER_TEXTURE) % 2) + 1);
@@ -365,32 +325,32 @@ void update_player()
 	int tempx = PLAYER_X;
 	int tempy = PLAYER_Y;
 
-	if (NORTH_PRESSED) {
-		if (WEST_PRESSED || EAST_PRESSED) {
+	if (PLAYER_PRESSED[NORTH]) {
+		if (PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
 			tempy -= DIAG_SPEED;
 		} else {
 			tempy -= PLAYER_MOVE_SPEED;
 		}
 	}
 
-	if (SOUTH_PRESSED) {
-		if (WEST_PRESSED || EAST_PRESSED) {
+	if (PLAYER_PRESSED[SOUTH]) {
+		if (PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
 			tempy += DIAG_SPEED;
 		} else {
 			tempy += PLAYER_MOVE_SPEED;
 		}
 	}
 
-	if (WEST_PRESSED) {
-		if (NORTH_PRESSED || SOUTH_PRESSED) {
+	if (PLAYER_PRESSED[WEST]) {
+		if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH]) {
 			tempx -= DIAG_SPEED;
 		} else {
 			tempx -= PLAYER_MOVE_SPEED;
 		}
 	}
 
-	if (EAST_PRESSED) {
-		if (NORTH_PRESSED || SOUTH_PRESSED) {
+	if (PLAYER_PRESSED[EAST]) {
+		if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH]) {
 			tempx += DIAG_SPEED;
 		} else {
 			tempx += PLAYER_MOVE_SPEED;

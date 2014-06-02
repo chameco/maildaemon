@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include <GL/glew.h>
@@ -28,10 +29,10 @@ static int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
 SDL_Surface *BITMAP = NULL;
 GLuint BITMAP_FONT[4][26] = {{0}};
 
-SCM __api_render_text_bitmap(SCM x, SCM y, SCM text, SCM size)
+SCM __api_render_text_bitmap(SCM text, SCM x, SCM y, SCM size)
 {
 	char *t = scm_to_locale_string(text);
-	render_text_bitmap(scm_to_int(x), scm_to_int(y), t, scm_to_double(size));
+	render_text_bitmap(t, scm_to_int(x), scm_to_int(y), scm_to_double(size));
 	free(t);
 	return SCM_BOOL_F;
 }
@@ -167,7 +168,7 @@ int bitmap_index(char c)
 	return 51;
 }
 
-void render_text_bitmap(int x, int y, char *text, double size)
+void render_text_bitmap(char *text, int x, int y, double size)
 {
 	int len = strlen(text);
 	int bmpx = 0, bmpy = 0;
@@ -220,14 +221,14 @@ void draw_button(char *text, int x, int y)
 {
 	draw_texture(BUTTON_BACKGROUND, x, y);
 
-	render_text_bitmap(x + 10, y + 10, text, 2);
+	render_text_bitmap(text, x + 10, y + 10, 2);
 }
 
 void draw_dialog_box(char *text, int x, int y)
 {
 	draw_texture(DIALOG_BOX_BACKGROUND, x, y);
 
-	render_text_bitmap(x + 10, y + 10, text, 2);
+	render_text_bitmap(text, x + 10, y + 10, 2);
 }
 
 void draw_meter(char *text, int x, int y, color c, int full)
@@ -256,7 +257,7 @@ void draw_meter(char *text, int x, int y, color c, int full)
 
 	glPopMatrix();
 
-	render_text_bitmap(x + 55 - (16 * strlen(text))/2, y + 8, text, 2);
+	render_text_bitmap(text, x + 55 - (16 * strlen(text))/2, y + 8, 2);
 }
 
 void draw_gui()
@@ -283,5 +284,5 @@ void draw_gui()
 	draw_meter(CURRENT_PLAYER_LEVEL_TEXT, 0, 64, (color) {1.0, 0.8, 0.0, 1.0}, elength);
 
 	//LEVEL TITLE
-	render_text_bitmap(150, 0, CURRENT_LEVEL_TEXT, 4);
+	render_text_bitmap(CURRENT_LEVEL_TEXT, 150, 0, 4);
 }

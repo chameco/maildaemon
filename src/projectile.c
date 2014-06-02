@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include <GL/glew.h>
@@ -12,7 +13,7 @@
 #include "cuttle/utils.h"
 
 #include "utils.h"
-#include "weapon.h"
+#include "item.h"
 #include "player.h"
 #include "entity.h"
 #include "level.h"
@@ -25,7 +26,7 @@ SCM __api_spawn_projectile(SCM c, SCM x, SCM y, SCM xv, SCM yv, SCM w, SCM h,
 {
 	color col = *((color *) SCM_SMOB_DATA(c));
 	scm_gc_free((color *) c, sizeof(color), "color");
-	weapon *sb = (weapon *) SCM_SMOB_DATA(spawned_by);
+	item *sb = (item *) SCM_SMOB_DATA(spawned_by);
 	spawn_projectile(col, scm_to_int(x), scm_to_int(y), scm_to_double(xv), scm_to_double(yv),
 			scm_to_int(w), scm_to_int(h), scm_to_int(longevity), sb, scm_to_int(dmg));
 	return SCM_BOOL_F;
@@ -50,7 +51,7 @@ void reset_projectile()
 }
 
 void spawn_projectile(color c, int x, int y, double xv, double yv, int w, int h,
-		int longevity, weapon *spawned_by, int dmg)
+		int longevity, item *spawned_by, int dmg)
 {
 	projectile *p = malloc(sizeof(projectile));
 	p->c = c;
@@ -76,7 +77,7 @@ void check_projectile_collisions(projectile *p)
 	};
 	SDL_Rect b;
 
-	if (p->spawned_by != get_player_weapon()) {
+	if (p->spawned_by != get_player_item()) {
 		b.x = get_player_x();
 		b.y = get_player_y();
 		b.w = get_player_w();
@@ -112,7 +113,7 @@ void check_projectile_collisions(projectile *p)
 	list_node *c;
 	entity *e;
 	for (c = entities->next; c->next != NULL; c = c->next) {
-		if (((entity *) c->data)->weapon != p->spawned_by &&
+		if (((entity *) c->data)->item != p->spawned_by &&
 				((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
 			b.x = e->x;
