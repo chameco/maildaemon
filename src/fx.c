@@ -123,7 +123,7 @@ global_effect *make_global_fx(void (*callback)(), int timer)
 
 void global_effect_shake()
 {
-	glTranslatef((rand() % 10) - 5, (rand() % 10) - 5, 0);
+	glTranslatef((rand() % 6) - 3, (rand() % 6) - 3, 0);
 }
 
 void spawn_global_fx(global_effect *e)
@@ -233,12 +233,11 @@ void apply_global_fx()
 inline void draw_particle(effect *e, int xdiff, int ydiff)
 {
 	glPushMatrix();
-
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
-
 	glScalef(e->dim, e->dim, 1);
 
 	glColor4f(e->c.r, e->c.g, e->c.b, e->c.a);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -271,14 +270,11 @@ inline void draw_smoke_particle(effect *e, int xdiff, int ydiff)
 	b = b < 0.0 ? 0.0 : b;
 
 	glPushMatrix();
-
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
-
 	glScalef(e->dim, e->dim, 1);
 
-	glBindTexture(GL_TEXTURE_2D, 0);
-
 	glColor4f(r, g, b, e->c.a);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 

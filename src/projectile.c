@@ -17,17 +17,16 @@
 #include "player.h"
 #include "entity.h"
 #include "level.h"
-#include "fx.h"
 
 static list_node *PROJECTILES;
 
-SCM __api_spawn_projectile(SCM c, SCM x, SCM y, SCM xv, SCM yv, SCM w, SCM h,
+SCM __api_spawn_projectile(SCM c, SCM x, SCM y, SCM speed, SCM rotation, SCM w, SCM h,
 		SCM longevity, SCM spawned_by, SCM dmg)
 {
 	color col = *((color *) SCM_SMOB_DATA(c));
 	scm_gc_free((color *) c, sizeof(color), "color");
 	item *sb = (item *) SCM_SMOB_DATA(spawned_by);
-	spawn_projectile(col, scm_to_int(x), scm_to_int(y), scm_to_double(xv), scm_to_double(yv),
+	spawn_projectile(col, scm_to_int(x), scm_to_int(y), scm_to_int(speed), scm_to_double(rotation),
 			scm_to_int(w), scm_to_int(h), scm_to_int(longevity), sb, scm_to_int(dmg));
 	return SCM_BOOL_F;
 }
@@ -50,7 +49,7 @@ void reset_projectile()
 	PROJECTILES = make_list();
 }
 
-void spawn_projectile(color c, int x, int y, double xv, double yv, int w, int h,
+void spawn_projectile(color c, int x, int y, int speed, double rotation, int w, int h,
 		int longevity, item *spawned_by, int dmg)
 {
 	projectile *p = malloc(sizeof(projectile));
@@ -59,8 +58,8 @@ void spawn_projectile(color c, int x, int y, double xv, double yv, int w, int h,
 	p->y = y;
 	p->w = w;
 	p->h = h;
-	p->xv = xv;
-	p->yv = yv;
+	p->xv = speed * cos(rotation);
+	p->yv = speed * sin(rotation);
 	p->longevity = longevity;
 	p->spawned_by = spawned_by;
 	p->dmg = dmg;

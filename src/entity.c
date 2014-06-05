@@ -240,8 +240,7 @@ void hit_entity(entity *e, int dmg)
 		if (e->health <= 0) {
 			remove_list(ENTITIES, (void *) e);
 			give_player_exp(e->expval);
-			spawn_fx(make_fx(EXPLOSION, COLOR_WHITE,
-						e->x, e->y, 4, 100, 20));
+			spawn_fx(make_fx(EXPLOSION, COLOR_WHITE, e->x, e->y, 4, 100, 20));
 			scm_gc_free(e, sizeof(entity), "entity");
 		}
 	}

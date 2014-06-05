@@ -19,15 +19,11 @@
 #include "level.h"
 #include "player.h"
 
-static texture *BUTTON_BACKGROUND;
-static texture *DIALOG_BOX_BACKGROUND;
-static texture *METER_BACKGROUND;
-static char CURRENT_PLAYER_LEVEL_TEXT[256];
-static char CURRENT_LEVEL_TEXT[256];
-static int BELIEVED_CURRENT_PLAYER_LEVEL = -1;
+static texture *BUTTON_BACKGROUND = NULL;
+static texture *DIALOG_BOX_BACKGROUND = NULL;
+static texture *METER_BACKGROUND = NULL;
 
-SDL_Surface *BITMAP = NULL;
-GLuint BITMAP_FONT[4][26] = {{0}};
+static texture *BITMAP_FONT = NULL;
 
 SCM __api_render_text_bitmap(SCM text, SCM x, SCM y, SCM size)
 {
@@ -57,7 +53,7 @@ SCM __api_draw_meter(SCM text, SCM x, SCM y, SCM c, SCM full)
 {
 	char *t = scm_to_locale_string(text);
 	color *col = (color *) SCM_SMOB_DATA(c);
-	draw_meter(t, scm_to_int(x), scm_to_int(y), *col, scm_to_int(full));
+	draw_meter(t, scm_to_int(x), scm_to_int(y), *col, scm_to_double(full));
 	free(t);
 	return SCM_BOOL_F;
 }
@@ -67,53 +63,12 @@ void initialize_gui()
 	BUTTON_BACKGROUND = load_texture("textures/gui/buttontemplate.png", 0, 0);
 	DIALOG_BOX_BACKGROUND = load_texture("textures/gui/dialogtemplate.png", 0, 0);
 	METER_BACKGROUND = load_texture("textures/gui/meter.png", 0, 0);
-	load_bitmap_font("fonts/font.png");
+	BITMAP_FONT = load_texture("fonts/font.png", 8, 8);
 
 	scm_c_define_gsubr("render-text-bitmap", 4, 0, 0, __api_render_text_bitmap);
 	scm_c_define_gsubr("draw-button", 3, 0, 0, __api_draw_button);
 	scm_c_define_gsubr("draw-dialog-box", 3, 0, 0, __api_draw_dialog_box);
 	scm_c_define_gsubr("draw-meter", 5, 0, 0, __api_draw_meter);
-}
-
-void load_bitmap_font(char *path)
-{
-	BITMAP = IMG_Load(path);
-	//SDL_SetSurfaceAlphaMod(BITMAP, 0);
-	SDL_SetSurfaceBlendMode(BITMAP, SDL_BLENDMODE_NONE);
-	SDL_SetColorKey(BITMAP, SDL_TRUE, SDL_MapRGBA(BITMAP->format, 255, 0, 0, 255));
-	Uint32 rmask, gmask, bmask, amask;
-
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-	rmask = 0xff000000;
-	gmask = 0x00ff0000;
-	bmask = 0x0000ff00;
-	amask = 0x000000ff;
-#else
-	rmask = 0x000000ff;
-	gmask = 0x0000ff00;
-	bmask = 0x00ff0000;
-	amask = 0xff000000;
-#endif
-
-
-	int x, y;
-	SDL_Rect srcrect = {0, 0, 8, 8};
-	SDL_Rect destrect = {0, 0, 0, 0};
-	for (y = 0; y < 4; y++) {
-		for (x = 0; x < 26; x++) {
-			srcrect.x = srcrect.y = 0;
-			srcrect.x = x * 8;
-			srcrect.y = y * 8;
-			SDL_Surface *temp = SDL_CreateRGBSurface(0, 8, 8, 32,
-					rmask, gmask, bmask, amask);
-			SDL_Surface *character = SDL_ConvertSurface(temp, BITMAP->format, BITMAP->flags);
-			SDL_Rect all = {0, 0, 8, 8};
-			SDL_FillRect(character, &all, SDL_MapRGBA(temp->format, 0, 0, 0, 0));
-			SDL_FreeSurface(temp);
-			SDL_BlitSurface(BITMAP, &srcrect, character, &destrect);
-			BITMAP_FONT[y][x] = surface_to_texture(character);
-		}
-	}
 }
 
 int bitmap_index(char c)
@@ -142,7 +97,7 @@ int bitmap_index(char c)
 			case ';':
 				return 43;
 				break;
-			case '_':
+			case '-':
 				return 44;
 				break;
 			case '/':
@@ -186,35 +141,12 @@ void render_text_bitmap(char *text, int x, int y, double size)
 				bmpx -= 13;
 				bmpy += 1;
 			}
-			glPushMatrix();
-
-			glTranslatef(curx, cury, 0);
-			glScalef(size * 8, size * 8, 1);
-			glColor3f(1.0, 1.0, 1.0);
-			glBindTexture(GL_TEXTURE_2D, BITMAP_FONT[bmpy][bmpx]);
-
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-			glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
-			glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
-			glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
-			glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
-
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glDisableClientState(GL_VERTEX_ARRAY);
-
-			glPopMatrix();
+			set_sheet_row(BITMAP_FONT, bmpy);
+			set_sheet_column(BITMAP_FONT, bmpx);
+			draw_texture_scale(BITMAP_FONT, curx, cury, 8 * size, 8 * size);
 			curx += 8 * size;
 		}
 	}
-}
-
-void update_gui()
-{
-	;
 }
 
 void draw_button(char *text, int x, int y)
@@ -231,7 +163,7 @@ void draw_dialog_box(char *text, int x, int y)
 	render_text_bitmap(text, x + 10, y + 10, 2);
 }
 
-void draw_meter(char *text, int x, int y, color c, int full)
+void draw_meter(char *text, int x, int y, color c, double full)
 {
 	draw_texture(METER_BACKGROUND, x, y);
 
@@ -258,31 +190,4 @@ void draw_meter(char *text, int x, int y, color c, int full)
 	glPopMatrix();
 
 	render_text_bitmap(text, x + 55 - (16 * strlen(text))/2, y + 8, 2);
-}
-
-void draw_gui()
-{
-	double h = get_player_health();
-	double mh = get_player_max_health();
-	double e = get_player_exp();
-	double me = get_player_exp_to_next();
-	int hlength;
-	hlength = (100 * h) / mh;
-	int elength;
-	elength = (100 * e) / me;
-	if (BELIEVED_CURRENT_PLAYER_LEVEL != get_player_level()) {
-		BELIEVED_CURRENT_PLAYER_LEVEL = get_player_level();
-		sprintf(CURRENT_PLAYER_LEVEL_TEXT, "lvl %d", BELIEVED_CURRENT_PLAYER_LEVEL);
-	}
-	if (strcmp(CURRENT_LEVEL_TEXT, get_current_level()->name) != 0) {
-		char *buffer = get_current_level()->name;
-		strncpy(CURRENT_LEVEL_TEXT, buffer, sizeof(CURRENT_LEVEL_TEXT));
-	}
-
-	draw_meter("Health", 0, 0, COLOR_GREEN, hlength);
-	draw_meter("Ammo", 0, 32, COLOR_GRAY, get_player_charge_percent());
-	draw_meter(CURRENT_PLAYER_LEVEL_TEXT, 0, 64, (color) {1.0, 0.8, 0.0, 1.0}, elength);
-
-	//LEVEL TITLE
-	render_text_bitmap(CURRENT_LEVEL_TEXT, 150, 0, 4);
 }

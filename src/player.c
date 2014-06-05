@@ -27,7 +27,7 @@ static bool PLAYER_PRESSED[4] = {0};
 static const int PLAYER_MOVE_SPEED = 6; //Pixels per second
 static const int DIAG_SPEED = 5;
 static const int PLAYER_WIDTH = TILE_DIM;
-static const int PLAYER_HEIGHT = TILE_DIM;
+static const int PLAYER_HEIGHT = (TILE_DIM)/2;
 static direction PLAYER_FACING = 0;
 static double PLAYER_EXP = 0;
 static double PLAYER_EXP_TO_NEXT = 100;
@@ -78,7 +78,7 @@ SCM __api_get_player_max_health()
 
 SCM __api_get_player_charge_percent()
 {
-	return scm_from_double(get_player_charge_percent());
+	return scm_from_int(get_player_charge_percent());
 }
 
 SCM __api_get_player_exp()
@@ -132,9 +132,9 @@ SCM __api_set_player_item_index(SCM i)
 	return SCM_BOOL_F;
 }
 
-SCM __api_use_player_item(SCM pressed, SCM xv, SCM yv)
+SCM __api_use_player_item(SCM pressed, SCM rot)
 {
-	use_player_item(scm_to_int(pressed), scm_to_double(xv), scm_to_double(yv));
+	use_player_item(scm_to_int(pressed), scm_to_double(rot));
 	return SCM_BOOL_F;
 }
 
@@ -161,7 +161,7 @@ void initialize_player()
 	scm_c_define_gsubr("give-player-exp", 1, 0, 0, __api_give_player_exp);
 	scm_c_define_gsubr("warp-player", 2, 0, 0, __api_warp_player);
 	scm_c_define_gsubr("set-player-item-index", 1, 0, 0, __api_set_player_item_index);
-	scm_c_define_gsubr("use-player-item", 3, 0, 0, __api_use_player_item);
+	scm_c_define_gsubr("use-player-item", 2, 0, 0, __api_use_player_item);
 
 	scm_c_primitive_load("script/init/player.scm");
 }
@@ -280,10 +280,10 @@ void set_player_item_index(int i)
 	}
 }
 
-void use_player_item(bool pressed, double xv, double yv)
+void use_player_item(bool pressed, double rot)
 {
 	if (pressed) {
-		activate_item(PLAYER_ITEMS[PLAYER_ITEM_INDEX], xv, yv);
+		activate_item(PLAYER_ITEMS[PLAYER_ITEM_INDEX], rot);
 	} else {
 		deactivate_item(PLAYER_ITEMS[PLAYER_ITEM_INDEX]);
 	}
@@ -444,5 +444,5 @@ void update_player()
 
 void draw_player()
 {
-	draw_texture_scale(PLAYER_TEXTURE, PLAYER_X, PLAYER_Y, PLAYER_WIDTH, PLAYER_HEIGHT);
+	draw_texture_scale(PLAYER_TEXTURE, PLAYER_X, PLAYER_Y - TILE_DIM/2, TILE_DIM, TILE_DIM);
 }

@@ -14,7 +14,6 @@
 
 #include "utils.h"
 #include "texture.h"
-#include "repl.h"
 #include "entity.h"
 #include "item.h"
 #include "level.h"
@@ -84,8 +83,6 @@ void inner_main(void *data, int argc, char *argv[])
 					break;
 			}
 		}
-
-		update_repl();
 
 		glClear(GL_COLOR_BUFFER_BIT);
 

@@ -1,0 +1,8 @@
+(define HUD_GREEN (make-color 0 1 0 1))
+(define HUD_GRAY (make-color 0.1 0.1 0.1 1))
+(define HUD_GOLD (make-color 1 0.8 0 1))
+(lambda ()
+  (draw-meter "Health" 0 0 HUD_GREEN (/ (* (get-player-health) 100) (get-player-max-health)))
+  (draw-meter "Ammo" 0 32 HUD_GRAY (get-player-charge-percent))
+  (draw-meter (string-append "lvl " (number->string (get-player-level))) 0 64 HUD_GOLD (/ (* (get-player-exp) 100) (get-player-exp-to-next)))
+  (render-text-bitmap (get-level-name) 150 0 4))

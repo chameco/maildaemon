@@ -2,7 +2,7 @@
                       (lambda (i data)
                         (begin
                           (spawn-projectile (make-color 0 0 1 1)
-                                            0 160 
+                                            32 160 
                                             16 0
                                             8 8
                                             100

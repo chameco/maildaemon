@@ -5,7 +5,7 @@
 #include <SDL2/SDL_mixer.h>
 #include "utils.h"
 
-#define SPRITESHEET_DIM 8
+#define SPRITESHEET_DIM 16
 
 typedef struct texture {
 	GLuint texture;

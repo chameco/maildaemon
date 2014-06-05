@@ -7,13 +7,15 @@
 
 typedef enum tile {
 	VOID=0,
-	PLANKS=1,
-	GRASS=2,
-	SNOW=3,
-	SAND=4,
+	STONEFLOOR,
+	PLANKS,
+	GRASS,
+	SNOW,
+	SAND,
 	STONE=8,
-	SHRUB=9,
-	TORCH=10
+	STONETOP,
+	STONETORCH,
+	SHRUB=16
 } tile;
 
 typedef struct level {
@@ -30,3 +32,4 @@ void save_level(level *l);
 level *get_current_level();
 int is_solid_tile(int x, int y);
 void draw_level();
+void draw_level_top();

@@ -63,16 +63,10 @@ SCM __api_set_item_charge(SCM i, SCM c)
 	return SCM_BOOL_F;
 }
 
-SCM __api_get_item_xv(SCM i)
+SCM __api_get_item_rotation(SCM i)
 {
 	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_double(get_item_xv(it));
-}
-
-SCM __api_get_item_yv(SCM i)
-{
-	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_double(get_item_yv(it));
+	return scm_from_double(get_item_rotation(it));
 }
 
 SCM __api_get_item_x(SCM i)
@@ -87,10 +81,10 @@ SCM __api_get_item_y(SCM i)
 	return scm_from_int(*(it->y));
 }
 
-SCM __api_activate_item(SCM i, SCM xv, SCM yv)
+SCM __api_activate_item(SCM i, SCM rot)
 {
 	item *it = (item *) SCM_SMOB_DATA(i);
-	activate_item(it, scm_to_double(xv), scm_to_double(yv));
+	activate_item(it, scm_to_double(rot));
 	return SCM_BOOL_F;
 }
 
@@ -119,11 +113,10 @@ void initialize_item()
 	scm_c_define_gsubr("is-item-active", 1, 0, 0, __api_is_item_active);
 	scm_c_define_gsubr("get-item-charge", 1, 0, 0, __api_get_item_charge);
 	scm_c_define_gsubr("set-item-charge", 2, 0, 0, __api_set_item_charge);
-	scm_c_define_gsubr("get-item-xv", 1, 0, 0, __api_get_item_xv);
-	scm_c_define_gsubr("get-item-yv", 1, 0, 0, __api_get_item_yv);
+	scm_c_define_gsubr("get-item-rotation", 1, 0, 0, __api_get_item_rotation);
 	scm_c_define_gsubr("get-item-x", 1, 0, 0, __api_get_item_x);
 	scm_c_define_gsubr("get-item-y", 1, 0, 0, __api_get_item_y);
-	scm_c_define_gsubr("activate-item", 3, 0, 0, __api_activate_item);
+	scm_c_define_gsubr("activate-item", 2, 0, 0, __api_activate_item);
 	scm_c_define_gsubr("deactivate-item", 1, 0, 0, __api_deactivate_item);
 
 	DIR *d = opendir("script/items");
@@ -173,7 +166,7 @@ item *build_item_prototype(char *name, SCM update_func)
 	ret->x = NULL;
 	ret->y = NULL;
 	ret->active = 0;
-	ret->xv = ret->yv = 0;
+	ret->rotation = 0;
 	//ret->sound = Mix_LoadWAV(sfx_path);
 	ret->sound = NULL;
 	ret->charge = 100.0;
@@ -215,23 +208,17 @@ void set_item_charge(item *i, double c)
 	i->charge = c;
 }
 
-double get_item_xv(item *i)
+double get_item_rotation(item *i)
 {
-	return i->xv;
+	return i->rotation;
 }
 
-double get_item_yv(item *i)
-{
-	return i->yv;
-}
-
-void activate_item(item *i, double xv, double yv)
+void activate_item(item *i, double rotation)
 {
 	if (i == NULL) {
 		return;
 	}
-	i->xv = xv;
-	i->yv = yv;
+	i->rotation = rotation;
 	i->active = 1;
 	Mix_PlayChannel(-1, i->sound, 0);
 }

@@ -25,7 +25,7 @@ vpath %.c src
 
 .PHONY: all directories install uninstall clean
 
-all: directories $(GAME) $(EDITOR)
+all: directories $(GAME)
 
 directories: $(BUILD_DIR)
 
@@ -36,9 +36,6 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) -o $@ -c $(CFLAGS) $<
 
 $(GAME): $(BUILD_DIR)/main.o $(OBJS)
-	$(CC) $^ $(LINKER_FLAGS) -o $@
-
-$(EDITOR): $(BUILD_DIR)/level_editor.o $(OBJS)
 	$(CC) $^ $(LINKER_FLAGS) -o $@
 
 install:

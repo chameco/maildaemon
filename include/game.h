@@ -5,6 +5,7 @@
 typedef enum mode {
 	TITLE_MODE,
 	MAIN_MENU_MODE,
+	TEXT_ENTRY_MODE,
 	DRAW_MODE,
 	GAME_OVER_MODE
 } mode;
@@ -22,5 +23,6 @@ void reset_game();
 void main_game_loop();
 int draw_title_loop();
 int draw_main_menu_loop();
+int draw_text_entry_loop();
 int draw_main_loop();
 int draw_game_over_loop();

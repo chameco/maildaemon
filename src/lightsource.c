@@ -103,7 +103,6 @@ void draw_lightsource()
 	glPopMatrix();
 
 	glBlendFunc(GL_DST_COLOR, GL_SRC_ALPHA);
-	//glBlendFunc(GL_DST_COLOR, GL_ZERO);
 	list_node *c;
 	lightsource *l;
 	int numtimes;

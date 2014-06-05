@@ -25,7 +25,7 @@ void hit_player(int dmg);
 void give_player_exp(double exp);
 void warp_player(int x, int y);
 void set_player_item_index(int i);
-void use_player_item(bool pressed, double xv, double yv);
+void use_player_item(bool pressed, double rot);
 void set_player_movement(bool pressed, direction d);
 void update_player();
 void draw_player();
