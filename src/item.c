@@ -98,7 +98,9 @@ SCM __api_deactivate_item(SCM i)
 SCM __api_smob_item_mark(SCM i)
 {
 	item *it = (item *) SCM_SMOB_DATA(i);
-	return it->update_func;
+	scm_gc_mark(it->draw_hud_func);
+	scm_gc_mark(it->update_func);
+	return it->data;
 }
 
 void initialize_item()
@@ -161,7 +163,7 @@ void free_item(item *i)
 
 item *build_item_prototype(char *name, SCM update_func)
 {
-	item *ret = scm_gc_malloc(sizeof(item), "item");
+	item *ret = malloc(sizeof(item));
 	strcpy(ret->name, name);
 	ret->x = NULL;
 	ret->y = NULL;

@@ -391,8 +391,8 @@ int draw_text_entry_loop()
 
 	draw_level();
 	draw_entity();
-	draw_player();
 	draw_projectile();
+	draw_player();
 	draw_level_top();
 	draw_fx();
 	draw_lightsource();
@@ -522,8 +522,8 @@ int draw_main_loop()
 
 	draw_level();
 	draw_entity();
-	draw_player();
 	draw_projectile();
+	draw_player();
 	draw_level_top();
 	draw_fx();
 	draw_lightsource();
