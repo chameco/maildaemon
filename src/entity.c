@@ -183,7 +183,7 @@ entity *build_entity_prototype(char *name, int w, int h,
 	e->health = health;
 	e->speed = speed;
 	e->expval = expval;
-	e->hit_func = e->collide_func = e->update_func = SCM_BOOL_F;
+	e->data = e->init_func = e->hit_func = e->collide_func = e->update_func = SCM_BOOL_F;
 	set_hash(ENTITY_PROTOTYPES, name, (void *) e);
 	return e;
 }
@@ -223,6 +223,9 @@ entity *make_entity(char *name, int x, int y)
 	ret->t = load_texture(buf, 8, 8);
 	ret->x = x;
 	ret->y = y;
+	if (scm_is_true(ret->init_func)) {
+		ret->data = scm_call_1(ret->init_func, scm_new_smob(__api_entity_tag, (unsigned long) ret));
+	}
 	return ret;
 }
 
@@ -234,7 +237,7 @@ void spawn_entity(entity *e)
 void hit_entity(entity *e, int dmg)
 {
 	if (scm_is_true(e->hit_func)) {
-		scm_call_2(e->hit_func, scm_new_smob(__api_entity_tag, (unsigned long) e), scm_from_int(dmg));
+		e->data = scm_call_3(e->hit_func, scm_new_smob(__api_entity_tag, (unsigned long) e), scm_from_int(dmg), e->data);
 	} else {
 		e->health -= dmg;
 		if (e->health <= 0) {
@@ -249,7 +252,7 @@ void hit_entity(entity *e, int dmg)
 void collide_entity(entity *e)
 {
 	if (scm_is_true(e->collide_func)) {
-		scm_call_1(e->collide_func, scm_new_smob(__api_entity_tag, (unsigned long) e));
+		e->data = scm_call_2(e->collide_func, scm_new_smob(__api_entity_tag, (unsigned long) e), e->data);
 	}
 }
 
@@ -342,8 +345,8 @@ void update_entity()
 	for (c = ENTITIES->next; c->next != NULL; c = c->next) {
 		if (((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
-			if (scm_is_true(e->collide_func)) {
-				scm_call_1(e->collide_func, scm_new_smob(__api_entity_tag, (unsigned long) e));
+			if (scm_is_true(e->update_func)) {
+				e->data = scm_call_2(e->update_func, scm_new_smob(__api_entity_tag, (unsigned long) e), e->data);
 			}
 			check_entity_collisions(e);
 		}

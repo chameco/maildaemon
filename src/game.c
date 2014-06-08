@@ -108,8 +108,8 @@ void initialize_game()
 	set_current_dialog("Hello");
 
 
-	spawn_fx(make_fx(SMOKE_CONST, COLOR_GRAY,
-				80, 0, 8, 50, 100));
+	//spawn_fx(make_fx(SMOKE_CONST, COLOR_GRAY,
+	//			80, 0, 8, 50, 100));
 
 	Mix_PlayMusic(Mix_LoadMUS("music/menu.ogg"), -1);
 }
@@ -499,6 +499,7 @@ int draw_main_loop()
 	}
 	CURRENT_TIME = SDL_GetTicks();
 	if (CURRENT_TIME - LAST_TIME > 40) {
+		update_level();
 		update_player();
 		update_entity();
 		update_item();

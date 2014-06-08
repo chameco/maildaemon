@@ -11,6 +11,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
+#include <libguile.h>
 
 #include "cuttle/debug.h"
 #include "cuttle/utils.h"
@@ -22,6 +23,26 @@ static list_node *GLOBAL_EFFECTS;
 static vertex EFFECT_VERTICES[4];
 static GLuint EFFECT_VERTEX_HANDLER = 0;
 static Mix_Chunk *EXPLOSION_SOUND;
+
+static scm_t_bits __api_effect_tag;
+
+SCM __api_make_fx(SCM type, SCM col, SCM x, SCM y, SCM dim, SCM radius, SCM speed)
+{
+	color c = *((color *) SCM_SMOB_DATA(col));
+	SCM ret = scm_new_smob(__api_effect_tag,
+			(unsigned long) make_fx(scm_to_int(type), c,
+				scm_to_int(x), scm_to_int(y), scm_to_int(dim),
+				scm_to_int(radius), scm_to_int(speed)));
+	scm_gc_protect_object(ret);
+	return ret;
+}
+
+SCM __api_spawn_fx(SCM e)
+{
+	effect *fx = (effect *) SCM_SMOB_DATA(e);
+	spawn_fx(fx);
+	return SCM_BOOL_F;
+}
 
 void initialize_fx()
 {
@@ -44,6 +65,10 @@ void initialize_fx()
 	glGenBuffers(1, &EFFECT_VERTEX_HANDLER);
 	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
 	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), EFFECT_VERTICES, GL_STATIC_DRAW);
+
+	__api_effect_tag = scm_make_smob_type("effect", sizeof(effect));
+	scm_c_define_gsubr("make-fx", 7, 0, 0, __api_make_fx);
+	scm_c_define_gsubr("spawn-fx", 1, 0, 0, __api_spawn_fx);
 }
 
 void reset_fx()

@@ -31,5 +31,6 @@ level *load_level(char *name);
 void save_level(level *l);
 level *get_current_level();
 int is_solid_tile(int x, int y);
+void update_level();
 void draw_level();
 void draw_level_top();

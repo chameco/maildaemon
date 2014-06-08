@@ -13,14 +13,27 @@
 
 #include "utils.h"
 #include "texture.h"
+#include "entity.h"
+#include "projectile.h"
+#include "fx.h"
+#include "lightsource.h"
 
 static level *CURRENT_LEVEL = NULL;
 static texture *TILE_SHEET = NULL;
 static texture *TILE_SHEET_TOP = NULL;
+static char SWITCH_TO[256] = {0};
 
-SCM __api_swap_tile(SCM x, SCM y, SCM tile)
+SCM __api_switch_level(SCM name)
 {
-	get_current_level()->tiles[scm_to_int(y)][scm_to_int(x)] = scm_to_int(tile);
+	char *s = scm_to_locale_string(name);
+	switch_level(s);
+	free(s);
+	return SCM_BOOL_F;
+}
+
+SCM __api_set_tile(SCM x, SCM y, SCM tile)
+{
+	get_current_level()->tiles[scm_to_int(x)][scm_to_int(y)] = scm_to_int(tile);
 	return SCM_BOOL_F;
 }
 
@@ -54,7 +67,8 @@ void initialize_level()
 	TILE_SHEET = load_texture("textures/tilesheet.png", 8, 8);
 	TILE_SHEET_TOP = load_texture("textures/tilesheet_top.png", 8, 8);
 
-	scm_c_define_gsubr("swap-tile", 3, 0, 0, __api_swap_tile);
+	scm_c_define_gsubr("switch-level", 1, 0, 0, __api_switch_level);
+	scm_c_define_gsubr("set-tile", 3, 0, 0, __api_set_tile);
 	scm_c_define_gsubr("set-level-name", 1, 0, 0, __api_set_level_name);
 	scm_c_define_gsubr("get-level-name", 0, 0, 0, __api_get_level_name);
 	scm_c_define_gsubr("set-level-ambience", 1, 0, 0, __api_set_level_ambience);
@@ -68,7 +82,7 @@ void reset_level()
 
 void switch_level(char *name)
 {
-	CURRENT_LEVEL = load_level(name);
+	strcpy(SWITCH_TO, name);
 }
 
 level *load_level(char *name)
@@ -119,6 +133,18 @@ int is_solid_tile(int x, int y)
 {
 	if (x < 0 || y < 0) return 0;
 	return CURRENT_LEVEL->tiles[x][y] > PLANKS;
+}
+
+void update_level()
+{
+	if (strlen(SWITCH_TO) != 0) {
+		reset_entity();
+		reset_projectile();
+		reset_fx();
+		reset_lightsource();
+		CURRENT_LEVEL = load_level(SWITCH_TO);
+		memset(SWITCH_TO, 0, sizeof(SWITCH_TO));
+	}
 }
 
 void draw_level()

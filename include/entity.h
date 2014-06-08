@@ -14,6 +14,7 @@ typedef struct entity {
 	item *item;
 	int health, speed;
 	double expval;
+	SCM data;
 	SCM init_func;
 	SCM hit_func;
 	SCM collide_func;
