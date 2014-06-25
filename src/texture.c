@@ -22,6 +22,11 @@ static hash_map *TEXTURE_CACHE;
 
 static scm_t_bits __api_texture_tag;
 
+scm_t_bits get_texture_tag()
+{
+	return __api_texture_tag;
+}
+
 SCM __api_load_texture(SCM path, SCM w, SCM h)
 {
 	char *p = scm_to_locale_string(path);
@@ -46,7 +51,7 @@ SCM __api_get_sheet_row(SCM r)
 SCM __api_set_sheet_row(SCM r, SCM ay)
 {
 	texture *res = (texture *) SCM_SMOB_DATA(r);
-	set_sheet_column(res, scm_to_int(ay));
+	set_sheet_row(res, scm_to_int(ay));
 	return SCM_BOOL_F;
 }
 
@@ -179,9 +184,37 @@ void draw_texture(texture *r, int x, int y)
 
 void draw_texture_scale(texture *r, int x, int y, int w, int h)
 {
+	//draw_texture_scale_rotate(r, x, y, r->w, r->h, 0.0);
 	glPushMatrix();
 	glTranslatef(x-(r->anim_x * w), y-(r->anim_y * h), 0);
 	glScalef(w, h, 1);
+
+	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, r->texture);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, r->vertex_handler);
+
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0x0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *((r->index_handlers) + (r->anim_y * r->column_count) + (r->anim_x)));
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glPopMatrix();
+}
+
+void draw_texture_scale_rotate(texture *r, int x, int y, int w, int h, double rotation)
+{
+	glPushMatrix();
+	glTranslatef(x-(r->anim_x * w), y-(r->anim_y * h), 0);
+	glScalef(w, h, 1);
+	glRotatef((rotation * 180)/3.141592654, 0.0, 0.0, 1.0);
 
 	glColor3f(1.0, 1.0, 1.0);
 	glBindTexture(GL_TEXTURE_2D, r->texture);

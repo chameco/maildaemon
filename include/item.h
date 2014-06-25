@@ -8,7 +8,6 @@
 #include "utils.h"
 
 typedef struct item {
-	char name[256];
 	int *x, *y;
 	bool active;
 	double rotation;

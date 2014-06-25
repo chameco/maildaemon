@@ -7,7 +7,7 @@
 void inner_main()
 {
 	initialize_game();
-	switch_level("test");
+	switch_level("village field");
 	main_game_loop();
 	SDL_Quit();
 }

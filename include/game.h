@@ -15,7 +15,6 @@ void initGL();
 SDL_Window *get_screen();
 int get_screen_width();
 int get_screen_height();
-char *get_current_dialog();
 void set_current_dialog(char *text);
 void take_screenshot(char *path);
 void set_mode(mode m);

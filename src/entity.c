@@ -65,6 +65,12 @@ SCM __api_set_entity_update(SCM e, SCM update)
 	return SCM_BOOL_F;
 }
 
+SCM __api_get_entity_texture(SCM e, SCM update)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_new_smob(get_texture_tag(), (unsigned long) ent->t);
+}
+
 SCM __api_make_entity(SCM name, SCM x, SCM y)
 {
 	char *t = scm_to_locale_string(name);
@@ -119,6 +125,7 @@ void initialize_entity()
 	scm_c_define_gsubr("set-entity-hit", 2, 0, 0, __api_set_entity_hit);
 	scm_c_define_gsubr("set-entity-collide", 2, 0, 0, __api_set_entity_collide);
 	scm_c_define_gsubr("set-entity-update", 2, 0, 0, __api_set_entity_update);
+	scm_c_define_gsubr("get-entity-texture", 1, 0, 0, __api_get_entity_texture);
 	scm_c_define_gsubr("make-entity", 3, 0, 0, __api_make_entity);
 	scm_c_define_gsubr("spawn-entity", 1, 0, 0, __api_spawn_entity);
 	scm_c_define_gsubr("give-entity-item", 2, 0, 0, __api_give_entity_item);
@@ -172,7 +179,6 @@ entity *build_entity_prototype(char *name, int w, int h,
 		int health, int speed, double expval)
 {
 	entity *e = malloc(sizeof(entity));
-	strcpy(e->name, name);
 	e->x = 0;
 	e->y = 0;
 	e->w = w;

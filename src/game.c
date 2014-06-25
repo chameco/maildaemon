@@ -11,7 +11,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_net.h>
 #include <libguile.h>
 
 #include "cuttle/debug.h"
@@ -36,21 +35,22 @@ static int SCREEN_HEIGHT = 0;
 static mode CURRENT_MODE = MAIN_MENU_MODE;
 static int LAST_TIME = 0;
 static int CURRENT_TIME = 0;
-static char *CURRENT_DIALOG = NULL;
+static char CURRENT_DIALOG[256] = "";
 static char *ENTERED_TEXT = NULL;
 static Mix_Chunk *BLIP_SOUND;
 static SCM HUD = SCM_BOOL_F;
 
-void __api_load_module(SCM path)
+SCM __api_set_current_dialog(SCM d)
 {
-	char *t = scm_to_locale_string(path);
-	scm_c_primitive_load(t);
+	char *t = scm_to_locale_string(d);
+	set_current_dialog(t);
 	free(t);
+	return SCM_BOOL_F;
 }
 
 void initialize_game()
 {
-	scm_c_define_gsubr("load-module", 1, 0, 0, __api_load_module);
+	scm_c_define_gsubr("set-current-dialog", 1, 0, 0, __api_set_current_dialog);
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		log_err("Failed to initialize SDL");    
@@ -87,7 +87,6 @@ void initialize_game()
 	initGL();
 	IMG_Init(IMG_INIT_PNG);
 	Mix_Init(MIX_INIT_OGG);
-	SDLNet_Init();
 
 	Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
 	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
@@ -105,7 +104,7 @@ void initialize_game()
 
 	HUD = scm_c_primitive_load("script/gui/hud.scm");
 
-	set_current_dialog("Hello");
+	//set_current_dialog("Entering the dungeons of doom is unsafe!\nFind a better hobby, adventurer!");
 
 
 	//spawn_fx(make_fx(SMOKE_CONST, COLOR_GRAY,
@@ -159,14 +158,9 @@ int get_screen_height()
 	return SCREEN_HEIGHT;
 }
 
-char *get_current_dialog()
-{
-	return CURRENT_DIALOG;
-}
-
 void set_current_dialog(char *text)
 {
-	CURRENT_DIALOG = text;
+	strcpy(CURRENT_DIALOG, text);
 }
 
 
@@ -402,11 +396,7 @@ int draw_text_entry_loop()
 
 	scm_call_0(HUD);
 
-	render_text_bitmap(buffer, (SCREEN_WIDTH - (4 * 8 * strlen(buffer))) / 2, 0, 4);
-
-	if (get_current_dialog() != NULL) {
-		draw_dialog_box(get_current_dialog(), (SCREEN_WIDTH - 1000) / 2, SCREEN_HEIGHT - 100);
-	}
+	render_text_bitmap(buffer, (SCREEN_WIDTH - (4 * 8 * strlen(buffer))) / 2, SCREEN_HEIGHT - 4 * 8, 4);
 
 	SDL_GL_SwapWindow(SCREEN);
 	return 1;
@@ -443,8 +433,8 @@ int draw_main_loop()
 					} else if (event.key.keysym.sym == SDLK_d) {
 						set_player_movement(pressed, EAST);
 					} else if (event.key.keysym.sym == SDLK_SPACE) {
-						if (pressed && get_current_dialog() != NULL) {
-							set_current_dialog(NULL);
+						if (pressed) {
+							set_current_dialog("");
 							Mix_PlayChannel(-1, BLIP_SOUND, 0);
 						}
 					} else if (event.key.keysym.sym == SDLK_o) {
@@ -534,8 +524,8 @@ int draw_main_loop()
 
 	scm_call_0(HUD);
 
-	if (get_current_dialog() != NULL) {
-		draw_dialog_box(get_current_dialog(), (SCREEN_WIDTH - 1000) / 2, SCREEN_HEIGHT - 100);
+	if (strcmp(CURRENT_DIALOG, "") != 0) {
+		draw_dialog_box(CURRENT_DIALOG, (SCREEN_WIDTH - 1000) / 2, SCREEN_HEIGHT - 100);
 	}
 
 	SDL_GL_SwapWindow(SCREEN);

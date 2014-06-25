@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <dirent.h>
 
 #include <libguile.h>
 
@@ -73,6 +74,24 @@ void initialize_level()
 	scm_c_define_gsubr("get-level-name", 0, 0, 0, __api_get_level_name);
 	scm_c_define_gsubr("set-level-ambience", 1, 0, 0, __api_set_level_ambience);
 	scm_c_define_gsubr("save-level", 0, 0, 0, __api_save_level);
+
+	DIR *d = opendir("script/levels/helpers");
+	struct dirent *entry;
+	char buf[256];
+	if (d != NULL) {
+		while ((entry = readdir(d))) {
+			char *pos = strrchr(entry->d_name, '.') + 1;
+			if (pos != NULL && strcmp(pos, "scm") == 0) {
+				strcpy(buf, "script/levels/helpers/");
+				strcat(buf, entry->d_name);
+				scm_c_primitive_load(buf);
+			}
+		}
+		closedir(d);
+	} else {
+		log_err("Directory \"script/levels/helpers/\" does not exist");
+		exit(1);
+	}
 }
 
 void reset_level()
@@ -132,7 +151,7 @@ level *get_current_level()
 int is_solid_tile(int x, int y)
 {
 	if (x < 0 || y < 0) return 0;
-	return CURRENT_LEVEL->tiles[x][y] > PLANKS;
+	return CURRENT_LEVEL->tiles[x][y] >= STONE;
 }
 
 void update_level()

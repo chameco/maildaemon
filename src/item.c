@@ -164,7 +164,6 @@ void free_item(item *i)
 item *build_item_prototype(char *name, SCM update_func)
 {
 	item *ret = malloc(sizeof(item));
-	strcpy(ret->name, name);
 	ret->x = NULL;
 	ret->y = NULL;
 	ret->active = 0;

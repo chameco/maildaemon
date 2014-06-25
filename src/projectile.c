@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <dirent.h>
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -20,14 +21,22 @@
 
 static list_node *PROJECTILES;
 
-SCM __api_spawn_projectile(SCM c, SCM x, SCM y, SCM speed, SCM rotation, SCM w, SCM h,
-		SCM longevity, SCM spawned_by, SCM dmg)
+static hash_map *PROJECTILE_PROTOTYPES;
+
+SCM __api_build_projectile_prototype(SCM name, SCM speed, SCM w, SCM h, SCM longevity, SCM dmg)
 {
-	color col = *((color *) SCM_SMOB_DATA(c));
-	scm_gc_free((color *) c, sizeof(color), "color");
+	char *s = scm_to_locale_string(name);
+	build_projectile_prototype(s, scm_to_int(speed), scm_to_int(w), scm_to_int(h), scm_to_int(longevity), scm_to_int(dmg));
+	free(s);
+	return SCM_BOOL_F;
+}
+
+SCM __api_spawn_projectile(SCM name, SCM x, SCM y, SCM rotation, SCM spawned_by)
+{
+	char *s = scm_to_locale_string(name);
 	item *sb = (item *) SCM_SMOB_DATA(spawned_by);
-	spawn_projectile(col, scm_to_int(x), scm_to_int(y), scm_to_int(speed), scm_to_double(rotation),
-			scm_to_int(w), scm_to_int(h), scm_to_int(longevity), sb, scm_to_int(dmg));
+	spawn_projectile(s, scm_to_int(x), scm_to_int(y), scm_to_double(rotation), sb);
+	free(s);
 	return SCM_BOOL_F;
 }
 
@@ -35,7 +44,28 @@ void initialize_projectile()
 {
 	PROJECTILES = make_list();
 
-	scm_c_define_gsubr("spawn-projectile", 10, 0, 0, __api_spawn_projectile);
+	PROJECTILE_PROTOTYPES = make_hash_map();
+
+	scm_c_define_gsubr("build-projectile-prototype", 6, 0, 0, __api_build_projectile_prototype);
+	scm_c_define_gsubr("spawn-projectile", 5, 0, 0, __api_spawn_projectile);
+
+	DIR *d = opendir("script/projectiles");
+	struct dirent *entry;
+	char buf[256];
+	if (d != NULL) {
+		while ((entry = readdir(d))) {
+			char *pos = strrchr(entry->d_name, '.') + 1;
+			if (pos != NULL && strcmp(pos, "scm") == 0) {
+				strcpy(buf, "script/projectiles/");
+				strcat(buf, entry->d_name);
+				scm_c_primitive_load(buf);
+			}
+		}
+		closedir(d);
+	} else {
+		log_err("Directory \"script/projectiles\" does not exist");
+		exit(1);
+	}
 }
 
 void reset_projectile()
@@ -49,20 +79,41 @@ void reset_projectile()
 	PROJECTILES = make_list();
 }
 
-void spawn_projectile(color c, int x, int y, int speed, double rotation, int w, int h,
-		int longevity, item *spawned_by, int dmg)
+void build_projectile_prototype(char *name, int speed, int w, int h, int longevity, int dmg)
 {
 	projectile *p = malloc(sizeof(projectile));
-	p->c = c;
-	p->x = x;
-	p->y = y;
 	p->w = w;
 	p->h = h;
-	p->xv = speed * cos(rotation);
-	p->yv = speed * sin(rotation);
+	p->speed = speed;
 	p->longevity = longevity;
-	p->spawned_by = spawned_by;
 	p->dmg = dmg;
+
+	p->x = p->y = p->xv = p->yv = 0;
+	p->rotation = 0;
+	p->spawned_by = NULL;
+
+	set_hash(PROJECTILE_PROTOTYPES, name, (void *) p);
+}
+
+void spawn_projectile(char *name, int x, int y, double rotation, item *spawned_by)
+{
+	projectile *proto = (projectile *) get_hash(PROJECTILE_PROTOTYPES, name);
+	if (proto == NULL) {
+		log_err("Projectile prototype \"%s\" does not exist", name);
+		exit(1);
+	}
+	projectile *p = malloc(sizeof(projectile));
+	memcpy(p, proto, sizeof(projectile));
+	char buf[256] = "textures/projectiles/";
+	strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
+	strcat(buf, ".png");
+	p->t = load_texture(buf, p->w, p->h);
+	p->x = x;
+	p->y = y;
+	p->rotation = rotation;
+	p->xv = p->speed * cos(rotation);
+	p->yv = p->speed * sin(rotation);
+	p->spawned_by = spawned_by;
 	insert_list(PROJECTILES, (void *) p);
 }
 
@@ -133,32 +184,6 @@ void destroy_projectile(projectile *p)
 	remove_list(PROJECTILES, p);
 }
 
-void draw_one_projectile(projectile *p)
-{
-	glPushMatrix();
-	glTranslatef(p->x, p->y, 0);
-	glScalef(p->w, p->h, 1);
-
-	glColor4f(p->c.r, p->c.g, p->c.b, p->c.a);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
-	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
-	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
-	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
-
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-
-	glPopMatrix();
-}
-
-
 void update_projectile()
 {
 	list_node *c;
@@ -178,11 +203,12 @@ void update_projectile()
 
 void draw_projectile()
 {
-	glBindTexture(GL_TEXTURE_2D, 0);
 	list_node *c;
+	projectile *p;
 	for (c = PROJECTILES; c->next != NULL; c = c->next) {
 		if (((projectile *) c->data) != NULL) {
-			draw_one_projectile((projectile *) c->data);
+			p = (projectile *) c->data;
+			draw_texture_scale_rotate(p->t, p->x, p->y, p->w, p->h, p->rotation);
 		}
 	}
 }

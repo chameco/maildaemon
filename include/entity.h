@@ -7,7 +7,6 @@
 #include "item.h"
 
 typedef struct entity {
-	char name[256];
 	int x, y, w, h;
 	int xv, yv;
 	texture *t;
