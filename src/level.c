@@ -80,8 +80,8 @@ void initialize_level()
 	char buf[256];
 	if (d != NULL) {
 		while ((entry = readdir(d))) {
-			char *pos = strrchr(entry->d_name, '.') + 1;
-			if (pos != NULL && strcmp(pos, "scm") == 0) {
+			char *pos = strrchr(entry->d_name, '.');
+			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
 				strcpy(buf, "script/levels/helpers/");
 				strcat(buf, entry->d_name);
 				scm_c_primitive_load(buf);
@@ -148,7 +148,7 @@ level *get_current_level()
 	return CURRENT_LEVEL;
 }
 
-int is_solid_tile(int x, int y)
+bool is_solid_tile(int x, int y)
 {
 	if (x < 0 || y < 0) return 0;
 	return CURRENT_LEVEL->tiles[x][y] >= STONE;

@@ -32,9 +32,65 @@ SCM __api_build_entity_prototype(SCM path, SCM w, SCM h,
 {
 	char *t = scm_to_locale_string(path);
 	entity *e = build_entity_prototype(t, scm_to_int(w), scm_to_int(h),
-			scm_to_int(health), scm_to_int(speed), scm_to_double(expval));
+			scm_to_int(health), scm_to_double(speed), scm_to_double(expval));
 	free(t);
 	return scm_new_smob(__api_entity_tag, (unsigned long) e);
+}
+
+SCM __api_get_entity_x(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_from_double(ent->x);
+}
+
+SCM __api_get_entity_y(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_from_double(ent->y);
+}
+
+SCM __api_get_entity_w(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_from_int(ent->w);
+}
+
+SCM __api_get_entity_h(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_from_int(ent->h);
+}
+
+SCM __api_get_entity_xv(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_from_double(ent->xv);
+}
+
+SCM __api_get_entity_yv(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_from_double(ent->yv);
+}
+
+SCM __api_set_entity_xv(SCM e, SCM xv)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	ent->xv = scm_to_double(xv);
+	return SCM_BOOL_F;
+}
+
+SCM __api_set_entity_yv(SCM e, SCM yv)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	ent->yv = scm_to_double(yv);
+	return SCM_BOOL_F;
+}
+
+SCM __api_get_entity_speed(SCM e)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	return scm_from_double(ent->speed);
 }
 
 SCM __api_set_entity_init(SCM e, SCM init)
@@ -65,7 +121,7 @@ SCM __api_set_entity_update(SCM e, SCM update)
 	return SCM_BOOL_F;
 }
 
-SCM __api_get_entity_texture(SCM e, SCM update)
+SCM __api_get_entity_texture(SCM e)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
 	return scm_new_smob(get_texture_tag(), (unsigned long) ent->t);
@@ -74,7 +130,7 @@ SCM __api_get_entity_texture(SCM e, SCM update)
 SCM __api_make_entity(SCM name, SCM x, SCM y)
 {
 	char *t = scm_to_locale_string(name);
-	entity *e = make_entity(t, scm_to_int(x), scm_to_int(y));
+	entity *e = make_entity(t, scm_to_double(x), scm_to_double(y));
 	free(t);
 	SCM ret = scm_new_smob(__api_entity_tag, (unsigned long) e);
 	scm_gc_protect_object(ret);
@@ -121,6 +177,15 @@ void initialize_entity()
 	__api_entity_tag = scm_make_smob_type("entity", sizeof(entity));
 	scm_set_smob_mark(__api_entity_tag, __api_smob_entity_mark);
 	scm_c_define_gsubr("build-entity-prototype", 6, 0, 0, __api_build_entity_prototype);
+	scm_c_define_gsubr("get-entity-x", 1, 0, 0, __api_get_entity_x);
+	scm_c_define_gsubr("get-entity-y", 1, 0, 0, __api_get_entity_y);
+	scm_c_define_gsubr("get-entity-w", 1, 0, 0, __api_get_entity_w);
+	scm_c_define_gsubr("get-entity-h", 1, 0, 0, __api_get_entity_h);
+	scm_c_define_gsubr("get-entity-xv", 1, 0, 0, __api_get_entity_xv);
+	scm_c_define_gsubr("get-entity-yv", 1, 0, 0, __api_get_entity_yv);
+	scm_c_define_gsubr("set-entity-xv", 2, 0, 0, __api_set_entity_xv);
+	scm_c_define_gsubr("set-entity-yv", 2, 0, 0, __api_set_entity_yv);
+	scm_c_define_gsubr("get-entity-speed", 1, 0, 0, __api_get_entity_speed);
 	scm_c_define_gsubr("set-entity-init", 2, 0, 0, __api_set_entity_init);
 	scm_c_define_gsubr("set-entity-hit", 2, 0, 0, __api_set_entity_hit);
 	scm_c_define_gsubr("set-entity-collide", 2, 0, 0, __api_set_entity_collide);
@@ -131,13 +196,32 @@ void initialize_entity()
 	scm_c_define_gsubr("give-entity-item", 2, 0, 0, __api_give_entity_item);
 	scm_c_define_gsubr("move-entity", 2, 0, 0, __api_move_entity);
 
-	DIR *d = opendir("script/entities");
+	DIR *d = opendir("script/entities/helpers");
 	struct dirent *entry;
 	char buf[256];
+	char *pos;
+
 	if (d != NULL) {
 		while ((entry = readdir(d))) {
-			char *pos = strrchr(entry->d_name, '.') + 1;
-			if (pos != NULL && strcmp(pos, "scm") == 0) {
+			pos = strrchr(entry->d_name, '.');
+			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
+				strcpy(buf, "script/entities/helpers/");
+				strcat(buf, entry->d_name);
+				scm_c_primitive_load(buf);
+			}
+		}
+		closedir(d);
+	} else {
+		log_err("Directory \"script/entities/helpers\" does not exist");
+		exit(1);
+	}
+
+	d = opendir("script/entities");
+
+	if (d != NULL) {
+		while ((entry = readdir(d))) {
+			pos = strrchr(entry->d_name, '.');
+			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
 				strcpy(buf, "script/entities/");
 				strcat(buf, entry->d_name);
 				scm_c_primitive_load(buf);
@@ -171,12 +255,12 @@ void free_entity(entity *e)
 	if (e != NULL) {
 		free_item(e->item);
 		free_texture(e->t);
-		scm_gc_free(e, sizeof(entity), "entity");
+		free(e);
 	}
 }
 
 entity *build_entity_prototype(char *name, int w, int h,
-		int health, int speed, double expval)
+		int health, double speed, double expval)
 {
 	entity *e = malloc(sizeof(entity));
 	e->x = 0;
@@ -214,14 +298,14 @@ void set_entity_update(entity *e, SCM update)
 	e->update_func = update;
 }
 
-entity *make_entity(char *name, int x, int y)
+entity *make_entity(char *name, double x, double y)
 {
 	entity *proto = (entity *) get_hash(ENTITY_PROTOTYPES, name);
 	if (proto == NULL) {
 		log_err("Entity prototype \"%s\" does not exist", name);
 		exit(1);
 	}
-	entity *ret = scm_gc_malloc(sizeof(entity), "entity");
+	entity *ret = malloc(sizeof(entity));
 	memcpy(ret, proto, sizeof(entity));
 	char buf[256] = "textures/entities/";
 	strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
@@ -250,7 +334,7 @@ void hit_entity(entity *e, int dmg)
 			remove_list(ENTITIES, (void *) e);
 			give_player_exp(e->expval);
 			spawn_fx(make_fx(EXPLOSION, COLOR_WHITE, e->x, e->y, 4, 100, 20));
-			scm_gc_free(e, sizeof(entity), "entity");
+			free_entity(e);
 		}
 	}
 }
@@ -304,16 +388,27 @@ void check_entity_collisions(entity *e)
 	b.w = get_player_w();
 	b.h = get_player_h();
 
-	if (!check_collision(a, b)) {
-		collide_entity(e);
-		return;
-	}
-
-	int tempx = e->x + e->xv;
-	int tempy = e->y + e->yv;
+	double tempx = e->x + e->xv;
+	double tempy = e->y + e->yv;
 
 	int shouldmovex = 1;
 	int shouldmovey = 1;
+	int curmovex = 0;
+	int curmovey = 0;
+
+	a.x = tempx;
+	a.y = e->y;
+	curmovex = check_collision(a, b);
+	shouldmovex = shouldmovex ? curmovex : 0;
+	a.x = e->x;
+	a.y = tempy;
+	curmovey = check_collision(a, b);
+	shouldmovey = shouldmovey ? curmovey : 0;
+	a.y = e->y;
+	
+	if (!shouldmovex || !shouldmovey) {
+		collide_entity(e);
+	}
 
 	int xmin = (e->x/TILE_DIM)-2;
 	int ymin = (e->y/TILE_DIM)-2;
@@ -323,8 +418,8 @@ void check_entity_collisions(entity *e)
 	for (x = xmin; x <= xmax; x++) {
 		for (y = ymin; y <= ymax; y++) {
 			if (is_solid_tile(x, y)) {
-				b.x = x*32;
-				b.y = y*32;
+				/*b.x = x*TILE_DIM;
+				b.y = y*TILE_DIM;
 				b.w = b.h = TILE_DIM;
 				a.x = tempx;
 				a.y = e->y;
@@ -332,6 +427,18 @@ void check_entity_collisions(entity *e)
 				a.x = e->x;
 				a.y = tempy;
 				shouldmovey = check_collision(a, b);
+				a.y = e->y;*/
+				b.x = x*TILE_DIM;
+				b.y = y*TILE_DIM;
+				b.w = b.h = TILE_DIM;
+				a.x = tempx;
+				a.y = e->y;
+				curmovex = check_collision(a, b);
+				shouldmovex = shouldmovex ? curmovex : 0;
+				a.x = e->x;
+				a.y = tempy;
+				curmovey = check_collision(a, b);
+				shouldmovey = shouldmovey ? curmovey : 0;
 				a.y = e->y;
 			}
 		}

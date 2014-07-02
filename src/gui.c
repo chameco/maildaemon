@@ -28,7 +28,7 @@ static texture *BITMAP_FONT = NULL;
 SCM __api_render_text_bitmap(SCM text, SCM x, SCM y, SCM size)
 {
 	char *t = scm_to_locale_string(text);
-	render_text_bitmap(t, scm_to_int(x), scm_to_int(y), scm_to_double(size));
+	render_text_bitmap(t, scm_to_double(x), scm_to_double(y), scm_to_double(size));
 	free(t);
 	return SCM_BOOL_F;
 }
@@ -36,7 +36,7 @@ SCM __api_render_text_bitmap(SCM text, SCM x, SCM y, SCM size)
 SCM __api_draw_button(SCM text, SCM x, SCM y)
 {
 	char *t = scm_to_locale_string(text);
-	draw_button(t, scm_to_int(x), scm_to_int(y));
+	draw_button(t, scm_to_double(x), scm_to_double(y));
 	free(t);
 	return SCM_BOOL_F;
 }
@@ -44,7 +44,7 @@ SCM __api_draw_button(SCM text, SCM x, SCM y)
 SCM __api_draw_dialog_box(SCM text, SCM x, SCM y)
 {
 	char *t = scm_to_locale_string(text);
-	draw_dialog_box(t, scm_to_int(x), scm_to_int(y));
+	draw_dialog_box(t, scm_to_double(x), scm_to_double(y));
 	free(t);
 	return SCM_BOOL_F;
 }
@@ -53,7 +53,7 @@ SCM __api_draw_meter(SCM text, SCM x, SCM y, SCM c, SCM full)
 {
 	char *t = scm_to_locale_string(text);
 	color *col = (color *) SCM_SMOB_DATA(c);
-	draw_meter(t, scm_to_int(x), scm_to_int(y), *col, scm_to_double(full));
+	draw_meter(t, scm_to_double(x), scm_to_double(y), *col, scm_to_double(full));
 	free(t);
 	return SCM_BOOL_F;
 }
@@ -123,12 +123,12 @@ int bitmap_index(char c)
 	return 51;
 }
 
-void render_text_bitmap(char *text, int x, int y, double size)
+void render_text_bitmap(char *text, double x, double y, double size)
 {
 	int len = strlen(text);
 	int bmpx = 0, bmpy = 0;
-	int curx = x;
-	int cury = y;
+	double curx = x;
+	double cury = y;
 	int c;
 	for (c = 0; c < len; c++) {
 		bmpx = bmpy = 0;
@@ -149,21 +149,21 @@ void render_text_bitmap(char *text, int x, int y, double size)
 	}
 }
 
-void draw_button(char *text, int x, int y)
+void draw_button(char *text, double x, double y)
 {
 	draw_texture(BUTTON_BACKGROUND, x, y);
 
 	render_text_bitmap(text, x + 10, y + 10, 2);
 }
 
-void draw_dialog_box(char *text, int x, int y)
+void draw_dialog_box(char *text, double x, double y)
 {
 	draw_texture(DIALOG_BOX_BACKGROUND, x, y);
 
 	render_text_bitmap(text, x + 10, y + 10, 2);
 }
 
-void draw_meter(char *text, int x, int y, color c, double full)
+void draw_meter(char *text, double x, double y, color c, double full)
 {
 	draw_texture(METER_BACKGROUND, x, y);
 

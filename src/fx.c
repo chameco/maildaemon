@@ -31,8 +31,8 @@ SCM __api_make_fx(SCM type, SCM col, SCM x, SCM y, SCM dim, SCM radius, SCM spee
 	color c = *((color *) SCM_SMOB_DATA(col));
 	SCM ret = scm_new_smob(__api_effect_tag,
 			(unsigned long) make_fx(scm_to_int(type), c,
-				scm_to_int(x), scm_to_int(y), scm_to_int(dim),
-				scm_to_int(radius), scm_to_int(speed)));
+				scm_to_double(x), scm_to_double(y), scm_to_int(dim),
+				scm_to_int(radius), scm_to_double(speed)));
 	scm_gc_protect_object(ret);
 	return ret;
 }
@@ -85,8 +85,8 @@ void reset_fx()
 }
 
 effect *make_fx(etype type, color col,
-		int x, int y, int dim,
-		int radius, int speed)
+		double x, double y, int dim,
+		int radius, double speed)
 {
 	effect *e = malloc(sizeof(effect));
 	e->type = type;
@@ -255,7 +255,7 @@ void apply_global_fx()
 	}
 }
 
-inline void draw_particle(effect *e, int xdiff, int ydiff)
+inline void draw_particle(effect *e, double xdiff, double ydiff)
 {
 	glPushMatrix();
 	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
@@ -277,7 +277,7 @@ inline void draw_particle(effect *e, int xdiff, int ydiff)
 	glPopMatrix();
 }
 
-inline void draw_smoke_particle(effect *e, int xdiff, int ydiff)
+inline void draw_smoke_particle(effect *e, double xdiff, double ydiff)
 {
 	GLfloat r, g, b;
 	GLfloat factor;

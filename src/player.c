@@ -21,11 +21,11 @@
 #include "game.h"
 #include "level.h"
 
-static int PLAYER_X = 0;
-static int PLAYER_Y = 0;
+static double PLAYER_X = 0;
+static double PLAYER_Y = 0;
 static bool PLAYER_PRESSED[4] = {0};
-static const int PLAYER_MOVE_SPEED = 6; //Pixels per second
-static const int DIAG_SPEED = 5;
+static const double PLAYER_MOVE_SPEED = 6; //Pixels per second
+static const double PLAYER_DIAG_SPEED = 5;
 static const int PLAYER_WIDTH = TILE_DIM;
 static const int PLAYER_HEIGHT = (TILE_DIM)/2;
 static direction PLAYER_FACING = 0;
@@ -43,12 +43,12 @@ static int PLAYER_ITEM_INDEX = 0;
 
 SCM __api_get_player_x()
 {
-	return scm_from_int(get_player_x());
+	return scm_from_double(get_player_x());
 }
 
 SCM __api_get_player_y()
 {
-	return scm_from_int(get_player_y());
+	return scm_from_double(get_player_y());
 }
 
 SCM __api_get_player_w()
@@ -59,11 +59,6 @@ SCM __api_get_player_w()
 SCM __api_get_player_h()
 {
 	return scm_from_int(get_player_h());
-}
-
-SCM __api_get_player_facing()
-{
-	return scm_from_int(get_player_facing());
 }
 
 SCM __api_get_player_health()
@@ -122,7 +117,7 @@ SCM __api_give_player_exp(SCM exp)
 
 SCM __api_warp_player(SCM x, SCM y)
 {
-	warp_player(scm_to_int(x), scm_to_int(y));
+	warp_player(scm_to_double(x), scm_to_double(y));
 	return SCM_BOOL_F;
 }
 
@@ -148,7 +143,6 @@ void initialize_player()
 	scm_c_define_gsubr("get-player-y", 0, 0, 0, __api_get_player_y);
 	scm_c_define_gsubr("get-player-w", 0, 0, 0, __api_get_player_w);
 	scm_c_define_gsubr("get-player-h", 0, 0, 0, __api_get_player_h);
-	scm_c_define_gsubr("get-player-facing", 0, 0, 0, __api_get_player_facing);
 	scm_c_define_gsubr("get-player-health", 0, 0, 0, __api_get_player_health);
 	scm_c_define_gsubr("get-player-max-health", 0, 0, 0, __api_get_player_max_health);
 	scm_c_define_gsubr("get-player-charge-percent", 0, 0, 0, __api_get_player_charge_percent);
@@ -182,12 +176,12 @@ void reset_player()
 	scm_c_primitive_load("script/init/player.scm");
 }
 
-int get_player_x()
+double get_player_x()
 {
 	return PLAYER_X;
 }
 
-int get_player_y()
+double get_player_y()
 {
 	return PLAYER_Y;
 }
@@ -200,11 +194,6 @@ int get_player_w()
 int get_player_h()
 {
 	return PLAYER_HEIGHT;
-}
-
-int get_player_facing()
-{
-	return PLAYER_FACING;
 }
 
 double get_player_health()
@@ -265,7 +254,7 @@ void give_player_exp(double exp)
 	}
 }
 
-void warp_player(int x, int y)
+void warp_player(double x, double y)
 {
 	PLAYER_X = x;
 	PLAYER_Y = y;
@@ -327,7 +316,7 @@ void update_player()
 
 	if (PLAYER_PRESSED[NORTH]) {
 		if (PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
-			tempy -= DIAG_SPEED;
+			tempy -= PLAYER_DIAG_SPEED;
 		} else {
 			tempy -= PLAYER_MOVE_SPEED;
 		}
@@ -335,7 +324,7 @@ void update_player()
 
 	if (PLAYER_PRESSED[SOUTH]) {
 		if (PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
-			tempy += DIAG_SPEED;
+			tempy += PLAYER_DIAG_SPEED;
 		} else {
 			tempy += PLAYER_MOVE_SPEED;
 		}
@@ -343,7 +332,7 @@ void update_player()
 
 	if (PLAYER_PRESSED[WEST]) {
 		if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH]) {
-			tempx -= DIAG_SPEED;
+			tempx -= PLAYER_DIAG_SPEED;
 		} else {
 			tempx -= PLAYER_MOVE_SPEED;
 		}
@@ -351,7 +340,7 @@ void update_player()
 
 	if (PLAYER_PRESSED[EAST]) {
 		if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH]) {
-			tempx += DIAG_SPEED;
+			tempx += PLAYER_DIAG_SPEED;
 		} else {
 			tempx += PLAYER_MOVE_SPEED;
 		}
@@ -396,8 +385,8 @@ void update_player()
 	for (x = xmin; x <= xmax; x++) {
 		for (y = ymin; y <= ymax; y++) {
 			if (is_solid_tile(x, y)) {
-				b.x = x*32;
-				b.y = y*32;
+				b.x = x*TILE_DIM;
+				b.y = y*TILE_DIM;
 				b.w = b.h = TILE_DIM;
 				player.x = tempx;
 				player.y = PLAYER_Y;

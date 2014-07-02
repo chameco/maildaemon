@@ -402,17 +402,30 @@ int draw_text_entry_loop()
 	return 1;
 }
 
+static SCM repl_catch_body(void *body_data)
+{
+	scm_c_eval_string((char *) ENTERED_TEXT);
+	return SCM_BOOL_F;
+}
+
+static SCM repl_catch_handle(void *handler_data, SCM key, SCM parameters)
+{
+	log_err("Invalid command: %s", (char *) handler_data);
+	return SCM_BOOL_F;
+}
+
 int draw_main_loop()
 {
 	if (ENTERED_TEXT != NULL) {
-		scm_c_eval_string(ENTERED_TEXT);
+		scm_c_catch(SCM_BOOL_T,
+				repl_catch_body, ENTERED_TEXT,
+				repl_catch_handle, ENTERED_TEXT,
+				NULL, NULL);
 		free(ENTERED_TEXT);
 		ENTERED_TEXT = NULL;
 	}
 
 	int pressed;
-	double theta;
-	int centerx, centery;
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		pressed = 0;
@@ -466,17 +479,7 @@ int draw_main_loop()
 				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				centerx = SCREEN_WIDTH/2;
-				centery = SCREEN_HEIGHT/2;
-				if (event.button.x >= centerx) {
-					theta = atan((double) (event.button.y - centery)
-							/ (double) (event.button.x - centerx));
-				} else {
-					theta = atan((double) (event.button.y - centery)
-							/ (double) (event.button.x - centerx))
-						+ 3.141592654;
-				}
-				use_player_item(1, theta);
+				use_player_item(1, calculate_angle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, event.button.x, event.button.y));
 				spawn_global_fx(make_global_fx(global_effect_shake, 5));
 				break;
 			case SDL_MOUSEBUTTONUP:

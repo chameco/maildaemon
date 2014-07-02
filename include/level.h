@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdbool.h>
+
 #include "utils.h"
 
 #define TILE_DIM 32
@@ -30,7 +32,7 @@ void switch_level(char *name);
 level *load_level(char *name);
 void save_level(level *l);
 level *get_current_level();
-int is_solid_tile(int x, int y);
+bool is_solid_tile(int x, int y);
 void update_level();
 void draw_level();
 void draw_level_top();

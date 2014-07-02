@@ -24,9 +24,9 @@ void initialize_texture();
 
 scm_t_bits get_texture_tag();
 texture *load_texture(char *path, int w, int h);
-void draw_texture(texture *r, int x, int y);
-void draw_texture_scale(texture *r, int x, int y, int w, int h);
-void draw_texture_scale_rotate(texture *r, int x, int y, int w, int h, double rotation);
+void draw_texture(texture *r, double x, double y);
+void draw_texture_scale(texture *r, double x, double y, int w, int h);
+void draw_texture_scale_rotate(texture *r, double x, double y, int w, int h, double rotation);
 int get_sheet_row(texture *r);
 void set_sheet_row(texture *r, int ay);
 int get_sheet_column(texture *r);

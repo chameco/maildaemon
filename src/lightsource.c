@@ -25,7 +25,7 @@ static scm_t_bits __api_lightsource_tag;
 SCM __api_make_lightsource(SCM x, SCM y, SCM dim, SCM intensity, SCM c)
 {
 	color *col = (color *) SCM_SMOB_DATA(c);
-	lightsource *l = make_lightsource(scm_to_int(x), scm_to_int(y), scm_to_int(dim), scm_to_int(intensity), *col);
+	lightsource *l = make_lightsource(scm_to_double(x), scm_to_double(y), scm_to_int(dim), scm_to_int(intensity), *col);
 	SCM ret = scm_new_smob(__api_lightsource_tag, (unsigned long) l);
 	scm_gc_protect_object(ret);
 	return ret;
@@ -53,15 +53,15 @@ void reset_lightsource()
 	list_node *c;
 	for (c = LIGHTS->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((lightsource *) c->data) != NULL) {
-			scm_gc_free((lightsource *) c->data, sizeof(lightsource), "lightsource");
+			free((lightsource *) c->data);
 		}
 	}
 	LIGHTS = make_list();
 }
 
-lightsource *make_lightsource(int x, int y, int dim, int intensity, color c)
+lightsource *make_lightsource(double x, double y, int dim, int intensity, color c)
 {
-	lightsource *l = scm_gc_malloc(sizeof(lightsource), "lightsource");
+	lightsource *l = malloc(sizeof(lightsource));
 	l->x = x - dim/2;
 	l->y = y - dim/2;
 	l->dim = dim;

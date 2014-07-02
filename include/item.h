@@ -8,7 +8,7 @@
 #include "utils.h"
 
 typedef struct item {
-	int *x, *y;
+	double *x, *y;
 	bool active;
 	double rotation;
 	Mix_Chunk *sound;
@@ -24,7 +24,7 @@ void free_item(item *i);
 scm_t_bits get_item_tag();
 item *build_item_prototype(char *name, SCM update_func);
 item *make_item(char *name);
-int is_item_active(item *i);
+bool is_item_active(item *i);
 double get_item_charge(item *i);
 void set_item_charge(item *i, double c);
 double get_item_rotation(item *i);

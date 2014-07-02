@@ -26,7 +26,7 @@ static hash_map *PROJECTILE_PROTOTYPES;
 SCM __api_build_projectile_prototype(SCM name, SCM speed, SCM w, SCM h, SCM longevity, SCM dmg)
 {
 	char *s = scm_to_locale_string(name);
-	build_projectile_prototype(s, scm_to_int(speed), scm_to_int(w), scm_to_int(h), scm_to_int(longevity), scm_to_int(dmg));
+	build_projectile_prototype(s, scm_to_double(speed), scm_to_int(w), scm_to_int(h), scm_to_int(longevity), scm_to_int(dmg));
 	free(s);
 	return SCM_BOOL_F;
 }
@@ -35,7 +35,7 @@ SCM __api_spawn_projectile(SCM name, SCM x, SCM y, SCM rotation, SCM spawned_by)
 {
 	char *s = scm_to_locale_string(name);
 	item *sb = (item *) SCM_SMOB_DATA(spawned_by);
-	spawn_projectile(s, scm_to_int(x), scm_to_int(y), scm_to_double(rotation), sb);
+	spawn_projectile(s, scm_to_double(x), scm_to_double(y), scm_to_double(rotation), sb);
 	free(s);
 	return SCM_BOOL_F;
 }
@@ -79,7 +79,7 @@ void reset_projectile()
 	PROJECTILES = make_list();
 }
 
-void build_projectile_prototype(char *name, int speed, int w, int h, int longevity, int dmg)
+void build_projectile_prototype(char *name, double speed, int w, int h, int longevity, int dmg)
 {
 	projectile *p = malloc(sizeof(projectile));
 	p->w = w;
@@ -95,7 +95,7 @@ void build_projectile_prototype(char *name, int speed, int w, int h, int longevi
 	set_hash(PROJECTILE_PROTOTYPES, name, (void *) p);
 }
 
-void spawn_projectile(char *name, int x, int y, double rotation, item *spawned_by)
+void spawn_projectile(char *name, double x, double y, double rotation, item *spawned_by)
 {
 	projectile *proto = (projectile *) get_hash(PROJECTILE_PROTOTYPES, name);
 	if (proto == NULL) {
@@ -208,7 +208,7 @@ void draw_projectile()
 	for (c = PROJECTILES; c->next != NULL; c = c->next) {
 		if (((projectile *) c->data) != NULL) {
 			p = (projectile *) c->data;
-			draw_texture_scale_rotate(p->t, p->x, p->y, p->w, p->h, p->rotation);
+			draw_texture_scale(p->t, p->x, p->y, p->w, p->h);
 		}
 	}
 }

@@ -32,13 +32,14 @@ SCM __api_load_texture(SCM path, SCM w, SCM h)
 	char *p = scm_to_locale_string(path);
 	texture *r = load_texture(p, scm_to_int(w), scm_to_int(h));
 	free(p);
-	return scm_new_smob(__api_texture_tag, (unsigned long) r);
+	SCM ret = scm_new_smob(__api_texture_tag, (unsigned long) r);
+	return ret;
 }
 
 SCM __api_draw_texture(SCM r, SCM x, SCM y)
 {
 	texture *res = (texture *) SCM_SMOB_DATA(r);
-	draw_texture(res, scm_to_int(x), scm_to_int(y));
+	draw_texture(res, scm_to_double(x), scm_to_double(y));
 	return SCM_BOOL_F;
 }
 
@@ -172,17 +173,17 @@ texture *load_texture(char *path, int w, int h)
 		set_hash(TEXTURE_CACHE, path, (void *) cached);
 	}
 
-	texture *ret = scm_gc_malloc(sizeof(texture), "texture");
+	texture *ret = malloc(sizeof(texture));
 	memcpy(ret, (texture *) get_hash(TEXTURE_CACHE, path), sizeof(texture));
 	return ret;
 }
 
-void draw_texture(texture *r, int x, int y)
+void draw_texture(texture *r, double x, double y)
 {
 	draw_texture_scale(r, x, y, r->w, r->h);
 }
 
-void draw_texture_scale(texture *r, int x, int y, int w, int h)
+void draw_texture_scale(texture *r, double x, double y, int w, int h)
 {
 	//draw_texture_scale_rotate(r, x, y, r->w, r->h, 0.0);
 	glPushMatrix();
@@ -209,7 +210,7 @@ void draw_texture_scale(texture *r, int x, int y, int w, int h)
 	glPopMatrix();
 }
 
-void draw_texture_scale_rotate(texture *r, int x, int y, int w, int h, double rotation)
+void draw_texture_scale_rotate(texture *r, double x, double y, int w, int h, double rotation)
 {
 	glPushMatrix();
 	glTranslatef(x-(r->anim_x * w), y-(r->anim_y * h), 0);
@@ -258,5 +259,5 @@ void set_sheet_column(texture *r, int ax)
 
 void free_texture(texture *r)
 {
-	scm_gc_free(r, sizeof(texture), "texture");
+	free(r);
 }

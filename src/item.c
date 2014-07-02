@@ -43,11 +43,7 @@ SCM __api_make_item(SCM name)
 SCM __api_is_item_active(SCM i)
 {
 	item *it = (item *) SCM_SMOB_DATA(i);
-	if (is_item_active(it)) {
-		return SCM_BOOL_T;
-	} else {
-		return SCM_BOOL_F;
-	}
+	return scm_from_bool(is_item_active(it));
 }
 
 SCM __api_get_item_charge(SCM i)
@@ -72,13 +68,13 @@ SCM __api_get_item_rotation(SCM i)
 SCM __api_get_item_x(SCM i)
 {
 	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_int(*(it->x));
+	return scm_from_double(*(it->x));
 }
 
 SCM __api_get_item_y(SCM i)
 {
 	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_int(*(it->y));
+	return scm_from_double(*(it->y));
 }
 
 SCM __api_activate_item(SCM i, SCM rot)
@@ -126,8 +122,8 @@ void initialize_item()
 	char buf[256];
 	if (d != NULL) {
 		while ((entry = readdir(d))) {
-			char *pos = strrchr(entry->d_name, '.') + 1;
-			if (pos != NULL && strcmp(pos, "scm") == 0) {
+			char *pos = strrchr(entry->d_name, '.');
+			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
 				strcpy(buf, "script/items/");
 				strcat(buf, entry->d_name);
 				scm_c_primitive_load(buf);
@@ -158,7 +154,7 @@ void reset_item()
 
 void free_item(item *i)
 {
-	scm_gc_free(i, sizeof(item), "item");
+	free(i);
 }
 
 item *build_item_prototype(char *name, SCM update_func)
@@ -184,7 +180,7 @@ item *make_item(char *name)
 		log_err("Item prototype \"%s\" does not exist", name);
 		exit(1);
 	}
-	item *ret = scm_gc_malloc(sizeof(item), "item");
+	item *ret = malloc(sizeof(item));
 	memcpy(ret, proto, sizeof(item));
 	char buf[256] = "sfx/items/";
 	strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
@@ -194,7 +190,7 @@ item *make_item(char *name)
 	return ret;
 }
 
-int is_item_active(item *i)
+bool is_item_active(item *i)
 {
 	return i->active;
 }
