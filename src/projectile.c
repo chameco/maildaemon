@@ -10,8 +10,8 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "utils.h"
 #include "item.h"
@@ -163,8 +163,8 @@ void check_projectile_collisions(projectile *p)
 	list_node *c;
 	entity *e;
 	for (c = entities->next; c->next != NULL; c = c->next) {
-		if (((entity *) c->data)->item != p->spawned_by &&
-				((entity *) c->data) != NULL) {
+		if (((entity *) c->data) != NULL &&
+				((entity *) c->data)->item != p->spawned_by) {
 			e = (entity *) c->data;
 			b.x = e->x;
 			b.y = e->y;
@@ -205,7 +205,7 @@ void draw_projectile()
 {
 	list_node *c;
 	projectile *p;
-	for (c = PROJECTILES; c->next != NULL; c = c->next) {
+	for (c = PROJECTILES->next; c->next != NULL; c = c->next) {
 		if (((projectile *) c->data) != NULL) {
 			p = (projectile *) c->data;
 			draw_texture_scale(p->t, p->x, p->y, p->w, p->h);

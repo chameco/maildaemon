@@ -4,9 +4,11 @@
 (define (make-stairs x y sr sc dest destx desty)
   (let ([s (make-entity "stairs" x y)])
    (set-entity-collide s (lambda (e data)
-                           (begin
-                             (switch-level dest)
-                             (warp-player destx desty))))
+                           (schedule
+                             (lambda ()
+                               (switch-level dest)
+                               (warp-player destx desty))
+                             0)))
    (set-sheet-row (get-entity-texture s) sr)
    (set-sheet-column (get-entity-texture s) sc)
    s))

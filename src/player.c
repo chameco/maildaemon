@@ -11,8 +11,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "utils.h"
 #include "texture.h"
@@ -23,7 +23,7 @@
 
 static double PLAYER_X = 0;
 static double PLAYER_Y = 0;
-static bool PLAYER_PRESSED[4] = {0};
+static bool PLAYER_PRESSED[4] = {0, 0, 0, 0};
 static const double PLAYER_MOVE_SPEED = 6; //Pixels per second
 static const double PLAYER_DIAG_SPEED = 5;
 static const int PLAYER_WIDTH = TILE_DIM;
@@ -258,7 +258,6 @@ void warp_player(double x, double y)
 {
 	PLAYER_X = x;
 	PLAYER_Y = y;
-	//PLAYER_PRESSED[NORTH] = PLAYER_PRESSED[SOUTH] = PLAYER_PRESSED[WEST] = PLAYER_PRESSED[EAST] = 0;
 }
 
 void set_player_item_index(int i)
@@ -292,11 +291,11 @@ void set_player_movement(bool pressed, direction d)
 void update_player()
 {
 	if (PLAYER_HEALTH <= 0.0) {
-		set_mode(GAME_OVER_MODE);
+		set_mode("game_over");
 		return;
 	}
 
-	if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH] || PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
+	if (PLAYER_PRESSED[DIR_NORTH] || PLAYER_PRESSED[DIR_SOUTH] || PLAYER_PRESSED[DIR_WEST] || PLAYER_PRESSED[DIR_EAST]) {
 		PLAYER_ANIM_STEP = ((PLAYER_ANIM_STEP + 1) % PLAYER_ANIM_STEP_TIMING);
 		if (PLAYER_ANIM_STEP == 0) {
 			set_sheet_column(PLAYER_TEXTURE, (get_sheet_column(PLAYER_TEXTURE) % 2) + 1);
@@ -314,32 +313,32 @@ void update_player()
 	int tempx = PLAYER_X;
 	int tempy = PLAYER_Y;
 
-	if (PLAYER_PRESSED[NORTH]) {
-		if (PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
+	if (PLAYER_PRESSED[DIR_NORTH]) {
+		if (PLAYER_PRESSED[DIR_WEST] || PLAYER_PRESSED[DIR_EAST]) {
 			tempy -= PLAYER_DIAG_SPEED;
 		} else {
 			tempy -= PLAYER_MOVE_SPEED;
 		}
 	}
 
-	if (PLAYER_PRESSED[SOUTH]) {
-		if (PLAYER_PRESSED[WEST] || PLAYER_PRESSED[EAST]) {
+	if (PLAYER_PRESSED[DIR_SOUTH]) {
+		if (PLAYER_PRESSED[DIR_WEST] || PLAYER_PRESSED[DIR_EAST]) {
 			tempy += PLAYER_DIAG_SPEED;
 		} else {
 			tempy += PLAYER_MOVE_SPEED;
 		}
 	}
 
-	if (PLAYER_PRESSED[WEST]) {
-		if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH]) {
+	if (PLAYER_PRESSED[DIR_WEST]) {
+		if (PLAYER_PRESSED[DIR_NORTH] || PLAYER_PRESSED[DIR_SOUTH]) {
 			tempx -= PLAYER_DIAG_SPEED;
 		} else {
 			tempx -= PLAYER_MOVE_SPEED;
 		}
 	}
 
-	if (PLAYER_PRESSED[EAST]) {
-		if (PLAYER_PRESSED[NORTH] || PLAYER_PRESSED[SOUTH]) {
+	if (PLAYER_PRESSED[DIR_EAST]) {
+		if (PLAYER_PRESSED[DIR_NORTH] || PLAYER_PRESSED[DIR_SOUTH]) {
 			tempx += PLAYER_DIAG_SPEED;
 		} else {
 			tempx += PLAYER_MOVE_SPEED;

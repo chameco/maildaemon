@@ -10,8 +10,8 @@
 #include <SDL2/SDL_image.h>
 #include <libguile.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "level.h"
 
@@ -132,10 +132,10 @@ line_point *bresenham_line(double x0, double y0, double x1, double y1)
 	double xdiff = x1 - x0;
 	double ydiff = y1 - y0;
 	line_point *ret;
-	double error = 0;
-	double delta_error = fabs(ydiff/xdiff);
 	int c = 0;
 	if (xdiff >= ydiff) {
+		double error = 0;
+		double delta_error = fabs(ydiff/xdiff);
 		ret = (line_point *) calloc(abs(xdiff) + 1, sizeof(line_point));
 		double y = y0;
 		for (double x = x0; x <= x1; ++x, ++c) {
@@ -148,6 +148,8 @@ line_point *bresenham_line(double x0, double y0, double x1, double y1)
 			}
 		}
 	} else {
+		double error = 0;
+		double delta_error = fabs(xdiff/ydiff);
 		ret = (line_point *) calloc(abs(ydiff) + 1, sizeof(line_point));
 		double x = x0;
 		for (double y = y0; y <= y1; ++y, ++c) {
@@ -175,4 +177,47 @@ bool is_unbroken_line(double x0, double y0, double x1, double y1)
 	}
 	free(points);
 	return true;
+}
+
+thunk make_thunk(void (*cfunc)())
+{
+	thunk ret;
+	if (cfunc != NULL) {
+		ret.type = THUNK_C;
+		ret.data.cfunc = cfunc;
+	} else {
+		ret.type = THUNK_NULL;
+	}
+	return ret;
+}
+
+thunk make_thunk_scm(SCM scmfunc)
+{
+	thunk ret;
+	if (scm_is_true(scmfunc)) {
+		ret.type = THUNK_SCM;
+		ret.data.scmfunc = scmfunc;
+		scm_gc_protect_object(ret.data.scmfunc);
+	} else {
+		ret.type = THUNK_NULL;
+	}
+	return ret;
+}
+
+void execute_thunk(thunk cb)
+{
+	switch (cb.type) {
+		case THUNK_NULL:
+			break;
+		case THUNK_C:
+			cb.data.cfunc();
+			break;
+		case THUNK_SCM:
+			scm_call_0(cb.data.scmfunc);
+			break;
+		default:
+			log_err("Invalid callback type");
+			exit(1);
+			break;
+	}
 }

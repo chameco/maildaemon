@@ -10,8 +10,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "utils.h"
 #include "projectile.h"
@@ -232,7 +232,7 @@ void update_item()
 {
 	item *i;
 	list_node *c;
-	for (c = ITEMS->next; c->next != NULL; c = c->next) {
+	for (c = ITEMS; c->next != NULL; c = c->next) {
 		if (((item *) c->data) != NULL) {
 			i = (item *) c->data;
 			i->data = scm_call_2(i->update_func, scm_new_smob(__api_item_tag, (unsigned long) i), i->data);

@@ -13,8 +13,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "utils.h"
 
@@ -79,7 +79,11 @@ void reset_fx()
 			free((effect *) c->data);
 		}
 	}
-	for (c = GLOBAL_EFFECTS->next; c->next != NULL; c = c->next, free(c->prev)) {}
+	for (c = GLOBAL_EFFECTS->next; c->next != NULL; c = c->next, free(c->prev)) {
+		if (((global_effect *) c->data) != NULL) {
+			free((global_effect *) c->data);
+		}
+	}
 	EFFECTS = make_list();
 	GLOBAL_EFFECTS = make_list();
 }
@@ -159,6 +163,7 @@ void spawn_global_fx(global_effect *e)
 void update_fx()
 {
 	list_node *c;
+	list_node *temp;
 	effect *e;
 	global_effect *ge;
 	int counter;
@@ -180,9 +185,11 @@ void update_fx()
 				case EXPLOSION:
 					e->cur += e->speed;
 					if (e->cur >= e->radius) {
+						temp = c->prev;
 						c->prev->next = c->next;
 						c->next->prev = c->prev;
 						free(c);
+						c = temp;
 						free(e);
 					} else {
 						for (counter = 0; counter < e->statelen; counter++) {
@@ -219,9 +226,11 @@ void update_fx()
 				case SMOKE:
 					e->cur += e->speed;
 					if (e->cur >= 100) {
+						temp = c->prev;
 						c->prev->next = c->next;
 						c->next->prev = c->prev;
 						free(c);
+						temp = c;
 						free(e);
 					} else {
 						for (counter = 0; counter < e->statelen; counter++) {

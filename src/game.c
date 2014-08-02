@@ -13,8 +13,8 @@
 #include <SDL2/SDL_mixer.h>
 #include <libguile.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "utils.h"
 #include "texture.h"
@@ -26,19 +26,31 @@
 #include "projectile.h"
 #include "gui.h"
 #include "fx.h"
+#include "scheduler.h"
 
 static SDL_Window *SCREEN;
 static SDL_GLContext *CONTEXT;
+static bool RUNNING = false;
 static const GLfloat CAMERA_SCALE = 1.0;
 static int SCREEN_WIDTH = 0;
 static int SCREEN_HEIGHT = 0;
-static mode CURRENT_MODE = MAIN_MENU_MODE;
+static hash_map *MODE_CALLBACKS = NULL;
+static mode *CURRENT_MODE = NULL;
 static int LAST_TIME = 0;
 static int CURRENT_TIME = 0;
 static char CURRENT_DIALOG[256] = "";
 static char *ENTERED_TEXT = NULL;
 static Mix_Chunk *BLIP_SOUND;
-static SCM HUD = SCM_BOOL_F;
+
+SCM __api_get_screen_width()
+{
+	return scm_from_int(get_screen_width());
+}
+
+SCM __api_get_screen_height()
+{
+	return scm_from_int(get_screen_height());
+}
 
 SCM __api_set_current_dialog(SCM d)
 {
@@ -48,9 +60,321 @@ SCM __api_set_current_dialog(SCM d)
 	return SCM_BOOL_F;
 }
 
+SCM __api_define_mode(SCM name, SCM init, SCM update, SCM draw)
+{
+	char *t = scm_to_locale_string(name);
+	define_mode(t,
+			make_thunk_scm(init),
+			make_thunk_scm(update),
+			make_thunk_scm(draw));
+	free(t);
+	return SCM_BOOL_F;
+}
+
+SCM __api_set_running(SCM b)
+{
+	set_running(scm_to_bool(b));
+	return SCM_BOOL_F;
+}
+
+SCM __api_set_mode(SCM mode)
+{
+	char *s = scm_to_locale_string(mode);
+	set_mode(s);
+	free(s);
+	return SCM_BOOL_F;
+}
+
+static void mode_main_menu_update()
+{
+	SDL_Event event;
+	while(SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym == SDLK_F2) {
+					take_screenshot("screenshot.png");
+				}
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					mouse_clicked(event.button.x, event.button.y);
+				}
+				break;
+			case SDL_QUIT:
+				set_running(false);
+				break;
+		}
+	}
+}
+
+static void mode_main_menu_draw()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	draw_gui();
+
+	SDL_GL_SwapWindow(SCREEN);
+}
+
+static void mode_text_entry_update()
+{
+	static char *buffer, *cursor;
+	int len;
+	if (ENTERED_TEXT == NULL) {
+		SDL_StartTextInput();
+		buffer = (char *) malloc(sizeof(char) * 256);
+		cursor = buffer;
+		memset(buffer, 0, sizeof(char) * 256);
+		ENTERED_TEXT = cursor;
+	}
+	SDL_Event event;
+	bool pressed;
+	while (SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_QUIT:
+				set_running(false);
+				break;
+			case SDL_KEYDOWN:
+				pressed = 1; //Intentional lack of break
+				if (event.key.keysym.sym == SDLK_BACKSPACE && cursor != buffer) {
+					*(--cursor) = 0x0;
+					return;
+				} else if (event.key.keysym.sym == SDLK_LEFT && cursor != buffer) {
+					--cursor;
+				} else if (event.key.keysym.sym == SDLK_RIGHT && cursor < buffer + 255 * sizeof(char)) {
+					++cursor;
+				} else if (event.key.keysym.sym == SDLK_RETURN) {
+					set_mode("main");
+					SDL_StopTextInput();
+					return;
+				}
+				break;
+			case SDL_KEYUP:
+				if (!event.key.repeat) {
+					pressed = pressed ? pressed : 0;
+					if (event.key.keysym.sym == SDLK_F2) {
+						take_screenshot("screenshot.png");
+					} else if (event.key.keysym.sym == SDLK_w) {
+						set_player_movement(pressed, DIR_NORTH);
+					} else if (event.key.keysym.sym == SDLK_s) {
+						set_player_movement(pressed, DIR_SOUTH);
+					} else if (event.key.keysym.sym == SDLK_a) {
+						set_player_movement(pressed, DIR_WEST);
+					} else if (event.key.keysym.sym == SDLK_d) {
+						set_player_movement(pressed, DIR_EAST);
+					}
+				}
+				break;
+			case SDL_TEXTINPUT:
+				len = strlen(event.text.text) * sizeof(char);
+				if (cursor + len < buffer + 255 * sizeof(char)) {
+					memcpy(cursor, event.text.text, len);
+					cursor += len;
+				}
+				break;
+		}
+	}
+}
+
+static void mode_text_entry_draw()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+
+	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_w()/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_h()/2) * CAMERA_SCALE, 0);
+	glScalef(CAMERA_SCALE, CAMERA_SCALE, 1.0);
+
+	apply_global_fx();
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	draw_level();
+	draw_entity();
+	draw_projectile();
+	draw_player();
+	draw_level_top();
+	draw_fx();
+	draw_lightsource();
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	draw_gui();
+
+	if (ENTERED_TEXT != NULL) {
+		render_text_bitmap(ENTERED_TEXT, (SCREEN_WIDTH - (4 * 8 * strlen(ENTERED_TEXT))) / 2, SCREEN_HEIGHT - 4 * 8, 4);
+	}
+
+	SDL_GL_SwapWindow(SCREEN);
+}
+
+static SCM repl_catch_body(void *body_data)
+{
+	scm_c_eval_string((char *) ENTERED_TEXT);
+	return SCM_BOOL_F;
+}
+
+static SCM repl_catch_handle(void *handler_data, SCM key, SCM parameters)
+{
+	log_err("Invalid command: %s", (char *) handler_data);
+	return SCM_BOOL_F;
+}
+
+static void mode_main_update()
+{
+	if (ENTERED_TEXT != NULL) {
+		scm_c_catch(SCM_BOOL_T,
+				repl_catch_body, ENTERED_TEXT,
+				repl_catch_handle, ENTERED_TEXT,
+				NULL, NULL);
+		free(ENTERED_TEXT);
+		ENTERED_TEXT = NULL;
+	}
+
+	int pressed;
+	SDL_Event event;
+	while (SDL_PollEvent(&event)) {
+		pressed = 0;
+		switch (event.type) {
+			case SDL_KEYDOWN:
+				pressed = 1; //Intentional lack of break
+			case SDL_KEYUP:
+				if (!event.key.repeat) {
+					pressed = pressed ? pressed : 0;
+					if (event.key.keysym.sym == SDLK_F2) {
+						take_screenshot("screenshot.png");
+					} else if (event.key.keysym.sym == SDLK_w) {
+						set_player_movement(pressed, DIR_NORTH);
+					} else if (event.key.keysym.sym == SDLK_s) {
+						set_player_movement(pressed, DIR_SOUTH);
+					} else if (event.key.keysym.sym == SDLK_a) {
+						set_player_movement(pressed, DIR_WEST);
+					} else if (event.key.keysym.sym == SDLK_d) {
+						set_player_movement(pressed, DIR_EAST);
+					} else if (event.key.keysym.sym == SDLK_SPACE) {
+						if (pressed) {
+							set_current_dialog("");
+							Mix_PlayChannel(-1, BLIP_SOUND, 0);
+						}
+					} else if (event.key.keysym.sym == SDLK_o) {
+						set_mode("text_entry");
+					} else if (event.key.keysym.sym == SDLK_m) {
+						hit_player(1000);
+					} else if (event.key.keysym.sym == SDLK_0) {
+						set_player_item_index(0);
+					} else if (event.key.keysym.sym == SDLK_1) {
+						set_player_item_index(1);
+					} else if (event.key.keysym.sym == SDLK_2) {
+						set_player_item_index(2);
+					} else if (event.key.keysym.sym == SDLK_3) {
+						set_player_item_index(3);
+					} else if (event.key.keysym.sym == SDLK_4) {
+						set_player_item_index(4);
+					} else if (event.key.keysym.sym == SDLK_5) {
+						set_player_item_index(5);
+					} else if (event.key.keysym.sym == SDLK_6) {
+						set_player_item_index(6);
+					} else if (event.key.keysym.sym == SDLK_7) {
+						set_player_item_index(7);
+					} else if (event.key.keysym.sym == SDLK_8) {
+						set_player_item_index(8);
+					} else if (event.key.keysym.sym == SDLK_9) {
+						set_player_item_index(9);
+					}
+				}
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				use_player_item(1, calculate_angle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, event.button.x, event.button.y));
+				spawn_global_fx(make_global_fx(global_effect_shake, 5));
+				break;
+			case SDL_MOUSEBUTTONUP:
+				use_player_item(0, 0.0);
+				break;
+			case SDL_QUIT:
+				set_running(false);
+				break;
+		}
+	}
+	update_player();
+	update_entity();
+	update_item();
+	update_projectile();
+	update_fx();
+}
+
+static void mode_main_draw()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+
+	//glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
+	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_w()/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_h()/2) * CAMERA_SCALE, 0);
+	glScalef(CAMERA_SCALE, CAMERA_SCALE, 1.0);
+
+	apply_global_fx();
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	draw_level();
+	draw_entity();
+	draw_projectile();
+	draw_player();
+	draw_level_top();
+	draw_fx();
+	draw_lightsource();
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	draw_gui();
+
+	SDL_GL_SwapWindow(SCREEN);
+}
+
+static void mode_game_over_update()
+{
+	SDL_Event event;
+	while(SDL_PollEvent(&event)) {
+		switch (event.type) {
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					mouse_clicked(event.button.x, event.button.y);
+				}
+				break;
+			case SDL_QUIT:
+				set_running(false);
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+static void mode_game_over_draw()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	draw_gui();
+
+	SDL_GL_SwapWindow(SCREEN);
+}
+
 void initialize_game()
 {
+	MODE_CALLBACKS = make_hash_map();
+
+	scm_c_define_gsubr("get-screen-width", 0, 0, 0, __api_get_screen_width);
+	scm_c_define_gsubr("get-screen-height", 0, 0, 0, __api_get_screen_height);
 	scm_c_define_gsubr("set-current-dialog", 1, 0, 0, __api_set_current_dialog);
+	scm_c_define_gsubr("define-mode", 4, 0, 0, __api_define_mode);
+	scm_c_define_gsubr("set-running", 1, 0, 0, __api_set_running);
+	scm_c_define_gsubr("set-mode", 1, 0, 0, __api_set_mode);
 
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		log_err("Failed to initialize SDL");    
@@ -92,8 +416,8 @@ void initialize_game()
 	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
 
 	initialize_utils();
+	initialize_scheduler();
 	initialize_texture();
-	initialize_level();
 	initialize_item();
 	initialize_lightsource();
 	initialize_entity();
@@ -101,14 +425,28 @@ void initialize_game()
 	initialize_projectile();
 	initialize_fx();
 	initialize_gui();
+	initialize_level();
 
-	HUD = scm_c_primitive_load("script/gui/hud.scm");
+	define_mode("main_menu",
+			make_thunk_scm(scm_c_primitive_load("script/gui/menu.scm")),
+			make_thunk(mode_main_menu_update),
+			make_thunk(mode_main_menu_draw));
+	define_mode("text_entry",
+			make_thunk(NULL),
+			make_thunk(mode_text_entry_update),
+			make_thunk(mode_text_entry_draw));
+	define_mode("main",
+			make_thunk_scm(scm_c_primitive_load("script/gui/hud.scm")),
+			make_thunk(mode_main_update),
+			make_thunk(mode_main_draw));
+	define_mode("game_over",
+			make_thunk_scm(scm_c_primitive_load("script/gui/game_over.scm")),
+			make_thunk(mode_game_over_update),
+			make_thunk(mode_game_over_draw));
 
-	//set_current_dialog("Entering the dungeons of doom is unsafe!\nFind a better hobby, adventurer!");
+	set_mode("main_menu");
 
-
-	//spawn_fx(make_fx(SMOKE_CONST, COLOR_GRAY,
-	//			80, 0, 8, 50, 100));
+	warp_player(64, 64);
 
 	Mix_PlayMusic(Mix_LoadMUS("music/menu.ogg"), -1);
 }
@@ -158,6 +496,15 @@ int get_screen_height()
 	return SCREEN_HEIGHT;
 }
 
+void define_mode(char *name, thunk init, thunk update, thunk draw)
+{
+	mode *m = (mode *) malloc(sizeof(mode));
+	m->init = init;
+	m->update = update;
+	m->draw = draw;
+	set_hash(MODE_CALLBACKS, name, m);
+}
+
 void set_current_dialog(char *text)
 {
 	strcpy(CURRENT_DIALOG, text);
@@ -186,9 +533,15 @@ void take_screenshot(char *path)
 	SDL_FreeSurface(image);
 }
 
-void set_mode(mode m)
+void set_running(bool b)
 {
-	CURRENT_MODE = m;
+	RUNNING = b;
+}
+
+void set_mode(char *s)
+{
+	CURRENT_MODE = get_hash(MODE_CALLBACKS, s);
+	execute_thunk(CURRENT_MODE->init);
 }
 
 void reset_game()
@@ -204,386 +557,16 @@ void reset_game()
 
 void main_game_loop()
 {
-	int running = 1;
-	while (running) {
-		SDL_Delay(10);
-		switch (CURRENT_MODE) {
-			case TITLE_MODE:
-				running = draw_title_loop();
-				break;
-			case MAIN_MENU_MODE:
-				running = draw_main_menu_loop();
-				break;
-			case TEXT_ENTRY_MODE:
-				running = draw_text_entry_loop();
-				break;
-			case DRAW_MODE:
-				running = draw_main_loop();
-				break;
-			case GAME_OVER_MODE:
-				running = draw_game_over_loop();
-				break;
+	RUNNING = true;
+	while (RUNNING) {
+		mode m = *CURRENT_MODE;
+		SDL_Delay(5);
+		CURRENT_TIME = SDL_GetTicks();
+		if (CURRENT_TIME - LAST_TIME > 40) {
+			update_scheduler();
+			execute_thunk(m.update);
+			LAST_TIME = CURRENT_TIME;
 		}
+		execute_thunk(m.draw);
 	}
-}
-
-int draw_title_loop()
-{
-	static int ticks = 0;
-	static texture *title_image;
-	if (!title_image) {
-		title_image = load_texture("textures/title.png", 0, 0);
-	}
-	CURRENT_TIME = SDL_GetTicks();
-	if (CURRENT_TIME - LAST_TIME > 50) {
-		if (ticks <= 100) {
-			glClear(GL_COLOR_BUFFER_BIT);
-
-			draw_texture(title_image, SCREEN_WIDTH/2 - 200, SCREEN_HEIGHT/2 - 200);
-
-			SDL_GL_SwapWindow(SCREEN);
-			ticks++;
-		} else {
-			CURRENT_MODE = MAIN_MENU_MODE;
-		}
-	}
-	return 1;
-}
-
-int draw_main_menu_loop()
-{
-	static int loaded = 0;
-	static texture *ampersand;
-	static SDL_Rect button_enter_rect;
-	static SDL_Rect button_quit_rect;
-	if (!loaded) {
-		loaded = 1;
-		Mix_PlayChannel(-1, Mix_LoadWAV("sfx/mail.wav"), 0);
-		ampersand = load_texture("textures/ampersand.png", 0, 0);
-		button_enter_rect.w = 200;
-		button_enter_rect.h = 50;
-		button_enter_rect.x = SCREEN_WIDTH/2 - button_enter_rect.w/2;
-		button_enter_rect.y = SCREEN_HEIGHT/2 - button_enter_rect.h/2;
-		button_quit_rect.w = 200;
-		button_quit_rect.h = 50;
-		button_quit_rect.x = button_enter_rect.x;
-		button_quit_rect.y = button_enter_rect.y + 75;
-
-	}
-	SDL_Rect mousecursor;
-	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
-		switch (event.type) {
-			case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_F2) {
-					take_screenshot("screenshot.png");
-				}
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				if (event.button.button == SDL_BUTTON_LEFT) {
-					mousecursor.w = mousecursor.h = 1;
-					mousecursor.x = event.button.x;
-					mousecursor.y = event.button.y;
-					if (!check_collision(mousecursor, button_enter_rect)) {
-						CURRENT_MODE = DRAW_MODE;
-					}
-					if (!check_collision(mousecursor, button_quit_rect)) {
-						return 0;
-					}
-				}
-				break;
-			case SDL_QUIT:
-				return 0;
-				break;
-		}
-	}
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	render_text_bitmap("maildaemon", SCREEN_WIDTH/2 - 640, 100, 16.0);
-
-	draw_texture(ampersand, button_enter_rect.x - 500, button_enter_rect.y);
-	draw_texture(ampersand, button_enter_rect.x + button_enter_rect.w + 180, button_enter_rect.y);
-
-	draw_button("Enter Game", button_enter_rect.x, button_enter_rect.y);
-	draw_button("Quit", button_quit_rect.x, button_quit_rect.y);
-
-	SDL_GL_SwapWindow(SCREEN);
-	
-	return 1;
-}
-
-int draw_text_entry_loop()
-{
-	static char *buffer, *cursor;
-	int len;
-	if (ENTERED_TEXT == NULL) {
-		SDL_StartTextInput();
-		buffer = (char *) malloc(sizeof(char) * 256);
-		cursor = buffer;
-		memset(buffer, 0, sizeof(char) * 256);
-		ENTERED_TEXT = cursor;
-	}
-	SDL_Event event;
-	bool pressed;
-	while (SDL_PollEvent(&event)) {
-		switch (event.type) {
-			case SDL_QUIT:
-				return false;
-				break;
-			case SDL_KEYDOWN:
-				pressed = 1; //Intentional lack of break
-				if (event.key.keysym.sym == SDLK_BACKSPACE && cursor != buffer) {
-					*(--cursor) = 0x0;
-					return true;
-				} else if (event.key.keysym.sym == SDLK_LEFT && cursor != buffer) {
-					--cursor;
-				} else if (event.key.keysym.sym == SDLK_RIGHT && cursor < buffer + 255 * sizeof(char)) {
-					++cursor;
-				} else if (event.key.keysym.sym == SDLK_RETURN) {
-					set_mode(DRAW_MODE);
-					SDL_StopTextInput();
-					return true;
-				}
-				break;
-			case SDL_KEYUP:
-				if (!event.key.repeat) {
-					pressed = pressed ? pressed : 0;
-					if (event.key.keysym.sym == SDLK_F2) {
-						take_screenshot("screenshot.png");
-					} else if (event.key.keysym.sym == SDLK_w) {
-						set_player_movement(pressed, NORTH);
-					} else if (event.key.keysym.sym == SDLK_s) {
-						set_player_movement(pressed, SOUTH);
-					} else if (event.key.keysym.sym == SDLK_a) {
-						set_player_movement(pressed, WEST);
-					} else if (event.key.keysym.sym == SDLK_d) {
-						set_player_movement(pressed, EAST);
-					}
-				}
-				break;
-			case SDL_TEXTINPUT:
-				len = strlen(event.text.text) * sizeof(char);
-				if (cursor + len < buffer + 255 * sizeof(char)) {
-					memcpy(cursor, event.text.text, len);
-					cursor += len;
-				}
-				break;
-		}
-	}
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-
-	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_w()/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_h()/2) * CAMERA_SCALE, 0);
-	glScalef(CAMERA_SCALE, CAMERA_SCALE, 1.0);
-
-	apply_global_fx();
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	draw_level();
-	draw_entity();
-	draw_projectile();
-	draw_player();
-	draw_level_top();
-	draw_fx();
-	draw_lightsource();
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-
-	scm_call_0(HUD);
-
-	render_text_bitmap(buffer, (SCREEN_WIDTH - (4 * 8 * strlen(buffer))) / 2, SCREEN_HEIGHT - 4 * 8, 4);
-
-	SDL_GL_SwapWindow(SCREEN);
-	return 1;
-}
-
-static SCM repl_catch_body(void *body_data)
-{
-	scm_c_eval_string((char *) ENTERED_TEXT);
-	return SCM_BOOL_F;
-}
-
-static SCM repl_catch_handle(void *handler_data, SCM key, SCM parameters)
-{
-	log_err("Invalid command: %s", (char *) handler_data);
-	return SCM_BOOL_F;
-}
-
-int draw_main_loop()
-{
-	if (ENTERED_TEXT != NULL) {
-		scm_c_catch(SCM_BOOL_T,
-				repl_catch_body, ENTERED_TEXT,
-				repl_catch_handle, ENTERED_TEXT,
-				NULL, NULL);
-		free(ENTERED_TEXT);
-		ENTERED_TEXT = NULL;
-	}
-
-	int pressed;
-	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		pressed = 0;
-		switch (event.type) {
-			case SDL_KEYDOWN:
-				pressed = 1; //Intentional lack of break
-			case SDL_KEYUP:
-				if (!event.key.repeat) {
-					pressed = pressed ? pressed : 0;
-					if (event.key.keysym.sym == SDLK_F2) {
-						take_screenshot("screenshot.png");
-					} else if (event.key.keysym.sym == SDLK_w) {
-						set_player_movement(pressed, NORTH);
-					} else if (event.key.keysym.sym == SDLK_s) {
-						set_player_movement(pressed, SOUTH);
-					} else if (event.key.keysym.sym == SDLK_a) {
-						set_player_movement(pressed, WEST);
-					} else if (event.key.keysym.sym == SDLK_d) {
-						set_player_movement(pressed, EAST);
-					} else if (event.key.keysym.sym == SDLK_SPACE) {
-						if (pressed) {
-							set_current_dialog("");
-							Mix_PlayChannel(-1, BLIP_SOUND, 0);
-						}
-					} else if (event.key.keysym.sym == SDLK_o) {
-						scm_c_eval_string("(get-player-x)");
-						set_mode(TEXT_ENTRY_MODE);
-					} else if (event.key.keysym.sym == SDLK_m) {
-						hit_player(1000);
-					} else if (event.key.keysym.sym == SDLK_0) {
-						set_player_item_index(0);
-					} else if (event.key.keysym.sym == SDLK_1) {
-						set_player_item_index(1);
-					} else if (event.key.keysym.sym == SDLK_2) {
-						set_player_item_index(2);
-					} else if (event.key.keysym.sym == SDLK_3) {
-						set_player_item_index(3);
-					} else if (event.key.keysym.sym == SDLK_4) {
-						set_player_item_index(4);
-					} else if (event.key.keysym.sym == SDLK_5) {
-						set_player_item_index(5);
-					} else if (event.key.keysym.sym == SDLK_6) {
-						set_player_item_index(6);
-					} else if (event.key.keysym.sym == SDLK_7) {
-						set_player_item_index(7);
-					} else if (event.key.keysym.sym == SDLK_8) {
-						set_player_item_index(8);
-					} else if (event.key.keysym.sym == SDLK_9) {
-						set_player_item_index(9);
-					}
-				}
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				use_player_item(1, calculate_angle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, event.button.x, event.button.y));
-				spawn_global_fx(make_global_fx(global_effect_shake, 5));
-				break;
-			case SDL_MOUSEBUTTONUP:
-				use_player_item(0, 0.0);
-				break;
-			case SDL_QUIT:
-				return 0;
-				break;
-		}
-	}
-	CURRENT_TIME = SDL_GetTicks();
-	if (CURRENT_TIME - LAST_TIME > 40) {
-		update_level();
-		update_player();
-		update_entity();
-		update_item();
-		update_projectile();
-		update_fx();
-		LAST_TIME = CURRENT_TIME;
-	}
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-
-	//glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
-	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_w()/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_h()/2) * CAMERA_SCALE, 0);
-	glScalef(CAMERA_SCALE, CAMERA_SCALE, 1.0);
-
-	apply_global_fx();
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	draw_level();
-	draw_entity();
-	draw_projectile();
-	draw_player();
-	draw_level_top();
-	draw_fx();
-	draw_lightsource();
-
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-
-	scm_call_0(HUD);
-
-	if (strcmp(CURRENT_DIALOG, "") != 0) {
-		draw_dialog_box(CURRENT_DIALOG, (SCREEN_WIDTH - 1000) / 2, SCREEN_HEIGHT - 100);
-	}
-
-	SDL_GL_SwapWindow(SCREEN);
-	return 1;
-}
-
-int draw_game_over_loop()
-{
-	static int loaded = 0;
-	static SDL_Rect button_respawn_rect;
-	static SDL_Rect button_quit_rect;
-	if (!loaded) {
-		loaded = 1;
-		button_respawn_rect.w = 200;
-		button_respawn_rect.h = 50;
-		button_respawn_rect.x = SCREEN_WIDTH/2 - 250;
-		button_respawn_rect.y = SCREEN_HEIGHT/2 + 100;
-		button_quit_rect.w = 200;
-		button_quit_rect.h = 50;
-		button_quit_rect.x = SCREEN_WIDTH/2 + 50;
-		button_quit_rect.y = SCREEN_HEIGHT/2 + 100;
-
-	}
-	SDL_Rect mousecursor;
-	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
-		switch (event.type) {
-			case SDL_MOUSEBUTTONDOWN:
-				if (event.button.button == SDL_BUTTON_LEFT) {
-					mousecursor.w = mousecursor.h = 1;
-					mousecursor.x = event.button.x;
-					mousecursor.y = event.button.y;
-					if (!check_collision(mousecursor, button_respawn_rect)) {
-						reset_game();
-						CURRENT_MODE = MAIN_MENU_MODE;
-					}
-					else if (!check_collision(mousecursor, button_quit_rect)) {
-						return 0;
-					}
-				}
-				break;
-			case SDL_QUIT:
-				return 0;
-				break;
-			default:
-				break;
-		}
-	}
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	render_text_bitmap("Game Over", SCREEN_WIDTH/2 - 576, 100, 16.0);
-
-	draw_button("Main Menu", button_respawn_rect.x, button_respawn_rect.y);
-	draw_button("Quit", button_quit_rect.x, button_quit_rect.y);
-
-	SDL_GL_SwapWindow(SCREEN);
-	return 1;
 }

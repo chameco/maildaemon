@@ -11,8 +11,8 @@
 #include <GL/glew.h>
 #include <libguile.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "utils.h"
 #include "texture.h"
@@ -356,19 +356,19 @@ void give_entity_item(entity *e, item *i)
 void move_entity(entity *e, direction d)
 {
 	switch (d) {
-		case NORTH:
+		case DIR_NORTH:
 			e->xv = 0;
 			e->yv = -e->speed;
 			break;
-		case SOUTH:
+		case DIR_SOUTH:
 			e->xv = 0;
 			e->yv = e->speed;
 			break;
-		case WEST:
+		case DIR_WEST:
 			e->xv = -e->speed;
 			e->yv = 0;
 			break;
-		case EAST:
+		case DIR_EAST:
 			e->xv = e->speed;
 			e->yv = 0;
 			break;
@@ -470,7 +470,7 @@ void draw_entity()
 {
 	entity *e;
 	list_node *c;
-	for (c = ENTITIES; c->next != NULL; c = c->next) {
+	for (c = ENTITIES->next; c->next != NULL; c = c->next) {
 		if (((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
 			draw_texture_scale(e->t, e->x, e->y, e->w, e->h);

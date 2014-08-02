@@ -9,8 +9,8 @@
 
 #include <libguile.h>
 
-#include "cuttle/debug.h"
-#include "cuttle/utils.h"
+#include <cuttle/debug.h>
+#include <cuttle/utils.h>
 
 #include "utils.h"
 #include "texture.h"
@@ -18,6 +18,7 @@
 #include "projectile.h"
 #include "fx.h"
 #include "lightsource.h"
+#include "scheduler.h"
 
 static level *CURRENT_LEVEL = NULL;
 static texture *TILE_SHEET = NULL;
@@ -92,6 +93,8 @@ void initialize_level()
 		log_err("Directory \"script/levels/helpers/\" does not exist");
 		exit(1);
 	}
+
+	CURRENT_LEVEL = load_level("village field");
 }
 
 void reset_level()
@@ -99,9 +102,22 @@ void reset_level()
 	switch_level(CURRENT_LEVEL->name);
 }
 
+static void do_switch()
+{
+	if (strlen(SWITCH_TO) != 0) {
+		reset_entity();
+		reset_projectile();
+		reset_fx();
+		reset_lightsource();
+		CURRENT_LEVEL = load_level(SWITCH_TO);
+		memset(SWITCH_TO, 0, sizeof(SWITCH_TO));
+	}
+}
+
 void switch_level(char *name)
 {
 	strcpy(SWITCH_TO, name);
+	schedule(make_thunk(do_switch), 0);
 }
 
 level *load_level(char *name)
@@ -152,18 +168,6 @@ bool is_solid_tile(int x, int y)
 {
 	if (x < 0 || y < 0) return 0;
 	return CURRENT_LEVEL->tiles[x][y] >= STONE;
-}
-
-void update_level()
-{
-	if (strlen(SWITCH_TO) != 0) {
-		reset_entity();
-		reset_projectile();
-		reset_fx();
-		reset_lightsource();
-		CURRENT_LEVEL = load_level(SWITCH_TO);
-		memset(SWITCH_TO, 0, sizeof(SWITCH_TO));
-	}
 }
 
 void draw_level()
