@@ -12,6 +12,7 @@ typedef enum gui_element_type {
 	BUTTON,
 	DIALOG_BOX,
 	METER,
+	DYNAMIC_METER,
 } gui_element_type;
 
 typedef struct gui_element_data_image {
@@ -34,7 +35,7 @@ typedef struct gui_element_data_button {
 } gui_element_data_button;
 
 typedef struct gui_element_data_dialog_box {
-	char text[1024];
+	SCM text_getter;
 } gui_element_data_dialog_box;
 
 typedef struct gui_element_data_meter {
@@ -43,6 +44,12 @@ typedef struct gui_element_data_meter {
 	SCM full_getter;
 } gui_element_data_meter;
 
+typedef struct gui_element_data_dynamic_meter {
+	SCM text_getter;
+	color c;
+	SCM full_getter;
+} gui_element_data_dynamic_meter;
+
 typedef union gui_element_data {
 	gui_element_data_image image;
 	gui_element_data_label label;
@@ -50,6 +57,7 @@ typedef union gui_element_data {
 	gui_element_data_button button;
 	gui_element_data_dialog_box dialog_box;
 	gui_element_data_meter meter;
+	gui_element_data_dynamic_meter dynamic_meter;
 } gui_element_data;
 
 typedef struct gui_element {
@@ -70,8 +78,9 @@ void spawn_image(double x, double y, char *path);
 void spawn_label(double x, double y, char *text, double size);
 void spawn_dynamic_label(double x, double y, SCM getter, double size);
 void spawn_button(double x, double y, char *text, SCM click_callback);
-void spawn_dialog_box(double x, double y, char *text);
+void spawn_dialog_box(double x, double y, SCM text_getter);
 void spawn_meter(double x, double y, char *text, color c, SCM full_getter);
+void spawn_dynamic_meter(double x, double y, SCM text_getter, color c, SCM full_getter);
 
 void mouse_clicked(double x, double y);
 
@@ -83,6 +92,7 @@ void draw_dynamic_label(gui_element *ge);
 void draw_button(gui_element *ge);
 void draw_dialog_box(gui_element *ge);
 void draw_meter(gui_element *ge);
+void draw_dynamic_meter(gui_element *ge);
 
 void draw_gui_element(gui_element *ge);
 

@@ -14,6 +14,8 @@
 
 #include "utils.h"
 #include "texture.h"
+#include "dungeon.h"
+#include "player.h"
 #include "entity.h"
 #include "projectile.h"
 #include "fx.h"
@@ -21,9 +23,10 @@
 #include "scheduler.h"
 
 static level *CURRENT_LEVEL = NULL;
+static double CURRENT_SPAWN_X = 0;
+static double CURRENT_SPAWN_Y = 0;
 static texture *TILE_SHEET = NULL;
 static texture *TILE_SHEET_TOP = NULL;
-static char SWITCH_TO[256] = {0};
 
 SCM __api_switch_level(SCM name)
 {
@@ -58,6 +61,11 @@ SCM __api_set_level_ambience(SCM a)
 	return SCM_BOOL_F;
 }
 
+SCM __api_get_level_ambience()
+{
+	return scm_from_double(get_current_level()->ambience);
+}
+
 SCM __api_save_level()
 {
 	save_level(get_current_level());
@@ -74,6 +82,7 @@ void initialize_level()
 	scm_c_define_gsubr("set-level-name", 1, 0, 0, __api_set_level_name);
 	scm_c_define_gsubr("get-level-name", 0, 0, 0, __api_get_level_name);
 	scm_c_define_gsubr("set-level-ambience", 1, 0, 0, __api_set_level_ambience);
+	scm_c_define_gsubr("get-level-ambience", 0, 0, 0, __api_get_level_ambience);
 	scm_c_define_gsubr("save-level", 0, 0, 0, __api_save_level);
 
 	DIR *d = opendir("script/levels/helpers");
@@ -93,8 +102,6 @@ void initialize_level()
 		log_err("Directory \"script/levels/helpers/\" does not exist");
 		exit(1);
 	}
-
-	CURRENT_LEVEL = load_level("village field");
 }
 
 void reset_level()
@@ -102,22 +109,15 @@ void reset_level()
 	switch_level(CURRENT_LEVEL->name);
 }
 
-static void do_switch()
-{
-	if (strlen(SWITCH_TO) != 0) {
-		reset_entity();
-		reset_projectile();
-		reset_fx();
-		reset_lightsource();
-		CURRENT_LEVEL = load_level(SWITCH_TO);
-		memset(SWITCH_TO, 0, sizeof(SWITCH_TO));
-	}
-}
-
 void switch_level(char *name)
 {
-	strcpy(SWITCH_TO, name);
-	schedule(make_thunk(do_switch), 0);
+	reset_entity();
+	reset_projectile();
+	reset_fx();
+	reset_lightsource();
+	CURRENT_LEVEL = load_level(name);
+	CURRENT_SPAWN_X = get_player_x();
+	CURRENT_SPAWN_Y = get_player_y();
 }
 
 level *load_level(char *name)
@@ -127,7 +127,7 @@ level *load_level(char *name)
 	strcat(buf, name);
 	int bare = strlen(buf);
 	strcat(buf, ".lvl");
-	FILE *f = fopen(buf, "r");
+	FILE *f = dungeon_fopen(buf, "r");
 	if (f == NULL) {
 		int x, y;
 		for (x = 0; x < LEVEL_MAX_DIM; x++) {
@@ -144,7 +144,7 @@ level *load_level(char *name)
 		strcat(buf, ".scm");
 		char sbuf[256] = "script/";
 		strcat(sbuf, buf);
-		scm_c_primitive_load(sbuf);
+		dungeon_load(sbuf);
 	}
 	return ret;
 }
@@ -164,9 +164,20 @@ level *get_current_level()
 	return CURRENT_LEVEL;
 }
 
+double get_current_spawn_x()
+{
+	return CURRENT_SPAWN_X;
+}
+
+double get_current_spawn_y()
+{
+	return CURRENT_SPAWN_Y;
+}
+
 bool is_solid_tile(int x, int y)
 {
-	if (x < 0 || y < 0) return 0;
+	if (x < 0 || y < 0) return false;
+	if (x >= LEVEL_MAX_DIM || y >= LEVEL_MAX_DIM) return false;
 	return CURRENT_LEVEL->tiles[x][y] >= STONE;
 }
 

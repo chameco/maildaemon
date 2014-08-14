@@ -156,8 +156,6 @@ void initialize_player()
 	scm_c_define_gsubr("warp-player", 2, 0, 0, __api_warp_player);
 	scm_c_define_gsubr("set-player-item-index", 1, 0, 0, __api_set_player_item_index);
 	scm_c_define_gsubr("use-player-item", 2, 0, 0, __api_use_player_item);
-
-	scm_c_primitive_load("script/init/player.scm");
 }
 
 void reset_player()
@@ -172,8 +170,6 @@ void reset_player()
 	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 	PLAYER_ANIM_STEP = 0;
 	PLAYER_ITEM_INDEX = 0;
-
-	scm_c_primitive_load("script/init/player.scm");
 }
 
 double get_player_x()

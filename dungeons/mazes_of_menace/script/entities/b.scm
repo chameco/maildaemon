@@ -2,4 +2,11 @@
 
 (set-entity-init ACID_BLOB (lambda (e) 0))
 
+(set-entity-collide
+  ACID_BLOB
+  (lambda (e data)
+    (if (= data 0)
+      (hit-player 5))
+    data))
+
 (set-entity-update ACID_BLOB (generate-update-track-player 3 5))

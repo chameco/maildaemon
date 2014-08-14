@@ -13,7 +13,6 @@ typedef struct item {
 	double rotation;
 	Mix_Chunk *sound;
 	double charge;
-	SCM draw_hud_func;
 	SCM update_func;
 	SCM data;
 } item;

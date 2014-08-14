@@ -34,7 +34,9 @@ SCM __api_build_entity_prototype(SCM path, SCM w, SCM h,
 	entity *e = build_entity_prototype(t, scm_to_int(w), scm_to_int(h),
 			scm_to_int(health), scm_to_double(speed), scm_to_double(expval));
 	free(t);
-	return scm_new_smob(__api_entity_tag, (unsigned long) e);
+	SCM ret = scm_new_smob(__api_entity_tag, (unsigned long) e);
+	scm_gc_protect_object(ret);
+	return ret;
 }
 
 SCM __api_get_entity_x(SCM e)
@@ -213,23 +215,6 @@ void initialize_entity()
 		closedir(d);
 	} else {
 		log_err("Directory \"script/entities/helpers\" does not exist");
-		exit(1);
-	}
-
-	d = opendir("script/entities");
-
-	if (d != NULL) {
-		while ((entry = readdir(d))) {
-			pos = strrchr(entry->d_name, '.');
-			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
-				strcpy(buf, "script/entities/");
-				strcat(buf, entry->d_name);
-				scm_c_primitive_load(buf);
-			}
-		}
-		closedir(d);
-	} else {
-		log_err("Directory \"script/entities\" does not exist");
 		exit(1);
 	}
 }

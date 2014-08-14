@@ -6,8 +6,8 @@
    (set-entity-collide s (lambda (e data)
                            (schedule
                              (lambda ()
-                               (switch-level dest)
-                               (warp-player destx desty))
+                               (warp-player destx desty)
+                               (switch-level dest))
                              0)))
    (set-sheet-row (get-entity-texture s) sr)
    (set-sheet-column (get-entity-texture s) sc)

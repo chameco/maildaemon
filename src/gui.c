@@ -63,11 +63,9 @@ SCM __api_spawn_button(SCM x, SCM y, SCM text, SCM click_callback)
 	return SCM_BOOL_F;
 }
 
-SCM __api_spawn_dialog_box(SCM x, SCM y, SCM text)
+SCM __api_spawn_dialog_box(SCM x, SCM y, SCM text_getter)
 {
-	char *s = scm_to_locale_string(text);
-	spawn_dialog_box(scm_to_double(x), scm_to_double(y), s);
-	free(s);
+	spawn_dialog_box(scm_to_double(x), scm_to_double(y), text_getter);
 	return SCM_BOOL_F;
 }
 
@@ -77,6 +75,13 @@ SCM __api_spawn_meter(SCM x, SCM y, SCM text, SCM col, SCM full_getter)
 	color c = *((color *) SCM_SMOB_DATA(col));
 	spawn_meter(scm_to_double(x), scm_to_double(y), s, c, full_getter);
 	free(s);
+	return SCM_BOOL_F;
+}
+
+SCM __api_spawn_dynamic_meter(SCM x, SCM y, SCM text_getter, SCM col, SCM full_getter)
+{
+	color c = *((color *) SCM_SMOB_DATA(col));
+	spawn_dynamic_meter(scm_to_double(x), scm_to_double(y), text_getter, c, full_getter);
 	return SCM_BOOL_F;
 }
 
@@ -95,6 +100,7 @@ void initialize_gui()
 	scm_c_define_gsubr("spawn-button", 4, 0, 0, __api_spawn_button);
 	scm_c_define_gsubr("spawn-dialog-box", 3, 0, 0, __api_spawn_dialog_box);
 	scm_c_define_gsubr("spawn-meter", 5, 0, 0, __api_spawn_meter);
+	scm_c_define_gsubr("spawn-dynamic-meter", 5, 0, 0, __api_spawn_dynamic_meter);
 }
 
 void reset_gui()
@@ -213,11 +219,12 @@ void spawn_button(double x, double y, char *text, SCM click_callback)
 	insert_list(GUI_ELEMENTS, (void *) ret);
 }
 
-void spawn_dialog_box(double x, double y, char *text)
+void spawn_dialog_box(double x, double y, SCM text_getter)
 {
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = DIALOG_BOX;
-	strncpy(ret->data.dialog_box.text, text, 1024);
+	ret->data.dialog_box.text_getter = text_getter;
+	scm_gc_protect_object(text_getter);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 1000;
@@ -233,6 +240,22 @@ void spawn_meter(double x, double y, char *text, color c, SCM full_getter)
 	ret->data.meter.c = c;
 	ret->data.meter.full_getter = full_getter;
 	scm_gc_protect_object(ret->data.meter.full_getter);
+	ret->x = x;
+	ret->y = y;
+	ret->w = 110;
+	ret->h = 32;
+	insert_list(GUI_ELEMENTS, (void *) ret);
+}
+
+void spawn_dynamic_meter(double x, double y, SCM text_getter, color c, SCM full_getter)
+{
+	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
+	ret->type = DYNAMIC_METER;
+	ret->data.dynamic_meter.text_getter = text_getter;
+	scm_gc_protect_object(ret->data.dynamic_meter.text_getter);
+	ret->data.dynamic_meter.c = c;
+	ret->data.dynamic_meter.full_getter = full_getter;
+	scm_gc_protect_object(ret->data.dynamic_meter.full_getter);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 110;
@@ -314,9 +337,12 @@ void draw_button(gui_element *ge)
 
 void draw_dialog_box(gui_element *ge)
 {
-	draw_texture(DIALOG_BOX_BACKGROUND, ge->x, ge->y);
-
-	render_text_bitmap(ge->data.dialog_box.text, ge->x + 10, ge->y + 10, 2);
+	char *t = scm_to_locale_string(scm_call_0(ge->data.dialog_box.text_getter));
+	if (strlen(t)) {
+		draw_texture(DIALOG_BOX_BACKGROUND, ge->x, ge->y);
+		render_text_bitmap(t, ge->x + 10, ge->y + 10, 2);
+	}
+	free(t);
 }
 
 void draw_meter(gui_element *ge)
@@ -326,7 +352,7 @@ void draw_meter(gui_element *ge)
 	glPushMatrix();
 
 	glTranslatef(ge->x + 4, ge->y + 4, 0);
-	glScalef(scm_to_double(scm_call_0(ge->data.meter.full_getter)), 24, 1);
+	glScalef(scm_to_double(scm_call_0(ge->data.meter.full_getter)) + 1, 24, 1);
 	glColor3f(ge->data.meter.c.r, ge->data.meter.c.g, ge->data.meter.c.b);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -346,6 +372,36 @@ void draw_meter(gui_element *ge)
 	glPopMatrix();
 
 	render_text_bitmap(ge->data.meter.text, ge->x + 55 - (16 * strlen(ge->data.meter.text))/2, ge->y + 8, 2);
+}
+
+void draw_dynamic_meter(gui_element *ge)
+{
+	draw_texture(METER_BACKGROUND, ge->x, ge->y);
+
+	glPushMatrix();
+
+	glTranslatef(ge->x + 4, ge->y + 4, 0);
+	glScalef(scm_to_double(scm_call_0(ge->data.dynamic_meter.full_getter)) + 1, 24, 1);
+	glColor3f(ge->data.dynamic_meter.c.r, ge->data.dynamic_meter.c.g, ge->data.dynamic_meter.c.b);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glPopMatrix();
+	char *s = scm_to_locale_string(scm_call_0(ge->data.dynamic_meter.text_getter));
+	render_text_bitmap(s, ge->x + 55 - (16 * strlen(s))/2, ge->y + 8, 2);
+	free(s);
 }
 
 void draw_gui_element(gui_element *ge)
@@ -368,6 +424,9 @@ void draw_gui_element(gui_element *ge)
 			break;
 		case METER:
 			draw_meter(ge);
+			break;
+		case DYNAMIC_METER:
+			draw_dynamic_meter(ge);
 			break;
 	}
 }

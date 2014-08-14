@@ -5,5 +5,6 @@
   (reset-gui)
   (spawn-meter 0 0 "Health" HUD_GREEN (lambda () (/ (* (get-player-health) 100) (get-player-max-health))))
   (spawn-meter 0 32 "Ammo" HUD_GRAY (lambda () (get-player-charge-percent)))
-  (spawn-meter 0 64 "Level" HUD_GOLD (lambda () (/ (* (get-player-exp) 100) (get-player-exp-to-next))))
-  (spawn-dynamic-label 150 0 get-level-name 4))
+  (spawn-dynamic-meter 0 64 (lambda() (string-append "lvl " (number->string (get-player-level)))) HUD_GOLD (lambda () (/ (* (get-player-exp) 100) (get-player-exp-to-next))))
+  (spawn-dynamic-label 150 0 get-level-name 4)
+  (spawn-dialog-box (- (/ (get-screen-width) 2) 500) (- (get-screen-height) 100) get-current-dialog))

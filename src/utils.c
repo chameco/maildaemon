@@ -47,12 +47,17 @@ SCM __api_make_color(SCM r, SCM g, SCM b, SCM a)
 
 SCM __api_calculate_angle(SCM ox, SCM oy, SCM px, SCM py)
 {
-	return scm_from_double(calculate_angle(scm_to_double(ox), scm_to_double(oy), scm_to_double(px), scm_to_double(px)));
+	return scm_from_double(calculate_angle(scm_to_double(ox), scm_to_double(oy), scm_to_double(px), scm_to_double(py)));
 }
 
 SCM __api_is_unbroken_line(SCM x0, SCM y0, SCM x1, SCM y1)
 {
 	return scm_from_bool(is_unbroken_line(scm_to_double(x0), scm_to_double(y0), scm_to_double(x1), scm_to_double(y1)));
+}
+
+SCM __api_rand()
+{
+	return scm_from_int(rand());
 }
 
 void initialize_utils()
@@ -69,6 +74,7 @@ void initialize_utils()
 	scm_c_define_gsubr("make-color", 4, 0, 0, __api_make_color);
 	scm_c_define_gsubr("calculate-angle", 4, 0, 0, __api_calculate_angle);
 	scm_c_define_gsubr("is-unbroken-line", 4, 0, 0, __api_is_unbroken_line);
+	scm_c_define_gsubr("random-integer", 0, 0, 0, __api_rand);
 }
 
 GLuint get_standard_indices_handler()
@@ -94,26 +100,22 @@ double calculate_angle(double originx, double originy, double pointx, double poi
 {
 	double xdiff = pointx - originx;
 	double ydiff = pointy - originy;
+	double slope;
+	double angle;
 	if (xdiff == 0) {
 		if (ydiff > 0) {
-			return 3 * 3.141592654 / 2;
+			slope = INFINITY;
 		} else {
-			return 3.141592654 / 2;
+			slope = -INFINITY;
 		}
-	}
-	if (ydiff == 0) {
-		if (xdiff > 0) {
-			return 0;
-		} else {
-			return 3.141592654;
-		}
-	}
-	if (pointx >= originx) {
-		return atan(ydiff/xdiff);
 	} else {
-		return atan(ydiff/xdiff)
-			+ 3.141592654;
+		slope = ydiff/xdiff;
 	}
+	angle = atan(slope);
+	if (xdiff < 0) {
+		angle += 3.141592654;
+	}
+	return angle;
 }
 
 line_point *bresenham_line(double x0, double y0, double x1, double y1)

@@ -32,6 +32,8 @@ void switch_level(char *name);
 level *load_level(char *name);
 void save_level(level *l);
 level *get_current_level();
+double get_current_spawn_x();
+double get_current_spawn_y();
 bool is_solid_tile(int x, int y);
 void draw_level();
 void draw_level_top();

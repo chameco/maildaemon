@@ -26,7 +26,9 @@
 #include "projectile.h"
 #include "gui.h"
 #include "fx.h"
+#include "dungeon.h"
 #include "scheduler.h"
+#include "save.h"
 
 static SDL_Window *SCREEN;
 static SDL_GLContext *CONTEXT;
@@ -41,6 +43,12 @@ static int CURRENT_TIME = 0;
 static char CURRENT_DIALOG[256] = "";
 static char *ENTERED_TEXT = NULL;
 static Mix_Chunk *BLIP_SOUND;
+
+SCM __api_reset_game()
+{
+	reset_game();
+	return SCM_BOOL_F;
+}
 
 SCM __api_get_screen_width()
 {
@@ -58,6 +66,11 @@ SCM __api_set_current_dialog(SCM d)
 	set_current_dialog(t);
 	free(t);
 	return SCM_BOOL_F;
+}
+
+SCM __api_get_current_dialog()
+{
+	return scm_from_locale_string(get_current_dialog());
 }
 
 SCM __api_define_mode(SCM name, SCM init, SCM update, SCM draw)
@@ -85,7 +98,7 @@ SCM __api_set_mode(SCM mode)
 	return SCM_BOOL_F;
 }
 
-static void mode_main_menu_update()
+static void mode_standard_gui_update()
 {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
@@ -107,7 +120,7 @@ static void mode_main_menu_update()
 	}
 }
 
-static void mode_main_menu_draw()
+static void mode_standard_gui_draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -288,6 +301,7 @@ static void mode_main_update()
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				use_player_item(1, calculate_angle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, event.button.x, event.button.y));
+				mouse_clicked(event.button.x, event.button.y);
 				spawn_global_fx(make_global_fx(global_effect_shake, 5));
 				break;
 			case SDL_MOUSEBUTTONUP:
@@ -337,41 +351,15 @@ static void mode_main_draw()
 	SDL_GL_SwapWindow(SCREEN);
 }
 
-static void mode_game_over_update()
-{
-	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
-		switch (event.type) {
-			case SDL_MOUSEBUTTONDOWN:
-				if (event.button.button == SDL_BUTTON_LEFT) {
-					mouse_clicked(event.button.x, event.button.y);
-				}
-				break;
-			case SDL_QUIT:
-				set_running(false);
-				break;
-			default:
-				break;
-		}
-	}
-}
-
-static void mode_game_over_draw()
-{
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	draw_gui();
-
-	SDL_GL_SwapWindow(SCREEN);
-}
-
 void initialize_game()
 {
 	MODE_CALLBACKS = make_hash_map();
 
+	scm_c_define_gsubr("reset-game", 0, 0, 0, __api_reset_game);
 	scm_c_define_gsubr("get-screen-width", 0, 0, 0, __api_get_screen_width);
 	scm_c_define_gsubr("get-screen-height", 0, 0, 0, __api_get_screen_height);
 	scm_c_define_gsubr("set-current-dialog", 1, 0, 0, __api_set_current_dialog);
+	scm_c_define_gsubr("get-current-dialog", 0, 0, 0, __api_get_current_dialog);
 	scm_c_define_gsubr("define-mode", 4, 0, 0, __api_define_mode);
 	scm_c_define_gsubr("set-running", 1, 0, 0, __api_set_running);
 	scm_c_define_gsubr("set-mode", 1, 0, 0, __api_set_mode);
@@ -417,6 +405,8 @@ void initialize_game()
 
 	initialize_utils();
 	initialize_scheduler();
+	initialize_dungeon();
+	initialize_save();
 	initialize_texture();
 	initialize_item();
 	initialize_lightsource();
@@ -429,26 +419,28 @@ void initialize_game()
 
 	define_mode("main_menu",
 			make_thunk_scm(scm_c_primitive_load("script/gui/menu.scm")),
-			make_thunk(mode_main_menu_update),
-			make_thunk(mode_main_menu_draw));
+			make_thunk(mode_standard_gui_update),
+			make_thunk(mode_standard_gui_draw));
+	define_mode("new_game",
+			make_thunk_scm(scm_c_primitive_load("script/gui/new_game.scm")),
+			make_thunk(mode_standard_gui_update),
+			make_thunk(mode_standard_gui_draw));
 	define_mode("text_entry",
 			make_thunk(NULL),
 			make_thunk(mode_text_entry_update),
 			make_thunk(mode_text_entry_draw));
 	define_mode("main",
-			make_thunk_scm(scm_c_primitive_load("script/gui/hud.scm")),
+			make_thunk_scm(scm_c_primitive_load("script/gui/main.scm")),
 			make_thunk(mode_main_update),
 			make_thunk(mode_main_draw));
 	define_mode("game_over",
 			make_thunk_scm(scm_c_primitive_load("script/gui/game_over.scm")),
-			make_thunk(mode_game_over_update),
-			make_thunk(mode_game_over_draw));
+			make_thunk(mode_standard_gui_update),
+			make_thunk(mode_standard_gui_draw));
 
 	set_mode("main_menu");
 
-	warp_player(64, 64);
-
-	Mix_PlayMusic(Mix_LoadMUS("music/menu.ogg"), -1);
+	//Mix_PlayMusic(Mix_LoadMUS("music/menu.ogg"), -1);
 }
 
 void initGL()
@@ -510,6 +502,11 @@ void set_current_dialog(char *text)
 	strcpy(CURRENT_DIALOG, text);
 }
 
+char *get_current_dialog()
+{
+	return CURRENT_DIALOG;
+}
+
 
 void take_screenshot(char *path)
 {
@@ -546,6 +543,7 @@ void set_mode(char *s)
 
 void reset_game()
 {
+	reset_gui();
 	reset_lightsource();
 	reset_item();
 	reset_entity();
@@ -569,4 +567,5 @@ void main_game_loop()
 		}
 		execute_thunk(m.draw);
 	}
+	SDL_Quit();
 }

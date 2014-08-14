@@ -1,4 +1,5 @@
 (set-player-item 1 (make-item "laser"))
+(set-player-item 2 (make-item "flamethrower"))
 
 (define (determine-beam-dims xv yv)
   (if (= xv 0)

@@ -1,14 +1,15 @@
-#include <SDL2/SDL.h>
 #include <cuttle/debug.h>
 #include <libguile.h>
+
+#include "dungeon.h"
 #include "level.h"
 #include "game.h"
+#include "save.h"
 
 void inner_main()
 {
 	initialize_game();
 	main_game_loop();
-	SDL_Quit();
 }
 
 int main(int argc, char *argv[])

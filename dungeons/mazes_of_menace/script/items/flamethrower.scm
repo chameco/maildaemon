@@ -1,0 +1,20 @@
+(define (flamethrower-random-angle-offset) (/ (- (modulo (random-integer) 50) 25) 100))
+
+(build-item-prototype "flamethrower"
+                      (lambda (i data)
+                        (let ((c (get-item-charge i)))
+                         (if (is-item-active i)
+                           (if (> c 5)
+                             (begin
+                               (let ((x (+ (get-item-x i) 12))
+                                     (y (get-item-y i))
+                                     (r (get-item-rotation i)))
+                               (spawn-projectile (make-projectile "flamethrower" x y (+ r (flamethrower-random-angle-offset)) i))
+                               (spawn-projectile (make-projectile "flamethrower" x y (+ r (flamethrower-random-angle-offset)) i))
+                               (spawn-projectile (make-projectile "flamethrower" x y (+ r (flamethrower-random-angle-offset)) i))
+                               (spawn-projectile (make-projectile "flamethrower" x y (+ r (flamethrower-random-angle-offset)) i))
+                               (spawn-projectile (make-projectile "flamethrower" x y (+ r (flamethrower-random-angle-offset)) i))
+                               (spawn-projectile (make-projectile "flamethrower" x y (+ r (flamethrower-random-angle-offset)) i))
+                               (spawn-projectile (make-projectile "flamethrower" x y (+ r (flamethrower-random-angle-offset)) i))
+                               (set-item-charge i (- c 1)))))
+                           (if (<= c 100) (set-item-charge i (+ c 1)))))))

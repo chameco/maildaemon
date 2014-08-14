@@ -18,8 +18,9 @@ typedef struct projectile {
 
 void initialize_projectile();
 void reset_projectile();
-void build_projectile_prototype(char *name, double speed, int w, int h, int longevity, int dmg);
-void spawn_projectile(char *name, double x, double y, double rotation, item *spawned_by);
+projectile *build_projectile_prototype(char *name, double speed, int w, int h, int longevity, int dmg);
+projectile *make_projectile(char *name, double x, double y, double rotation, item *spawned_by);
+void spawn_projectile(projectile *e);
 void check_projectile_collisions(projectile *p);
 void destroy_projectile(projectile *p);
 void update_projectile();
