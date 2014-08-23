@@ -63,6 +63,8 @@ void initialize_projectile()
 	scm_c_define_gsubr("build-projectile-prototype", 6, 0, 0, __api_build_projectile_prototype);
 	scm_c_define_gsubr("make-projectile", 5, 0, 0, __api_make_projectile);
 	scm_c_define_gsubr("spawn-projectile", 1, 0, 0, __api_spawn_projectile);
+
+	load_all("script/projectiles");
 }
 
 void reset_projectile()
@@ -135,8 +137,8 @@ void check_projectile_collisions(projectile *p)
 	if (p->spawned_by != get_player_item()) {
 		b.x = get_player_x();
 		b.y = get_player_y();
-		b.w = get_player_w();
-		b.h = get_player_h();
+		b.w = get_player_stat("width");
+		b.h = get_player_stat("height");
 		if (!check_collision(a, b)) {
 			hit_player(p->dmg);
 			destroy_projectile(p);

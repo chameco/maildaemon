@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <dirent.h>
 #include <math.h>
 
 #include <SDL2/SDL_image.h>
@@ -45,6 +46,11 @@ SCM __api_make_color(SCM r, SCM g, SCM b, SCM a)
 	return scm_new_smob(__api_color_tag, (unsigned long) c);
 }
 
+SCM __api_get_tile_dim()
+{
+	return scm_from_int(TILE_DIM);
+}
+
 SCM __api_calculate_angle(SCM ox, SCM oy, SCM px, SCM py)
 {
 	return scm_from_double(calculate_angle(scm_to_double(ox), scm_to_double(oy), scm_to_double(px), scm_to_double(py)));
@@ -72,6 +78,7 @@ void initialize_utils()
 
 	__api_color_tag = scm_make_smob_type("color", sizeof(color));
 	scm_c_define_gsubr("make-color", 4, 0, 0, __api_make_color);
+	scm_c_define_gsubr("get-tile-dim", 0, 0, 0, __api_get_tile_dim);
 	scm_c_define_gsubr("calculate-angle", 4, 0, 0, __api_calculate_angle);
 	scm_c_define_gsubr("is-unbroken-line", 4, 0, 0, __api_is_unbroken_line);
 	scm_c_define_gsubr("random-integer", 0, 0, 0, __api_rand);
@@ -85,6 +92,26 @@ GLuint get_standard_indices_handler()
 GLuint get_standard_vertices_handler()
 {
 	return STANDARD_VERTICES_HANDLER;
+}
+
+void load_all(char *dir)
+{
+	char buf[256];
+	DIR *d = opendir(dir);
+	struct dirent *entry;
+	if (d != NULL) {
+		while ((entry = readdir(d))) {
+			char *pos = strrchr(entry->d_name, '.');
+			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
+				sprintf(buf, "%s/%s", dir, entry->d_name);
+				scm_c_primitive_load(buf);
+			}
+		}
+		closedir(d);
+	} else {
+		log_err("Directory \"%s\" does not exist", dir);
+		exit(1);
+	}
 }
 
 bool check_collision(SDL_Rect A, SDL_Rect B)

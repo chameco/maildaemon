@@ -6,5 +6,6 @@
 (spawn-entity (make-sign 128 32 "Hiya"))
 
 (spawn-entity (make-entity "acid_blob" 256 288))
+(spawn-entity (make-entity "gelatinous_cube" 288 288))
 
 (set-current-dialog "Entering the dungeons of doom is unsafe.\nFind a better hobby, adventurer.")

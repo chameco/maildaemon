@@ -109,6 +109,8 @@ void initialize_item()
 	scm_c_define_gsubr("get-item-y", 1, 0, 0, __api_get_item_y);
 	scm_c_define_gsubr("activate-item", 2, 0, 0, __api_activate_item);
 	scm_c_define_gsubr("deactivate-item", 1, 0, 0, __api_deactivate_item);
+
+	load_all("script/items");
 }
 
 scm_t_bits get_item_tag()

@@ -116,8 +116,7 @@ texture *load_texture(char *path, int w, int h)
 		texture *cached = (texture *) malloc(sizeof(texture));
 		SDL_Surface *surface = IMG_Load(path);
 		if (surface == NULL) {
-			log_err("File %s does not exist", path);
-			exit(1);
+			return NULL;
 		}
 		cached->texture = surface_to_texture(surface);
 		cached->w = (w == 0) ? surface->w : w;

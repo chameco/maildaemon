@@ -18,6 +18,8 @@ void initGL();
 SDL_Window *get_screen();
 int get_screen_width();
 int get_screen_height();
+void mode_standard_gui_update();
+void mode_standard_gui_draw();
 void define_mode(char *name, thunk init, thunk update, thunk draw);
 void set_current_dialog(char *text);
 char *get_current_dialog();

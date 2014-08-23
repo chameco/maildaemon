@@ -2,8 +2,8 @@
 *.pyc
 a.out
 build_*
-level_editor
 maildaemon
+saves
 *.exe
 *.dll
 *.so

@@ -21,20 +21,12 @@
 #include "game.h"
 #include "level.h"
 
+static hash_map *PLAYER_STATS;
+
 static double PLAYER_X = 0;
 static double PLAYER_Y = 0;
 static bool PLAYER_PRESSED[4] = {0, 0, 0, 0};
-static const double PLAYER_MOVE_SPEED = 6; //Pixels per second
-static const double PLAYER_DIAG_SPEED = 5;
-static const int PLAYER_WIDTH = TILE_DIM;
-static const int PLAYER_HEIGHT = (TILE_DIM)/2;
 static direction PLAYER_FACING = 0;
-static double PLAYER_EXP = 0;
-static double PLAYER_EXP_TO_NEXT = 100;
-static int PLAYER_LEVEL = 0;
-static double PLAYER_MAX_HEALTH = 100;
-static double PLAYER_HEALTH;
-static double PLAYER_REGEN = 0.1;
 static texture *PLAYER_TEXTURE;
 static const int PLAYER_ANIM_STEP_TIMING = 8;
 static int PLAYER_ANIM_STEP = 0;
@@ -51,45 +43,18 @@ SCM __api_get_player_y()
 	return scm_from_double(get_player_y());
 }
 
-SCM __api_get_player_w()
+SCM __api_get_player_stat(SCM k)
 {
-	return scm_from_int(get_player_w());
+	char *s = scm_to_locale_string(k);
+	return scm_from_double(get_player_stat(s));
+	free(s);
 }
 
-SCM __api_get_player_h()
+SCM __api_set_player_stat(SCM k, SCM v)
 {
-	return scm_from_int(get_player_h());
-}
-
-SCM __api_get_player_health()
-{
-	return scm_from_double(get_player_health());
-}
-
-SCM __api_get_player_max_health()
-{
-	return scm_from_double(get_player_max_health());
-}
-
-SCM __api_get_player_charge_percent()
-{
-	return scm_from_int(get_player_charge_percent());
-}
-
-SCM __api_get_player_exp()
-{
-	return scm_from_double(get_player_exp());
-}
-
-SCM __api_get_player_exp_to_next()
-{
-	return scm_from_double(get_player_exp_to_next());
-}
-
-SCM __api_set_player_item(SCM i, SCM w)
-{
-	item *weap = (item *) SCM_SMOB_DATA(w);
-	set_player_item(scm_to_int(i), weap);
+	char *s = scm_to_locale_string(k);
+	set_player_stat(s, scm_to_double(v));
+	free(s);
 	return SCM_BOOL_F;
 }
 
@@ -98,9 +63,11 @@ SCM __api_get_player_item()
 	return scm_new_smob(get_item_tag(), (unsigned long) get_player_item());
 }
 
-SCM __api_get_player_level()
+SCM __api_set_player_item(SCM i, SCM w)
 {
-	return scm_from_int(get_player_level());
+	item *weap = (item *) SCM_SMOB_DATA(w);
+	set_player_item(scm_to_int(i), weap);
+	return SCM_BOOL_F;
 }
 
 SCM __api_hit_player(SCM dmg)
@@ -135,27 +102,22 @@ SCM __api_use_player_item(SCM pressed, SCM rot)
 
 void initialize_player()
 {
-	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
-
+	PLAYER_STATS = make_hash_map();
 	PLAYER_TEXTURE = load_texture("textures/player.png", 8, 8);
 
 	scm_c_define_gsubr("get-player-x", 0, 0, 0, __api_get_player_x);
 	scm_c_define_gsubr("get-player-y", 0, 0, 0, __api_get_player_y);
-	scm_c_define_gsubr("get-player-w", 0, 0, 0, __api_get_player_w);
-	scm_c_define_gsubr("get-player-h", 0, 0, 0, __api_get_player_h);
-	scm_c_define_gsubr("get-player-health", 0, 0, 0, __api_get_player_health);
-	scm_c_define_gsubr("get-player-max-health", 0, 0, 0, __api_get_player_max_health);
-	scm_c_define_gsubr("get-player-charge-percent", 0, 0, 0, __api_get_player_charge_percent);
-	scm_c_define_gsubr("get-player-exp", 0, 0, 0, __api_get_player_exp);
-	scm_c_define_gsubr("get-player-exp-to-next", 0, 0, 0, __api_get_player_exp_to_next);
+	scm_c_define_gsubr("get-player-stat", 1, 0, 0, __api_get_player_stat);
+	scm_c_define_gsubr("set-player-stat", 2, 0, 0, __api_set_player_stat);
 	scm_c_define_gsubr("set-player-item", 2, 0, 0, __api_set_player_item);
 	scm_c_define_gsubr("get-player-item", 0, 0, 0, __api_get_player_item);
-	scm_c_define_gsubr("get-player-level", 0, 0, 0, __api_get_player_level);
 	scm_c_define_gsubr("hit-player", 1, 0, 0, __api_hit_player);
 	scm_c_define_gsubr("give-player-exp", 1, 0, 0, __api_give_player_exp);
 	scm_c_define_gsubr("warp-player", 2, 0, 0, __api_warp_player);
 	scm_c_define_gsubr("set-player-item-index", 1, 0, 0, __api_set_player_item_index);
 	scm_c_define_gsubr("use-player-item", 2, 0, 0, __api_use_player_item);
+
+	load_all("script/players");
 }
 
 void reset_player()
@@ -164,12 +126,10 @@ void reset_player()
 	memset(PLAYER_PRESSED, 0, sizeof(PLAYER_PRESSED));
 	PLAYER_X = PLAYER_Y = 0;
 	PLAYER_FACING = 0;
-	PLAYER_EXP = 0;
-	PLAYER_EXP_TO_NEXT = 100;
-	PLAYER_LEVEL = 0;
-	PLAYER_HEALTH = PLAYER_MAX_HEALTH;
 	PLAYER_ANIM_STEP = 0;
 	PLAYER_ITEM_INDEX = 0;
+
+	load_all("script/players");
 }
 
 double get_player_x()
@@ -182,44 +142,32 @@ double get_player_y()
 	return PLAYER_Y;
 }
 
-int get_player_w()
+double get_player_stat(char *k)
 {
-	return PLAYER_WIDTH;
+	double *v;
+	if ((v = get_hash(PLAYER_STATS, k)) == NULL) {
+		log_err("Player stat \"%s\" does not exist", k);
+		exit(1);
+	} else {
+		return *v;
+	}
 }
 
-int get_player_h()
+void set_player_stat(char *k, double v)
 {
-	return PLAYER_HEIGHT;
+	double *p;
+	if ((p = get_hash(PLAYER_STATS, k)) == NULL) {
+		p = (double *) malloc(sizeof(double));
+		*p = v;
+		set_hash(PLAYER_STATS, k, p);
+	} else {
+		*p = v;
+	}
 }
 
-double get_player_health()
+item *get_player_item()
 {
-	return PLAYER_HEALTH;
-}
-
-double get_player_max_health()
-{
-	return PLAYER_MAX_HEALTH;
-}
-
-double get_player_charge_percent()
-{
-	return PLAYER_ITEMS[PLAYER_ITEM_INDEX]->charge;
-}
-
-double get_player_exp()
-{
-	return PLAYER_EXP;
-}
-
-double get_player_exp_to_next()
-{
-	return PLAYER_EXP_TO_NEXT;
-}
-
-int get_player_level()
-{
-	return PLAYER_LEVEL;
+	return PLAYER_ITEMS[PLAYER_ITEM_INDEX];
 }
 
 void set_player_item(int i, item *it)
@@ -229,24 +177,22 @@ void set_player_item(int i, item *it)
 	it->y = &PLAYER_Y;
 }
 
-item *get_player_item()
-{
-	return PLAYER_ITEMS[PLAYER_ITEM_INDEX];
-}
-
 void hit_player(int dmg)
 {
-	PLAYER_HEALTH -= dmg;
+	set_player_stat("health", get_player_stat("health") - dmg);
 }
 
 void give_player_exp(double exp)
 {
-	PLAYER_EXP += exp;
-	if (PLAYER_EXP >= PLAYER_EXP_TO_NEXT) {
-		PLAYER_EXP = PLAYER_EXP - PLAYER_EXP_TO_NEXT;
-		PLAYER_EXP_TO_NEXT += 50;
-		PLAYER_LEVEL += 1;
-		PLAYER_HEALTH = PLAYER_MAX_HEALTH;
+	double cur = get_player_stat("exp");
+	double next = get_player_stat("exp_to_next");
+	cur += exp;
+	if (cur >= next) {
+		set_player_stat("exp", cur - next);
+		next += 50;
+		set_player_stat("level", get_player_stat("level") + 1);
+	} else {
+		set_player_stat("exp", cur);
 	}
 }
 
@@ -286,7 +232,10 @@ void set_player_movement(bool pressed, direction d)
 
 void update_player()
 {
-	if (PLAYER_HEALTH <= 0.0) {
+	double health = get_player_stat("health");
+	double max_health = get_player_stat("max_health");
+	double regen = get_player_stat("regen");
+	if (health <= 0.0) {
 		set_mode("game_over");
 		return;
 	}
@@ -300,44 +249,47 @@ void update_player()
 		set_sheet_column(PLAYER_TEXTURE, 0);
 	}
 
-	if (PLAYER_HEALTH <= PLAYER_MAX_HEALTH-PLAYER_REGEN) {
-		PLAYER_HEALTH += PLAYER_REGEN;
-	} else if (PLAYER_HEALTH < PLAYER_MAX_HEALTH) {
-		PLAYER_HEALTH = PLAYER_MAX_HEALTH;
+	if (health <= max_health - regen) {
+		set_player_stat("health", health + regen);
+	} else if (health < max_health) {
+		set_player_stat("health", max_health);
 	}
 
 	int tempx = PLAYER_X;
 	int tempy = PLAYER_Y;
 
+	double move_speed = get_player_stat("move_speed");
+	double diag_speed = get_player_stat("diag_speed");
+
 	if (PLAYER_PRESSED[DIR_NORTH]) {
 		if (PLAYER_PRESSED[DIR_WEST] || PLAYER_PRESSED[DIR_EAST]) {
-			tempy -= PLAYER_DIAG_SPEED;
+			tempy -= diag_speed;
 		} else {
-			tempy -= PLAYER_MOVE_SPEED;
+			tempy -= move_speed;
 		}
 	}
 
 	if (PLAYER_PRESSED[DIR_SOUTH]) {
 		if (PLAYER_PRESSED[DIR_WEST] || PLAYER_PRESSED[DIR_EAST]) {
-			tempy += PLAYER_DIAG_SPEED;
+			tempy += diag_speed;
 		} else {
-			tempy += PLAYER_MOVE_SPEED;
+			tempy += move_speed;
 		}
 	}
 
 	if (PLAYER_PRESSED[DIR_WEST]) {
 		if (PLAYER_PRESSED[DIR_NORTH] || PLAYER_PRESSED[DIR_SOUTH]) {
-			tempx -= PLAYER_DIAG_SPEED;
+			tempx -= diag_speed;
 		} else {
-			tempx -= PLAYER_MOVE_SPEED;
+			tempx -= move_speed;
 		}
 	}
 
 	if (PLAYER_PRESSED[DIR_EAST]) {
 		if (PLAYER_PRESSED[DIR_NORTH] || PLAYER_PRESSED[DIR_SOUTH]) {
-			tempx += PLAYER_DIAG_SPEED;
+			tempx += diag_speed;
 		} else {
-			tempx += PLAYER_MOVE_SPEED;
+			tempx += move_speed;
 		}
 	}
 
@@ -363,8 +315,8 @@ void update_player()
 	SDL_Rect player = {
 		PLAYER_X,
 		PLAYER_Y,
-		PLAYER_WIDTH,
-		PLAYER_HEIGHT
+		get_player_stat("width"),
+		get_player_stat("height")
 	};
 	SDL_Rect b;
 	int shouldmovex = 1;

@@ -12,6 +12,9 @@
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
+#include "utils.h"
+#include "texture.h"
+
 static char CURRENT_DUNGEON[256] = {0};
 
 SCM __api_set_dungeon(SCM d)
@@ -36,15 +39,19 @@ void initialize_dungeon()
 void set_dungeon(char *dungeon)
 {
 	strcpy(CURRENT_DUNGEON, dungeon);
-	dungeon_load_all("script/projectiles");
-	dungeon_load_all("script/items");
 	dungeon_load_all("script/entities");
-	dungeon_load_all("script/players");
 }
 
 char *get_dungeon()
 {
 	return CURRENT_DUNGEON;
+}
+
+texture *dungeon_load_texture(char *path, int w, int h)
+{
+	char buf[256];
+	sprintf(buf, "dungeons/%s/%s", CURRENT_DUNGEON, path);
+	return load_texture(buf, w, h);
 }
 
 SCM dungeon_load(char *path)
@@ -58,21 +65,7 @@ void dungeon_load_all(char *dir)
 {
 	char buf[256];
 	sprintf(buf, "dungeons/%s/%s", CURRENT_DUNGEON, dir);
-	DIR *d = opendir(buf);
-	struct dirent *entry;
-	if (d != NULL) {
-		while ((entry = readdir(d))) {
-			char *pos = strrchr(entry->d_name, '.');
-			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
-				sprintf(buf, "dungeons/%s/%s/%s", CURRENT_DUNGEON, dir, entry->d_name);
-				scm_c_primitive_load(buf);
-			}
-		}
-		closedir(d);
-	} else {
-		log_err("Directory \"dungeons/%s/%s\" does not exist", CURRENT_DUNGEON, dir);
-		exit(1);
-	}
+	load_all(buf);
 }
 
 FILE *dungeon_fopen(char *path, char *mode)

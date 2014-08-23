@@ -85,23 +85,7 @@ void initialize_level()
 	scm_c_define_gsubr("get-level-ambience", 0, 0, 0, __api_get_level_ambience);
 	scm_c_define_gsubr("save-level", 0, 0, 0, __api_save_level);
 
-	DIR *d = opendir("script/levels/helpers");
-	struct dirent *entry;
-	char buf[256];
-	if (d != NULL) {
-		while ((entry = readdir(d))) {
-			char *pos = strrchr(entry->d_name, '.');
-			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
-				strcpy(buf, "script/levels/helpers/");
-				strcat(buf, entry->d_name);
-				scm_c_primitive_load(buf);
-			}
-		}
-		closedir(d);
-	} else {
-		log_err("Directory \"script/levels/helpers/\" does not exist");
-		exit(1);
-	}
+	load_all("script/levels/helpers");
 }
 
 void reset_level()

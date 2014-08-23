@@ -15,6 +15,7 @@
 #include <cuttle/utils.h>
 
 #include "utils.h"
+#include "dungeon.h"
 #include "texture.h"
 #include "level.h"
 #include "fx.h"
@@ -198,25 +199,8 @@ void initialize_entity()
 	scm_c_define_gsubr("give-entity-item", 2, 0, 0, __api_give_entity_item);
 	scm_c_define_gsubr("move-entity", 2, 0, 0, __api_move_entity);
 
-	DIR *d = opendir("script/entities/helpers");
-	struct dirent *entry;
-	char buf[256];
-	char *pos;
-
-	if (d != NULL) {
-		while ((entry = readdir(d))) {
-			pos = strrchr(entry->d_name, '.');
-			if (pos != NULL && strcmp(pos + 1, "scm") == 0) {
-				strcpy(buf, "script/entities/helpers/");
-				strcat(buf, entry->d_name);
-				scm_c_primitive_load(buf);
-			}
-		}
-		closedir(d);
-	} else {
-		log_err("Directory \"script/entities/helpers\" does not exist");
-		exit(1);
-	}
+	load_all("script/entities/helpers");
+	load_all("script/entities");
 }
 
 list_node *get_entities()
@@ -295,7 +279,12 @@ entity *make_entity(char *name, double x, double y)
 	char buf[256] = "textures/entities/";
 	strncat(buf, name, sizeof(buf) - strlen(buf) - 5);
 	strcat(buf, ".png");
-	ret->t = load_texture(buf, 8, 8);
+	if (!(ret->t = dungeon_load_texture(buf, 8, 8))) {
+		if (!(ret->t = load_texture(buf, 8, 8))) {
+			log_err("No texture found for entity \"%s\"", name);
+			exit(1);
+		}
+	}
 	ret->x = x;
 	ret->y = y;
 	if (scm_is_true(ret->init_func)) {
@@ -370,8 +359,8 @@ void check_entity_collisions(entity *e)
 
 	b.x = get_player_x();
 	b.y = get_player_y();
-	b.w = get_player_w();
-	b.h = get_player_h();
+	b.w = get_player_stat("width");
+	b.h = get_player_stat("height");
 
 	double tempx = e->x + e->xv;
 	double tempy = e->y + e->yv;

@@ -1,0 +1,5 @@
+(define (generate-collide-damage dmg)
+  (lambda (e data)
+    (if (= data 0)
+      (hit-player dmg))
+    data))

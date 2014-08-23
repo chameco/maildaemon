@@ -84,6 +84,17 @@ SCM __api_define_mode(SCM name, SCM init, SCM update, SCM draw)
 	return SCM_BOOL_F;
 }
 
+SCM __api_define_standard_gui_mode(SCM name, SCM init)
+{
+	char *t = scm_to_locale_string(name);
+	define_mode(t,
+			make_thunk_scm(init),
+			make_thunk(mode_standard_gui_update),
+			make_thunk(mode_standard_gui_draw));
+	free(t);
+	return SCM_BOOL_F;
+}
+
 SCM __api_set_running(SCM b)
 {
 	set_running(scm_to_bool(b));
@@ -98,7 +109,7 @@ SCM __api_set_mode(SCM mode)
 	return SCM_BOOL_F;
 }
 
-static void mode_standard_gui_update()
+void mode_standard_gui_update()
 {
 	SDL_Event event;
 	while(SDL_PollEvent(&event)) {
@@ -120,7 +131,7 @@ static void mode_standard_gui_update()
 	}
 }
 
-static void mode_standard_gui_draw()
+void mode_standard_gui_draw()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -196,7 +207,7 @@ static void mode_text_entry_draw()
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 
-	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_w()/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_h()/2) * CAMERA_SCALE, 0);
+	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_stat("width")/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_stat("height")/2) * CAMERA_SCALE, 0);
 	glScalef(CAMERA_SCALE, CAMERA_SCALE, 1.0);
 
 	apply_global_fx();
@@ -327,7 +338,7 @@ static void mode_main_draw()
 	glPushMatrix();
 
 	//glTranslatef(SCREEN_WIDTH/2 - get_player_x(), SCREEN_HEIGHT/2 - get_player_y(), 0);
-	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_w()/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_h()/2) * CAMERA_SCALE, 0);
+	glTranslatef(SCREEN_WIDTH/2 - (get_player_x() + get_player_stat("width")/2) * CAMERA_SCALE, SCREEN_HEIGHT/2 - (get_player_y() + get_player_stat("height")/2) * CAMERA_SCALE, 0);
 	glScalef(CAMERA_SCALE, CAMERA_SCALE, 1.0);
 
 	apply_global_fx();
@@ -361,6 +372,7 @@ void initialize_game()
 	scm_c_define_gsubr("set-current-dialog", 1, 0, 0, __api_set_current_dialog);
 	scm_c_define_gsubr("get-current-dialog", 0, 0, 0, __api_get_current_dialog);
 	scm_c_define_gsubr("define-mode", 4, 0, 0, __api_define_mode);
+	scm_c_define_gsubr("define-standard-gui-mode", 2, 0, 0, __api_define_standard_gui_mode);
 	scm_c_define_gsubr("set-running", 1, 0, 0, __api_set_running);
 	scm_c_define_gsubr("set-mode", 1, 0, 0, __api_set_mode);
 
@@ -399,8 +411,8 @@ void initialize_game()
 	initGL();
 	IMG_Init(IMG_INIT_PNG);
 	Mix_Init(MIX_INIT_OGG);
-
 	Mix_OpenAudio(22050, AUDIO_S16, 2, 4096);
+
 	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
 
 	initialize_utils();
@@ -417,14 +429,6 @@ void initialize_game()
 	initialize_gui();
 	initialize_level();
 
-	define_mode("main_menu",
-			make_thunk_scm(scm_c_primitive_load("script/gui/menu.scm")),
-			make_thunk(mode_standard_gui_update),
-			make_thunk(mode_standard_gui_draw));
-	define_mode("new_game",
-			make_thunk_scm(scm_c_primitive_load("script/gui/new_game.scm")),
-			make_thunk(mode_standard_gui_update),
-			make_thunk(mode_standard_gui_draw));
 	define_mode("text_entry",
 			make_thunk(NULL),
 			make_thunk(mode_text_entry_update),
@@ -433,14 +437,10 @@ void initialize_game()
 			make_thunk_scm(scm_c_primitive_load("script/gui/main.scm")),
 			make_thunk(mode_main_update),
 			make_thunk(mode_main_draw));
-	define_mode("game_over",
-			make_thunk_scm(scm_c_primitive_load("script/gui/game_over.scm")),
-			make_thunk(mode_standard_gui_update),
-			make_thunk(mode_standard_gui_draw));
+
+	load_all("script/init");
 
 	set_mode("main_menu");
-
-	//Mix_PlayMusic(Mix_LoadMUS("music/menu.ogg"), -1);
 }
 
 void initGL()
@@ -517,10 +517,7 @@ void take_screenshot(char *path)
 	void *temp_row;
 	 
 	temp_row = malloc(image->pitch);
-	if (temp_row == NULL) {
-			log_err("Not enough memory for image inversion");
-	}
-	for(index = 0; index < image->h/2; index++)    {
+	for (index = 0; index < image->h/2; index++) {
 		memcpy((Uint8 *) temp_row, (Uint8 *) image->pixels + image->pitch * index, image->pitch);
 		memcpy((Uint8 *) image->pixels + image->pitch * index, (Uint8 *) image->pixels + image->pitch * (image->h - index-1), image->pitch);
 		memcpy((Uint8 *) image->pixels + image->pitch * (image->h - index-1), temp_row, image->pitch);
@@ -537,8 +534,9 @@ void set_running(bool b)
 
 void set_mode(char *s)
 {
-	CURRENT_MODE = get_hash(MODE_CALLBACKS, s);
-	execute_thunk(CURRENT_MODE->init);
+	if ((CURRENT_MODE = get_hash(MODE_CALLBACKS, s)) != NULL) {
+		execute_thunk(CURRENT_MODE->init);
+	}
 }
 
 void reset_game()

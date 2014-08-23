@@ -24,8 +24,7 @@ SCM __api_save_game(SCM slot)
 
 SCM __api_load_game(SCM slot)
 {
-	load_game(scm_to_int(slot));
-	return SCM_BOOL_F;
+	return scm_from_bool(load_game(scm_to_int(slot)));
 }
 
 void initialize_save()
@@ -37,24 +36,21 @@ void initialize_save()
 void save_game(int slot)
 {
 	char path[256];
-	sprintf(path, "characters/%d.sav", slot);
+	sprintf(path, "saves/%d.sav", slot);
 	FILE *f = fopen(path, "w+");
 	savegame s;
 	strcpy(s.dungeon_name, get_dungeon());
 	strcpy(s.level_name, get_current_level()->name);
 	s.player_x = get_current_spawn_x();
 	s.player_y = get_current_spawn_y();
-	s.player_exp = get_player_exp();
-	s.player_exp_to_next = get_player_exp_to_next();
-	s.player_level = get_player_level();
 	fwrite(&s, sizeof(savegame), 1, f);
 	fclose(f);
 }
 
-void load_game(int slot)
+bool load_game(int slot)
 {
 	char path[256];
-	sprintf(path, "characters/%d.sav", slot);
+	sprintf(path, "saves/%d.sav", slot);
 	FILE *f = fopen(path, "r");
 	if (f != NULL) {
 		savegame *s = (savegame *) malloc(sizeof(savegame));
@@ -63,5 +59,7 @@ void load_game(int slot)
 		switch_level(s->level_name);
 		warp_player(s->player_x, s->player_y);
 		fclose(f);
+		return true;
 	}
+	return false;
 }

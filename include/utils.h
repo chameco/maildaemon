@@ -56,6 +56,8 @@ void initialize_utils();
 GLuint get_standard_indices_handler();
 GLuint get_standard_vertices_handler();
 
+void load_all(char *dir);
+
 bool check_collision(SDL_Rect A, SDL_Rect B);
 double calculate_angle(double originx, double originy, double pointx, double pointy);
 line_point *bresenham_line(double x0, double y0, double x1, double y1);
