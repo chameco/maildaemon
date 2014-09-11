@@ -1,1 +1,1 @@
-(define (generate-init-standard) (lambda (e) 0))
+(define (generate-init-standard) (lambda (e) (list 0)))

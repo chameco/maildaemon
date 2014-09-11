@@ -1,31 +1,32 @@
 (define GRID_BUG (build-entity-prototype "grid_bug" 32 32 10 8 2))
+(define XAN (build-entity-prototype "xan" 32 32 30 8 2))
 
-(set-entity-init
-  GRID_BUG
-  (lambda (e)
-    (list (cons (get-entity-x e) (get-entity-y e)) 0 0)))
+(let ((init (lambda (e) (list (cons (get-entity-x e) (get-entity-y e)) 0 0)))
+      (generate-collide (lambda (dmg)
+                          (lambda (e data)
+                            (if (= (cadr data) 0)
+                              (begin
+                                (hit-player dmg)
+                                (set-entity-xv e (- (get-entity-xv e)))
+                                (set-entity-yv e (- (get-entity-yv e)))
+                                (list (cons (get-entity-x e) (get-entity-y e)) 5 (caddr data)))
+                              data))))
+      (update (lambda (e data)
+                (let ((curpos (cons (get-entity-x e) (get-entity-y e)))
+                      (t (get-entity-texture e)))
+                  (if (zero? (caddr data))
+                    (set-sheet-column t (modulo (+ (get-sheet-column t) 1) 3)))
+                  (if (and (equal? curpos (car data)) (= (cadr data) 0))
+                    (begin
+                      (set-entity-xv e (- (get-entity-xv e)))
+                      (set-entity-yv e (- (get-entity-yv e)))
+                      (list curpos (cadr data) (modulo (+ (caddr data) 1) 3)))
+                    (list curpos (max (- (cadr data) 1) 0) (modulo (+ (caddr data) 1) 3)))))))
 
-(set-entity-collide
-  GRID_BUG
-  (lambda (e data)
-    (if (= (cadr data) 0)
-      (begin
-        (hit-player 10)
-        (set-entity-xv e (- (get-entity-xv e)))
-        (set-entity-yv e (- (get-entity-yv e)))
-        (list (cons (get-entity-x e) (get-entity-y e)) 5 (caddr data)))
-      data)))
+  (set-entity-init GRID_BUG init)
+  (set-entity-collide GRID_BUG (generate-collide 10))
+  (set-entity-update GRID_BUG update)
 
-(set-entity-update
-  GRID_BUG
-  (lambda (e data)
-    (let ((curpos (cons (get-entity-x e) (get-entity-y e)))
-          (t (get-entity-texture e)))
-     (if (zero? (caddr data))
-       (set-sheet-column t (modulo (+ (get-sheet-column t) 1) 3)))
-     (if (and (equal? curpos (car data)) (= (cadr data) 0))
-       (begin
-         (set-entity-xv e (- (get-entity-xv e)))
-         (set-entity-yv e (- (get-entity-yv e)))
-         (list curpos (cadr data) (modulo (+ (caddr data) 1) 3)))
-       (list curpos (max (- (cadr data) 1) 0) (modulo (+ (caddr data) 1) 3))))))
+  (set-entity-init XAN init)
+  (set-entity-collide XAN (generate-collide 30))
+  (set-entity-update XAN update))

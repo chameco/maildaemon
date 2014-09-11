@@ -15,10 +15,10 @@
           (set-entity-xv e (* (cos theta) (get-entity-speed e)))
           (set-entity-yv e (* (sin theta) (get-entity-speed e)))
           (let ((t (get-entity-texture e)))
-           (if (zero? data)
+           (if (zero? (car data))
              (set-sheet-column t (modulo (+ (get-sheet-column t) 1) frames)))))
         (begin
           (set-entity-xv e 0)
           (set-entity-yv e 0)
           (set-sheet-column (get-entity-texture e) 0)))
-      (modulo (+ data 1) time))))
+      (cons (modulo (+ (car data) 1) time) (cdr data)))))
