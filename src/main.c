@@ -1,5 +1,5 @@
 #include <cuttle/debug.h>
-#include <libguile.h>
+#include <solid.h>
 
 #include "dungeon.h"
 #include "level.h"
