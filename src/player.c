@@ -9,7 +9,7 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -33,71 +33,68 @@ static int PLAYER_ANIM_STEP = 0;
 static item *PLAYER_ITEMS[10] = {NULL};
 static int PLAYER_ITEM_INDEX = 0;
 
-SCM __api_get_player_x()
+void __api_get_player_x(solid_vm *vm)
 {
-	return scm_from_double(get_player_x());
+	vm->regs[255] = solid_double(vm, get_player_x());
 }
 
-SCM __api_get_player_y()
-{
-	return scm_from_double(get_player_y());
+void __api_get_player_y(solid_vm *vm) {
+	vm->regs[255] = solid_double(vm, get_player_y());
 }
 
-SCM __api_get_player_stat(SCM k)
+void __api_get_player_stat(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(k);
-	return scm_from_double(get_player_stat(s));
-	free(s);
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, get_player_stat(s));
 }
 
-SCM __api_set_player_stat(SCM k, SCM v)
+void __api_set_player_stat(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(k);
-	set_player_stat(s, scm_to_double(v));
-	free(s);
-	return SCM_BOOL_F;
+	double v = solid_get_double_value(solid_pop_stack(vm));
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	set_player_stat(s, v);
 }
 
-SCM __api_get_player_item()
+void __api_get_player_item(solid_vm *vm)
 {
-	return scm_new_smob(get_item_tag(), (unsigned long) get_player_item());
+	vm->regs[255] = solid_struct(vm, get_player_item());
 }
 
-SCM __api_set_player_item(SCM i, SCM w)
+void __api_set_player_item(solid_vm *vm)
 {
-	item *weap = (item *) SCM_SMOB_DATA(w);
-	set_player_item(scm_to_int(i), weap);
-	return SCM_BOOL_F;
+	solid_object *o = solid_pop_stack(vm);
+	item *weap = solid_get_struct_value(o);
+	int index = solid_get_int_value(solid_pop_stack(vm));
+	set_player_item(index, weap);
 }
 
-SCM __api_hit_player(SCM dmg)
+void __api_hit_player(solid_vm *vm)
 {
-	hit_player(scm_to_int(dmg));
-	return SCM_BOOL_F;
+	hit_player(solid_get_int_value(solid_pop_stack(vm)));
 }
 
-SCM __api_give_player_exp(SCM exp)
+void __api_give_player_exp(solid_vm *vm)
 {
-	give_player_exp(scm_to_double(exp));
-	return SCM_BOOL_F;
+	give_player_exp(solid_get_double_value(solid_pop_stack(vm)));
 }
 
-SCM __api_warp_player(SCM x, SCM y)
+void __api_warp_player(solid_vm *vm)
 {
-	warp_player(scm_to_double(x), scm_to_double(y));
-	return SCM_BOOL_F;
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	warp_player(x, y);
 }
 
-SCM __api_set_player_item_index(SCM i)
+void __api_set_player_item_index(solid_vm *vm)
 {
-	set_player_item_index(scm_to_int(i));
-	return SCM_BOOL_F;
+	set_player_item_index(solid_get_int_value(solid_pop_stack(vm)));
 }
 
-SCM __api_use_player_item(SCM pressed, SCM rot)
+void __api_use_player_item(solid_vm *vm)
 {
-	use_player_item(scm_to_int(pressed), scm_to_double(rot));
-	return SCM_BOOL_F;
+	double rotation = solid_get_double_value(solid_pop_stack(vm));
+	int pressed = solid_get_double_value(solid_pop_stack(vm));
+	use_player_item(pressed, rotation);
 }
 
 void initialize_player()
@@ -105,17 +102,17 @@ void initialize_player()
 	PLAYER_STATS = make_hash_map();
 	PLAYER_TEXTURE = load_texture("textures/player.png", 8, 8);
 
-	scm_c_define_gsubr("get-player-x", 0, 0, 0, __api_get_player_x);
-	scm_c_define_gsubr("get-player-y", 0, 0, 0, __api_get_player_y);
-	scm_c_define_gsubr("get-player-stat", 1, 0, 0, __api_get_player_stat);
-	scm_c_define_gsubr("set-player-stat", 2, 0, 0, __api_set_player_stat);
-	scm_c_define_gsubr("set-player-item", 2, 0, 0, __api_set_player_item);
-	scm_c_define_gsubr("get-player-item", 0, 0, 0, __api_get_player_item);
-	scm_c_define_gsubr("hit-player", 1, 0, 0, __api_hit_player);
-	scm_c_define_gsubr("give-player-exp", 1, 0, 0, __api_give_player_exp);
-	scm_c_define_gsubr("warp-player", 2, 0, 0, __api_warp_player);
-	scm_c_define_gsubr("set-player-item-index", 1, 0, 0, __api_set_player_item_index);
-	scm_c_define_gsubr("use-player-item", 2, 0, 0, __api_use_player_item);
+	defun("get_player_x", __api_get_player_x);
+	defun("get_player_y", __api_get_player_y);
+	defun("get_player_stat", __api_get_player_stat);
+	defun("set_player_stat", __api_set_player_stat);
+	defun("get_player_item", __api_get_player_item);
+	defun("set_player_item", __api_set_player_item);
+	defun("hit_player", __api_hit_player);
+	defun("give_player_exp", __api_give_player_exp);
+	defun("warp_player", __api_warp_player);
+	defun("set_player_item_index", __api_set_player_item_index);
+	defun("use_player_item", __api_use_player_item);
 
 	load_all("script/players");
 }

@@ -4,9 +4,9 @@
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
-#include "cuttle/utils.h"
+#include <cuttle/utils.h>
 
 typedef enum direction {
 	DIR_NORTH=0,
@@ -31,12 +31,12 @@ typedef struct color {
 typedef enum thunk_type {
 	THUNK_NULL,
 	THUNK_C,
-	THUNK_SCM
+	THUNK_SOLID
 } thunk_type;
 
 typedef union thunk_data {
 	void (*cfunc)();
-	SCM scmfunc;
+	solid_object *solfunc;
 } thunk_data;
 
 typedef struct thunk {
@@ -53,9 +53,13 @@ color COLOR_GRAY;
 
 void initialize_utils();
 
+solid_vm *get_vm();
+void defun(char *s, void (*function)(solid_vm *vm));
+
 GLuint get_standard_indices_handler();
 GLuint get_standard_vertices_handler();
 
+solid_object *load(char *path);
 void load_all(char *dir);
 
 bool check_collision(SDL_Rect A, SDL_Rect B);
@@ -64,5 +68,5 @@ line_point *bresenham_line(double x0, double y0, double x1, double y1);
 bool is_unbroken_line(double x0, double y0, double x1, double y1);
 
 thunk make_thunk(void (*cfunc)());
-thunk make_thunk_scm(SCM scmfunc);
+thunk make_thunk_solid(solid_object *o);
 void execute_thunk(thunk cb);

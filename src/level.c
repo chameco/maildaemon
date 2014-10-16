@@ -7,7 +7,7 @@
 #include <string.h>
 #include <dirent.h>
 
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -28,48 +28,44 @@ static double CURRENT_SPAWN_Y = 0;
 static texture *TILE_SHEET = NULL;
 static texture *TILE_SHEET_TOP = NULL;
 
-SCM __api_switch_level(SCM name)
+void __api_switch_level(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(name);
+	char *s = solid_get_str_value(solid_pop_stack(vm));
 	switch_level(s);
-	free(s);
-	return SCM_BOOL_F;
 }
 
-SCM __api_set_tile(SCM x, SCM y, SCM tile)
+void __api_set_tile(solid_vm *vm)
 {
-	get_current_level()->tiles[scm_to_int(x)][scm_to_int(y)] = scm_to_int(tile);
-	return SCM_BOOL_F;
+	int tile = solid_get_int_value(solid_pop_stack(vm));
+	int y = solid_get_int_value(solid_pop_stack(vm));
+	int x = solid_get_int_value(solid_pop_stack(vm));
+	get_current_level()->tiles[x][y] = tile;
 }
 
-SCM __api_set_level_name(SCM name)
+void __api_set_level_name(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(name);
+	char *s = solid_get_str_value(solid_pop_stack(vm));
 	strcpy(get_current_level()->name, s);
-	free(s);
-	return SCM_BOOL_F;
 }
 
-SCM __api_get_level_name()
+void __api_get_level_name(solid_vm *vm)
 {
-	return scm_from_locale_string(get_current_level()->name);
+	vm->regs[255] = solid_str(vm, get_current_level()->name);
 }
 
-SCM __api_set_level_ambience(SCM a)
+void __api_set_level_ambience(solid_vm *vm)
 {
-	get_current_level()->ambience = scm_to_double(a);
-	return SCM_BOOL_F;
+	get_current_level()->ambience = solid_get_double_value(solid_pop_stack(vm));
 }
 
-SCM __api_get_level_ambience()
+void __api_get_level_ambience(solid_vm *vm)
 {
-	return scm_from_double(get_current_level()->ambience);
+	vm->regs[255] = solid_double(vm, get_current_level()->ambience);
 }
 
-SCM __api_save_level()
+void __api_save_level(solid_vm *vm)
 {
 	save_level(get_current_level());
-	return SCM_BOOL_F;
 }
 
 void initialize_level()
@@ -77,13 +73,13 @@ void initialize_level()
 	TILE_SHEET = load_texture("textures/tilesheet.png", 8, 8);
 	TILE_SHEET_TOP = load_texture("textures/tilesheet_top.png", 8, 8);
 
-	scm_c_define_gsubr("switch-level", 1, 0, 0, __api_switch_level);
-	scm_c_define_gsubr("set-tile", 3, 0, 0, __api_set_tile);
-	scm_c_define_gsubr("set-level-name", 1, 0, 0, __api_set_level_name);
-	scm_c_define_gsubr("get-level-name", 0, 0, 0, __api_get_level_name);
-	scm_c_define_gsubr("set-level-ambience", 1, 0, 0, __api_set_level_ambience);
-	scm_c_define_gsubr("get-level-ambience", 0, 0, 0, __api_get_level_ambience);
-	scm_c_define_gsubr("save-level", 0, 0, 0, __api_save_level);
+	defun("switch_level", __api_switch_level);
+	defun("set_tile", __api_set_tile);
+	defun("set_level_name", __api_set_level_name);
+	defun("get_level_name", __api_get_level_name);
+	defun("set_level_ambience", __api_set_level_ambience);
+	defun("get_level_ambience", __api_get_level_ambience);
+	defun("save_level", __api_save_level);
 
 	load_all("script/levels/helpers");
 }
@@ -125,7 +121,7 @@ level *load_level(char *name)
 		fread(ret, sizeof(level), 1, f);
 		fclose(f);
 		buf[bare] = 0x0;
-		strcat(buf, ".scm");
+		strcat(buf, ".sol");
 		char sbuf[256] = "script/";
 		strcat(sbuf, buf);
 		dungeon_load(sbuf);

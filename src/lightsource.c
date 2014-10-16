@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include <GL/glew.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -20,22 +20,20 @@ static list_node *LIGHTS;
 
 static texture *LIGHTMAP;
 
-static scm_t_bits __api_lightsource_tag;
-
-SCM __api_make_lightsource(SCM x, SCM y, SCM dim, SCM intensity, SCM c)
+void __api_make_lightsource(solid_vm *vm)
 {
-	color *col = (color *) SCM_SMOB_DATA(c);
-	lightsource *l = make_lightsource(scm_to_double(x), scm_to_double(y), scm_to_int(dim), scm_to_int(intensity), *col);
-	SCM ret = scm_new_smob(__api_lightsource_tag, (unsigned long) l);
-	scm_gc_protect_object(ret);
-	return ret;
+	color *col = solid_get_struct_value(solid_pop_stack(vm));
+	int intensity = solid_get_int_value(solid_pop_stack(vm));
+	int dim = solid_get_int_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	lightsource *l = make_lightsource(x, y, dim, intensity, *col);
+	vm->regs[255] = solid_struct(vm, l);
 }
 
-SCM __api_spawn_lightsource(SCM l)
+void __api_spawn_lightsource(solid_vm *vm)
 {
-	lightsource *light = (lightsource *) SCM_SMOB_DATA(l);
-	spawn_lightsource(light);
-	return SCM_BOOL_F;
+	spawn_lightsource(solid_get_struct_value(solid_pop_stack(vm)));
 }
 
 void initialize_lightsource()
@@ -43,9 +41,8 @@ void initialize_lightsource()
 	LIGHTS = make_list();
 	LIGHTMAP = load_texture("textures/lightmap.png", 0, 0);
 
-	__api_lightsource_tag = scm_make_smob_type("lightsource", sizeof(lightsource));
-	scm_c_define_gsubr("make-lightsource", 5, 0, 0, __api_make_lightsource);
-	scm_c_define_gsubr("spawn-lightsource", 1, 0, 0, __api_spawn_lightsource);
+	defun("make_lightsource", __api_make_lightsource);
+	defun("spawn_lightsource", __api_spawn_lightsource);
 }
 
 void reset_lightsource()

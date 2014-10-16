@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 #include <SDL2/SDL.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include "utils.h"
 

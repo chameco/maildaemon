@@ -10,6 +10,8 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 
+#include <solid/solid.h>
+
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
@@ -23,34 +25,33 @@ static list_node *PROJECTILES;
 
 static hash_map *PROJECTILE_PROTOTYPES;
 
-static scm_t_bits __api_projectile_tag;
-
-SCM __api_build_projectile_prototype(SCM name, SCM speed, SCM w, SCM h, SCM longevity, SCM dmg)
+void __api_build_projectile_prototype(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(name);
-	projectile *p = build_projectile_prototype(s, scm_to_double(speed), scm_to_int(w), scm_to_int(h), scm_to_int(longevity), scm_to_int(dmg));
-	free(s);
-	SCM ret = scm_new_smob(__api_projectile_tag, (unsigned long) p);
-	scm_gc_protect_object(ret);
-	return ret;
+	int damage = solid_get_int_value(solid_pop_stack(vm));
+	int longevity = solid_get_int_value(solid_pop_stack(vm));
+	int h = solid_get_int_value(solid_pop_stack(vm));
+	int w = solid_get_int_value(solid_pop_stack(vm));
+	double speed = solid_get_double_value(solid_pop_stack(vm));
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	projectile *p = build_projectile_prototype(s, speed, w, h, longevity, damage);
+	vm->regs[255] = solid_struct(vm, p);
 }
 
-SCM __api_make_projectile(SCM name, SCM x, SCM y, SCM rotation, SCM spawned_by)
+void __api_make_projectile(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(name);
-	item *sb = (item *) SCM_SMOB_DATA(spawned_by);
-	projectile *p = make_projectile(s, scm_to_double(x), scm_to_double(y), scm_to_double(rotation), sb);
-	free(s);
-	SCM ret = scm_new_smob(__api_projectile_tag, (unsigned long) p);
-	scm_gc_protect_object(ret);
-	return ret;
+	item *sb = solid_get_struct_value(solid_pop_stack(vm));
+	double rotation = solid_get_double_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	projectile *p = make_projectile(s, x, y, rotation, sb);
+	vm->regs[255] = solid_struct(vm, p);
 }
 
-SCM __api_spawn_projectile(SCM proj)
+void __api_spawn_projectile(solid_vm *vm)
 {
-	projectile *p = (projectile *) SCM_SMOB_DATA(proj);
+	projectile *p = solid_get_struct_value(solid_pop_stack(vm));
 	spawn_projectile(p);
-	return SCM_BOOL_F;
 }
 
 void initialize_projectile()
@@ -59,10 +60,9 @@ void initialize_projectile()
 
 	PROJECTILE_PROTOTYPES = make_hash_map();
 
-	__api_projectile_tag = scm_make_smob_type("projectile", sizeof(projectile));
-	scm_c_define_gsubr("build-projectile-prototype", 6, 0, 0, __api_build_projectile_prototype);
-	scm_c_define_gsubr("make-projectile", 5, 0, 0, __api_make_projectile);
-	scm_c_define_gsubr("spawn-projectile", 1, 0, 0, __api_spawn_projectile);
+	defun("build_projectile_prototype", __api_build_projectile_prototype);
+	defun("make_projectile", __api_make_projectile);
+	defun("spawn_projectile", __api_spawn_projectile);
 
 	load_all("script/projectiles");
 }

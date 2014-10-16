@@ -8,7 +8,7 @@
 #include <dirent.h>
 
 #include <SDL2/SDL_mixer.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -20,77 +20,70 @@ static list_node *ITEMS;
 
 static hash_map *ITEM_PROTOTYPES;
 
-static scm_t_bits __api_item_tag;
-
-SCM __api_build_item_prototype(SCM name, SCM update_func)
+void __api_build_item_prototype(solid_vm *vm)
 {
-	char *n = scm_to_locale_string(name);
-	item *w = build_item_prototype(n, update_func);
-	free(n);
-	SCM ret = scm_new_smob(__api_item_tag, (unsigned long) w);
-	scm_gc_protect_object(ret);
-	return ret;
+	solid_object *update_func = solid_pop_stack(vm);
+	char *name = solid_get_str_value(solid_pop_stack(vm));
+	item *w = build_item_prototype(name, update_func);
+	vm->regs[255] = solid_struct(vm, w);
 }
 
-SCM __api_make_item(SCM name)
+void __api_make_item(solid_vm *vm)
 {
-	char *n = scm_to_locale_string(name);
-	item *w = make_item(n);
-	free(n);
-	SCM ret = scm_new_smob(__api_item_tag, (unsigned long) w);
-	scm_gc_protect_object(ret);
-	return ret;
+	char *name = solid_get_str_value(solid_pop_stack(vm));
+	item *w = make_item(name);
+	solid_object *ret = solid_struct(vm, w);
+	vm->regs[255] = ret;
 }
 
-SCM __api_is_item_active(SCM i)
+void __api_is_item_active(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_bool(is_item_active(it));
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_bool(vm, is_item_active(it));
 }
 
-SCM __api_get_item_charge(SCM i)
+void __api_get_item_charge(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_double(get_item_charge(it));
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, get_item_charge(it));
 }
 
-SCM __api_set_item_charge(SCM i, SCM c)
+void __api_set_item_charge(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
-	set_item_charge(it, scm_to_double(c));
-	return SCM_BOOL_F;
+	double c = solid_get_double_value(solid_pop_stack(vm));
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
+	set_item_charge(it, c);
 }
 
-SCM __api_get_item_rotation(SCM i)
+void __api_get_item_rotation(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_double(get_item_rotation(it));
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, get_item_rotation(it));
 }
 
-SCM __api_get_item_x(SCM i)
+void __api_get_item_x(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_double(*(it->x));
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, *(it->x));
 }
 
-SCM __api_get_item_y(SCM i)
+void __api_get_item_y(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
-	return scm_from_double(*(it->y));
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, *(it->y));
 }
 
-SCM __api_activate_item(SCM i, SCM rot)
+void __api_activate_item(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
-	activate_item(it, scm_to_double(rot));
-	return SCM_BOOL_F;
+	double rot = solid_get_double_value(solid_pop_stack(vm));
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
+	activate_item(it, rot);
 }
 
-SCM __api_deactivate_item(SCM i)
+void __api_deactivate_item(solid_vm *vm)
 {
-	item *it = (item *) SCM_SMOB_DATA(i);
+	item *it = solid_get_struct_value(solid_pop_stack(vm));
 	deactivate_item(it);
-	return SCM_BOOL_F;
 }
 
 void initialize_item()
@@ -98,24 +91,18 @@ void initialize_item()
 	ITEMS = make_list();
 	ITEM_PROTOTYPES = make_hash_map();
 
-	__api_item_tag = scm_make_smob_type("item", sizeof(item));
-	scm_c_define_gsubr("build-item-prototype", 2, 0, 0, __api_build_item_prototype);
-	scm_c_define_gsubr("make-item", 1, 0, 0, __api_make_item);
-	scm_c_define_gsubr("is-item-active", 1, 0, 0, __api_is_item_active);
-	scm_c_define_gsubr("get-item-charge", 1, 0, 0, __api_get_item_charge);
-	scm_c_define_gsubr("set-item-charge", 2, 0, 0, __api_set_item_charge);
-	scm_c_define_gsubr("get-item-rotation", 1, 0, 0, __api_get_item_rotation);
-	scm_c_define_gsubr("get-item-x", 1, 0, 0, __api_get_item_x);
-	scm_c_define_gsubr("get-item-y", 1, 0, 0, __api_get_item_y);
-	scm_c_define_gsubr("activate-item", 2, 0, 0, __api_activate_item);
-	scm_c_define_gsubr("deactivate-item", 1, 0, 0, __api_deactivate_item);
+	defun("build_item_prototype", __api_build_item_prototype);
+	defun("make_item", __api_make_item);
+	defun("is_item_active", __api_is_item_active);
+	defun("get_item_charge", __api_get_item_charge);
+	defun("set_item_charge", __api_set_item_charge);
+	defun("get_item_rotation", __api_get_item_rotation);
+	defun("get_item_x", __api_get_item_x);
+	defun("get_item_y", __api_get_item_y);
+	defun("activate_item", __api_activate_item);
+	defun("deactivate_item", __api_deactivate_item);
 
 	load_all("script/items");
-}
-
-scm_t_bits get_item_tag()
-{
-	return __api_item_tag;
 }
 
 void reset_item()
@@ -134,7 +121,7 @@ void free_item(item *i)
 	free(i);
 }
 
-item *build_item_prototype(char *name, SCM update_func)
+item *build_item_prototype(char *name, solid_object *update_func)
 {
 	item *ret = malloc(sizeof(item));
 	ret->x = NULL;
@@ -145,8 +132,6 @@ item *build_item_prototype(char *name, SCM update_func)
 	ret->sound = NULL;
 	ret->charge = 100.0;
 	ret->update_func = update_func;
-	scm_gc_protect_object(update_func);
-	ret->data = SCM_BOOL_F;
 	set_hash(ITEM_PROTOTYPES, name, (void *) ret);
 	return ret;
 }
@@ -210,10 +195,12 @@ void update_item()
 {
 	item *i;
 	list_node *c;
+	solid_vm *vm = get_vm();
 	for (c = ITEMS; c->next != NULL; c = c->next) {
 		if (((item *) c->data) != NULL) {
 			i = (item *) c->data;
-			i->data = scm_call_2(i->update_func, scm_new_smob(__api_item_tag, (unsigned long) i), i->data);
+			solid_push_stack(vm, solid_struct(vm, i));
+			solid_call_func(vm, i->update_func);
 		}
 	}
 }

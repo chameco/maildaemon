@@ -9,7 +9,7 @@
 #include <dirent.h>
 
 #include <GL/glew.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -26,149 +26,135 @@ static list_node *ENTITIES;
 
 static hash_map *ENTITY_PROTOTYPES;
 
-static scm_t_bits __api_entity_tag;
-
-SCM __api_build_entity_prototype(SCM path, SCM w, SCM h,
-		SCM health, SCM speed, SCM expval)
+void __api_build_entity_prototype(solid_vm *vm)
 {
-	char *t = scm_to_locale_string(path);
-	entity *e = build_entity_prototype(t, scm_to_int(w), scm_to_int(h),
-			scm_to_int(health), scm_to_double(speed), scm_to_double(expval));
-	free(t);
-	SCM ret = scm_new_smob(__api_entity_tag, (unsigned long) e);
-	scm_gc_protect_object(ret);
-	return ret;
+	double expval = solid_get_double_value(solid_pop_stack(vm));
+	double speed = solid_get_double_value(solid_pop_stack(vm));
+	int health = solid_get_int_value(solid_pop_stack(vm));
+	int h = solid_get_int_value(solid_pop_stack(vm));
+	int w = solid_get_int_value(solid_pop_stack(vm));
+	char *path = solid_get_str_value(solid_pop_stack(vm));
+	entity *e = build_entity_prototype(path, w, h, health, speed, expval);
+	vm->regs[255] = solid_struct(vm, e);
 }
 
-SCM __api_get_entity_x(SCM e)
+void __api_get_entity_x(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_from_double(ent->x);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, ent->x);
 }
 
-SCM __api_get_entity_y(SCM e)
+void __api_get_entity_y(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_from_double(ent->y);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, ent->y);
 }
 
-SCM __api_get_entity_w(SCM e)
+void __api_get_entity_w(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_from_int(ent->w);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_int(vm, ent->w);
 }
 
-SCM __api_get_entity_h(SCM e)
+void __api_get_entity_h(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_from_int(ent->h);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_int(vm, ent->h);
 }
 
-SCM __api_get_entity_xv(SCM e)
+void __api_get_entity_xv(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_from_double(ent->xv);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, ent->xv);
 }
 
-SCM __api_get_entity_yv(SCM e)
+void __api_get_entity_yv(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_from_double(ent->yv);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, ent->yv);
 }
 
-SCM __api_set_entity_xv(SCM e, SCM xv)
+void __api_set_entity_xv(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	ent->xv = scm_to_double(xv);
-	return SCM_BOOL_F;
+	double xv = solid_get_double_value(solid_pop_stack(vm));
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	ent->xv = xv;
 }
 
-SCM __api_set_entity_yv(SCM e, SCM yv)
+void __api_set_entity_yv(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	ent->yv = scm_to_double(yv);
-	return SCM_BOOL_F;
+	double yv = solid_get_double_value(solid_pop_stack(vm));
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	ent->yv = yv;
 }
 
-SCM __api_get_entity_speed(SCM e)
+void __api_get_entity_speed(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_from_double(ent->speed);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, ent->speed);
 }
 
-SCM __api_set_entity_init(SCM e, SCM init)
+void __api_set_entity_init(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	solid_object *init = solid_pop_stack(vm);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
 	set_entity_init(ent, init);
-	return SCM_BOOL_F;
 }
 
-SCM __api_set_entity_hit(SCM e, SCM hit)
+void __api_set_entity_hit(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	solid_object *hit = solid_pop_stack(vm);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
 	set_entity_hit(ent, hit);
-	return SCM_BOOL_F;
 }
 
-SCM __api_set_entity_collide(SCM e, SCM collide)
+void __api_set_entity_collide(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	solid_object *collide = solid_pop_stack(vm);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
 	set_entity_collide(ent, collide);
-	return SCM_BOOL_F;
 }
 
-SCM __api_set_entity_update(SCM e, SCM update)
+void __api_set_entity_update(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	solid_object *update = solid_pop_stack(vm);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
 	set_entity_update(ent, update);
-	return SCM_BOOL_F;
 }
 
-SCM __api_get_entity_texture(SCM e)
+void __api_get_entity_texture(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	return scm_new_smob(get_texture_tag(), (unsigned long) ent->t);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_struct(vm, ent->t);
 }
 
-SCM __api_make_entity(SCM name, SCM x, SCM y)
+void __api_make_entity(solid_vm *vm)
 {
-	char *t = scm_to_locale_string(name);
-	entity *e = make_entity(t, scm_to_double(x), scm_to_double(y));
-	free(t);
-	SCM ret = scm_new_smob(__api_entity_tag, (unsigned long) e);
-	scm_gc_protect_object(ret);
-	return ret;
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	char *t = solid_get_str_value(solid_pop_stack(vm));
+	entity *e = make_entity(t, x, y);
+	vm->regs[255] = solid_struct(vm, e);
 }
 
-SCM __api_spawn_entity(SCM e)
+void __api_spawn_entity(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
 	spawn_entity(ent);
-	return SCM_BOOL_F;
 }
 
-SCM __api_give_entity_item(SCM e, SCM w)
+void __api_give_entity_item(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	item *weap = (item *) SCM_SMOB_DATA(w);
+	item *weap = solid_get_struct_value(solid_pop_stack(vm));
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
 	give_entity_item(ent, weap);
-	return SCM_BOOL_F;
 }
 
-SCM __api_move_entity(SCM e, SCM d)
+void __api_move_entity(solid_vm *vm)
 {
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	move_entity(ent, scm_to_int(d));
-	return SCM_BOOL_F;
-}
-
-SCM __api_smob_entity_mark(SCM e)
-{
-	entity *ent = (entity *) SCM_SMOB_DATA(e);
-	scm_gc_mark(ent->init_func);
-	scm_gc_mark(ent->hit_func);
-	scm_gc_mark(ent->collide_func);
-	return ent->update_func;
+	int d = solid_get_int_value(solid_pop_stack(vm));
+	entity *ent = solid_get_struct_value(solid_pop_stack(vm));
+	move_entity(ent, d);
 }
 
 void initialize_entity()
@@ -177,27 +163,25 @@ void initialize_entity()
 
 	ENTITY_PROTOTYPES = make_hash_map();
 
-	__api_entity_tag = scm_make_smob_type("entity", sizeof(entity));
-	scm_set_smob_mark(__api_entity_tag, __api_smob_entity_mark);
-	scm_c_define_gsubr("build-entity-prototype", 6, 0, 0, __api_build_entity_prototype);
-	scm_c_define_gsubr("get-entity-x", 1, 0, 0, __api_get_entity_x);
-	scm_c_define_gsubr("get-entity-y", 1, 0, 0, __api_get_entity_y);
-	scm_c_define_gsubr("get-entity-w", 1, 0, 0, __api_get_entity_w);
-	scm_c_define_gsubr("get-entity-h", 1, 0, 0, __api_get_entity_h);
-	scm_c_define_gsubr("get-entity-xv", 1, 0, 0, __api_get_entity_xv);
-	scm_c_define_gsubr("get-entity-yv", 1, 0, 0, __api_get_entity_yv);
-	scm_c_define_gsubr("set-entity-xv", 2, 0, 0, __api_set_entity_xv);
-	scm_c_define_gsubr("set-entity-yv", 2, 0, 0, __api_set_entity_yv);
-	scm_c_define_gsubr("get-entity-speed", 1, 0, 0, __api_get_entity_speed);
-	scm_c_define_gsubr("set-entity-init", 2, 0, 0, __api_set_entity_init);
-	scm_c_define_gsubr("set-entity-hit", 2, 0, 0, __api_set_entity_hit);
-	scm_c_define_gsubr("set-entity-collide", 2, 0, 0, __api_set_entity_collide);
-	scm_c_define_gsubr("set-entity-update", 2, 0, 0, __api_set_entity_update);
-	scm_c_define_gsubr("get-entity-texture", 1, 0, 0, __api_get_entity_texture);
-	scm_c_define_gsubr("make-entity", 3, 0, 0, __api_make_entity);
-	scm_c_define_gsubr("spawn-entity", 1, 0, 0, __api_spawn_entity);
-	scm_c_define_gsubr("give-entity-item", 2, 0, 0, __api_give_entity_item);
-	scm_c_define_gsubr("move-entity", 2, 0, 0, __api_move_entity);
+	defun("build_entity_prototype", __api_build_entity_prototype);
+	defun("get_entity_x", __api_get_entity_x);
+	defun("get_entity_y", __api_get_entity_y);
+	defun("get_entity_w", __api_get_entity_w);
+	defun("get_entity_h", __api_get_entity_h);
+	defun("get_entity_xv", __api_get_entity_xv);
+	defun("get_entity_yv", __api_get_entity_yv);
+	defun("set_entity_xv", __api_set_entity_xv);
+	defun("set_entity_yv", __api_set_entity_yv);
+	defun("get_entity_speed", __api_get_entity_speed);
+	defun("set_entity_init", __api_set_entity_init);
+	defun("set_entity_hit", __api_set_entity_hit);
+	defun("set_entity_collide", __api_set_entity_collide);
+	defun("set_entity_update", __api_set_entity_update);
+	defun("get_entity_texture", __api_get_entity_texture);
+	defun("make_entity", __api_make_entity);
+	defun("spawn_entity", __api_spawn_entity);
+	defun("give_entity_item", __api_give_entity_item);
+	defun("move_entity", __api_move_entity);
 
 	load_all("script/entities/helpers");
 	load_all("script/entities");
@@ -242,27 +226,28 @@ entity *build_entity_prototype(char *name, int w, int h,
 	e->health = health;
 	e->speed = speed;
 	e->expval = expval;
-	e->data = e->init_func = e->hit_func = e->collide_func = e->update_func = SCM_BOOL_F;
+	e->init_func = e->hit_func = e->collide_func = e->update_func = NULL;
+	e->data = solid_int(get_vm(), 0);
 	set_hash(ENTITY_PROTOTYPES, name, (void *) e);
 	return e;
 }
 
-void set_entity_init(entity *e, SCM init)
+void set_entity_init(entity *e, solid_object *init)
 {
 	e->init_func = init;
 }
 
-void set_entity_hit(entity *e, SCM hit)
+void set_entity_hit(entity *e, solid_object *hit)
 {
 	e->hit_func = hit;
 }
 
-void set_entity_collide(entity *e, SCM collide)
+void set_entity_collide(entity *e, solid_object *collide)
 {
 	e->collide_func = collide;
 }
 
-void set_entity_update(entity *e, SCM update)
+void set_entity_update(entity *e, solid_object *update)
 {
 	e->update_func = update;
 }
@@ -287,8 +272,10 @@ entity *make_entity(char *name, double x, double y)
 	}
 	ret->x = x;
 	ret->y = y;
-	if (scm_is_true(ret->init_func)) {
-		ret->data = scm_call_1(ret->init_func, scm_new_smob(__api_entity_tag, (unsigned long) ret));
+	if (ret->init_func != NULL) {
+		solid_push_stack(get_vm(), solid_struct(get_vm(), ret));
+		solid_call_func(get_vm(), ret->init_func);
+		ret->data = get_vm()->regs[255];
 	}
 	return ret;
 }
@@ -300,8 +287,12 @@ void spawn_entity(entity *e)
 
 void hit_entity(entity *e, int dmg)
 {
-	if (scm_is_true(e->hit_func)) {
-		e->data = scm_call_3(e->hit_func, scm_new_smob(__api_entity_tag, (unsigned long) e), scm_from_int(dmg), e->data);
+	if (e->hit_func != NULL) {
+		solid_push_stack(get_vm(), e->data);
+		solid_push_stack(get_vm(), solid_int(get_vm(), dmg));
+		solid_push_stack(get_vm(), solid_struct(get_vm(), e));
+		solid_call_func(get_vm(), e->hit_func);
+		e->data = get_vm()->regs[255];
 	} else {
 		e->health -= dmg;
 		if (e->health <= 0) {
@@ -315,8 +306,11 @@ void hit_entity(entity *e, int dmg)
 
 void collide_entity(entity *e)
 {
-	if (scm_is_true(e->collide_func)) {
-		e->data = scm_call_2(e->collide_func, scm_new_smob(__api_entity_tag, (unsigned long) e), e->data);
+	if (e->collide_func != NULL) {
+		solid_push_stack(get_vm(), e->data);
+		solid_push_stack(get_vm(), solid_struct(get_vm(), e));
+		solid_call_func(get_vm(), e->collide_func);
+		e->data = get_vm()->regs[255];
 	}
 }
 
@@ -432,8 +426,11 @@ void update_entity()
 	for (c = ENTITIES->next; c->next != NULL; c = c->next) {
 		if (((entity *) c->data) != NULL) {
 			e = (entity *) c->data;
-			if (scm_is_true(e->update_func)) {
-				e->data = scm_call_2(e->update_func, scm_new_smob(__api_entity_tag, (unsigned long) e), e->data);
+			if (e->update_func != NULL) {
+				solid_push_stack(get_vm(), e->data);
+				solid_push_stack(get_vm(), solid_struct(get_vm(), e));
+				solid_call_func(get_vm(), e->update_func);
+				e->data = get_vm()->regs[255];
 			}
 			check_entity_collisions(e);
 		}

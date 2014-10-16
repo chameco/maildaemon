@@ -16,14 +16,14 @@ datarootdir = $(prefix)/share
 datadir = $(datarootdir)
 libdir = $(exec_prefix)/lib
 
-CFLAGS_gcc = -Iinclude -std=c99 -g -Wall -Werror `pkg-config guile-2.0 --cflags`
-CFLAGS_clang = -Iinclude -std=c99 -g -Wall -Werror `pkg-config guile-2.0 --cflags`
+CFLAGS_gcc = -Iinclude -std=c99 -g -Wall -Werror
+CFLAGS_clang = -Iinclude -std=c99 -g -Wall -Werror
 CFLAGS_x86_64-w64-mingw32-gcc = -static -DGLEW_STATIC -Iinclude -g -Wall
 CFLAGS = $(CFLAGS_$(CC))
 LINKER_FLAGS_gcc = -Wl,-z,origin '-Wl,-rpath,$$ORIGIN/$(LIB_DIR):$$ORIGIN/steam-runtime/amd64/lib/x86_64-linux-gnu:$$ORIGIN/steam-runtime/amd64/lib:$$ORIGIN/steam-runtime/amd64/usr/lib/x86_64-linux-gnu:$$ORIGIN/steam-runtime/amd64/usr/lib' \
-	-L$(LIB_DIR)/ -lm -lcuttle `pkg-config guile-2.0 --libs` -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer
+	-L$(LIB_DIR)/ -lm -lcuttle -lsolid -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer
 LINKER_FLAGS_clang = -Wl,-z,origin '-Wl,-rpath,$$ORIGIN/$(LIB_DIR):$$ORIGIN/steam-runtime/amd64/lib/x86_64-linux-gnu:$$ORIGIN/steam-runtime/amd64/lib:$$ORIGIN/steam-runtime/amd64/usr/lib/x86_64-linux-gnu:$$ORIGIN/steam-runtime/amd64/usr/lib' \
-	-L$(LIB_DIR)/ -lm -lcuttle `pkg-config guile-2.0 --libs` -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer
+	-L$(LIB_DIR)/ -lm -lcuttle -lsolid -lGLEW -lSDL2 -lGL -lGLU -lSDL2_image -lSDL2_mixer
 LINKER_FLAGS = $(LINKER_FLAGS_$(CC))
 
 vpath %.c src

@@ -11,7 +11,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -24,24 +24,22 @@ static vertex EFFECT_VERTICES[4];
 static GLuint EFFECT_VERTEX_HANDLER = 0;
 static Mix_Chunk *EXPLOSION_SOUND;
 
-static scm_t_bits __api_effect_tag;
-
-SCM __api_make_fx(SCM type, SCM col, SCM x, SCM y, SCM dim, SCM radius, SCM speed)
+void __api_make_fx(solid_vm *vm)
 {
-	color c = *((color *) SCM_SMOB_DATA(col));
-	SCM ret = scm_new_smob(__api_effect_tag,
-			(unsigned long) make_fx(scm_to_int(type), c,
-				scm_to_double(x), scm_to_double(y), scm_to_int(dim),
-				scm_to_int(radius), scm_to_double(speed)));
-	scm_gc_protect_object(ret);
-	return ret;
+	double speed = solid_get_double_value(solid_pop_stack(vm));
+	int radius = solid_get_int_value(solid_pop_stack(vm));
+	int dim = solid_get_int_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	color *c = solid_get_struct_value(solid_pop_stack(vm));
+	int type = solid_get_int_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_struct(vm, make_fx(type, *c, x, y, dim, radius, speed));
 }
 
-SCM __api_spawn_fx(SCM e)
+void __api_spawn_fx(solid_vm *vm)
 {
-	effect *fx = (effect *) SCM_SMOB_DATA(e);
+	effect *fx = solid_get_struct_value(solid_pop_stack(vm));
 	spawn_fx(fx);
-	return SCM_BOOL_F;
 }
 
 void initialize_fx()
@@ -66,9 +64,8 @@ void initialize_fx()
 	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
 	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), EFFECT_VERTICES, GL_STATIC_DRAW);
 
-	__api_effect_tag = scm_make_smob_type("effect", sizeof(effect));
-	scm_c_define_gsubr("make-fx", 7, 0, 0, __api_make_fx);
-	scm_c_define_gsubr("spawn-fx", 1, 0, 0, __api_spawn_fx);
+	defun("make_fx", __api_make_fx);
+	defun("spawn_fx", __api_spawn_fx);
 }
 
 void reset_fx()

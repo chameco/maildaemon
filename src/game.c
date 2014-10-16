@@ -11,7 +11,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -44,69 +44,63 @@ static char CURRENT_DIALOG[256] = "";
 static char *ENTERED_TEXT = NULL;
 static Mix_Chunk *BLIP_SOUND;
 
-SCM __api_reset_game()
+void __api_reset_game(solid_vm *vm)
 {
 	reset_game();
-	return SCM_BOOL_F;
 }
 
-SCM __api_get_screen_width()
+void __api_get_screen_width(solid_vm *vm)
 {
-	return scm_from_int(get_screen_width());
+	vm->regs[255] = solid_int(vm, get_screen_width());
 }
 
-SCM __api_get_screen_height()
+void __api_get_screen_height(solid_vm *vm)
 {
-	return scm_from_int(get_screen_height());
+	vm->regs[255] = solid_int(vm, get_screen_height());
 }
 
-SCM __api_set_current_dialog(SCM d)
+void __api_set_current_dialog(solid_vm *vm)
 {
-	char *t = scm_to_locale_string(d);
+	char *t = solid_get_str_value(solid_pop_stack(vm));
 	set_current_dialog(t);
-	free(t);
-	return SCM_BOOL_F;
 }
 
-SCM __api_get_current_dialog()
+void __api_get_current_dialog(solid_vm *vm)
 {
-	return scm_from_locale_string(get_current_dialog());
+	vm->regs[255] = solid_str(vm, get_current_dialog());
 }
 
-SCM __api_define_mode(SCM name, SCM init, SCM update, SCM draw)
+void __api_define_mode(solid_vm *vm)
 {
-	char *t = scm_to_locale_string(name);
-	define_mode(t,
-			make_thunk_scm(init),
-			make_thunk_scm(update),
-			make_thunk_scm(draw));
-	free(t);
-	return SCM_BOOL_F;
+	solid_object *draw = solid_pop_stack(vm);
+	solid_object *update = solid_pop_stack(vm);
+	solid_object *init = solid_pop_stack(vm);
+	char *name = solid_get_str_value(solid_pop_stack(vm));
+	define_mode(name,
+			make_thunk_solid(init),
+			make_thunk_solid(update),
+			make_thunk_solid(draw));
 }
 
-SCM __api_define_standard_gui_mode(SCM name, SCM init)
+void __api_define_standard_gui_mode(solid_vm *vm)
 {
-	char *t = scm_to_locale_string(name);
-	define_mode(t,
-			make_thunk_scm(init),
+	solid_object *init = solid_pop_stack(vm);
+	char *name = solid_get_str_value(solid_pop_stack(vm));
+	define_mode(name,
+			make_thunk_solid(init),
 			make_thunk(mode_standard_gui_update),
 			make_thunk(mode_standard_gui_draw));
-	free(t);
-	return SCM_BOOL_F;
 }
 
-SCM __api_set_running(SCM b)
+void __api_set_running(solid_vm *vm)
 {
-	set_running(scm_to_bool(b));
-	return SCM_BOOL_F;
+	set_running(solid_get_bool_value(solid_pop_stack(vm)));
 }
 
-SCM __api_set_mode(SCM mode)
+void __api_set_mode(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(mode);
-	set_mode(s);
-	free(s);
-	return SCM_BOOL_F;
+	char *m = solid_get_str_value(solid_pop_stack(vm));
+	set_mode(m);
 }
 
 void mode_standard_gui_update()
@@ -235,25 +229,10 @@ static void mode_text_entry_draw()
 	SDL_GL_SwapWindow(SCREEN);
 }
 
-static SCM repl_catch_body(void *body_data)
-{
-	scm_c_eval_string((char *) ENTERED_TEXT);
-	return SCM_BOOL_F;
-}
-
-static SCM repl_catch_handle(void *handler_data, SCM key, SCM parameters)
-{
-	log_err("Invalid command: %s", (char *) handler_data);
-	return SCM_BOOL_F;
-}
-
 static void mode_main_update()
 {
 	if (ENTERED_TEXT != NULL) {
-		scm_c_catch(SCM_BOOL_T,
-				repl_catch_body, ENTERED_TEXT,
-				repl_catch_handle, ENTERED_TEXT,
-				NULL, NULL);
+		solid_call_func(get_vm(), solid_parse_tree(get_vm(), solid_parse_expr(ENTERED_TEXT)));
 		free(ENTERED_TEXT);
 		ENTERED_TEXT = NULL;
 	}
@@ -366,16 +345,6 @@ void initialize_game()
 {
 	MODE_CALLBACKS = make_hash_map();
 
-	scm_c_define_gsubr("reset-game", 0, 0, 0, __api_reset_game);
-	scm_c_define_gsubr("get-screen-width", 0, 0, 0, __api_get_screen_width);
-	scm_c_define_gsubr("get-screen-height", 0, 0, 0, __api_get_screen_height);
-	scm_c_define_gsubr("set-current-dialog", 1, 0, 0, __api_set_current_dialog);
-	scm_c_define_gsubr("get-current-dialog", 0, 0, 0, __api_get_current_dialog);
-	scm_c_define_gsubr("define-mode", 4, 0, 0, __api_define_mode);
-	scm_c_define_gsubr("define-standard-gui-mode", 2, 0, 0, __api_define_standard_gui_mode);
-	scm_c_define_gsubr("set-running", 1, 0, 0, __api_set_running);
-	scm_c_define_gsubr("set-mode", 1, 0, 0, __api_set_mode);
-
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		log_err("Failed to initialize SDL");    
 	}
@@ -416,25 +385,36 @@ void initialize_game()
 	BLIP_SOUND = Mix_LoadWAV("sfx/blip.wav");
 
 	initialize_utils();
+
+	defun("reset_game", __api_reset_game);
+	defun("get_screen_width", __api_get_screen_width);
+	defun("get_screen_height", __api_get_screen_height);
+	defun("set_current_dialog", __api_set_current_dialog);
+	defun("get_current_dialog", __api_get_current_dialog);
+	defun("define_mode", __api_define_mode);
+	defun("define_standard_gui_mode", __api_define_standard_gui_mode);
+	defun("set_running", __api_set_running);
+	defun("set_mode", __api_set_mode);
+
 	initialize_scheduler();
 	initialize_dungeon();
 	initialize_save();
 	initialize_texture();
-	initialize_item();
 	initialize_lightsource();
-	initialize_entity();
-	initialize_player();
-	initialize_projectile();
 	initialize_fx();
-	initialize_gui();
 	initialize_level();
+	initialize_projectile();
+	initialize_item();
+	initialize_player();
+	initialize_entity();
+	initialize_gui();
 
 	define_mode("text_entry",
 			make_thunk(NULL),
 			make_thunk(mode_text_entry_update),
 			make_thunk(mode_text_entry_draw));
 	define_mode("main",
-			make_thunk_scm(scm_c_primitive_load("script/gui/main.scm")),
+			make_thunk_solid(load("script/gui/main.sol")),
 			make_thunk(mode_main_update),
 			make_thunk(mode_main_draw));
 
@@ -536,6 +516,9 @@ void set_mode(char *s)
 {
 	if ((CURRENT_MODE = get_hash(MODE_CALLBACKS, s)) != NULL) {
 		execute_thunk(CURRENT_MODE->init);
+	} else {
+		log_err("Mode \"%s\" does not exist", s); 
+		exit(1);
 	}
 }
 

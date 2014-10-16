@@ -6,22 +6,23 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
 
 list_node *SCHEDULED_EVENTS;
 
-SCM __api_schedule(SCM cb, SCM ticks)
+void __api_schedule(solid_vm *vm)
 {
-	schedule(make_thunk_scm(cb), scm_to_int(ticks));
-	return SCM_BOOL_F;
+	int ticks = solid_get_int_value(solid_pop_stack(vm));
+	solid_object *cb = solid_pop_stack(vm);
+	schedule(make_thunk_solid(cb), ticks);
 }
 
 void initialize_scheduler()
 {
-	scm_c_define_gsubr("schedule", 2, 0, 0, __api_schedule);
+	defun("schedule", __api_schedule);
 	SCHEDULED_EVENTS = make_list();
 }
 

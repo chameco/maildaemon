@@ -9,7 +9,7 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -27,62 +27,72 @@ static list_node *GUI_ELEMENTS;
 
 static texture *BITMAP_FONT = NULL;
 
-SCM __api_reset_gui()
+void __api_reset_gui(solid_vm *vm)
 {
 	reset_gui();
-	return SCM_BOOL_F;
 }
 
-SCM __api_spawn_image(SCM x, SCM y, SCM path)
+void __api_spawn_image(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(path);
-	spawn_image(scm_to_double(x), scm_to_double(y), s);
-	free(s);
-	return SCM_BOOL_F;
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	spawn_image(x, y, s);
 }
 
-SCM __api_spawn_label(SCM x, SCM y, SCM text, SCM size)
+void __api_spawn_label(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(text);
-	spawn_label(scm_to_double(x), scm_to_double(y), s, scm_to_double(size));
-	free(s);
-	return SCM_BOOL_F;
+	double size = solid_get_double_value(solid_pop_stack(vm));
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	spawn_label(x, y, s, size);
 }
 
-SCM __api_spawn_dynamic_label(SCM x, SCM y, SCM getter, SCM size)
+void __api_spawn_dynamic_label(solid_vm *vm)
 {
-	spawn_dynamic_label(scm_to_double(x), scm_to_double(y), getter, scm_to_double(size));
-	return SCM_BOOL_F;
+	double size = solid_get_double_value(solid_pop_stack(vm));
+	solid_object *getter = solid_pop_stack(vm);
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	spawn_dynamic_label(x, y, getter, size);
 }
 
-SCM __api_spawn_button(SCM x, SCM y, SCM text, SCM click_callback)
+void __api_spawn_button(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(text);
-	spawn_button(scm_to_double(x), scm_to_double(y), s, click_callback);
-	free(s);
-	return SCM_BOOL_F;
+	solid_object *click_callback = solid_pop_stack(vm);
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	spawn_button(x, y, s, click_callback);
 }
 
-SCM __api_spawn_dialog_box(SCM x, SCM y, SCM text_getter)
+void __api_spawn_dialog_box(solid_vm *vm)
 {
-	spawn_dialog_box(scm_to_double(x), scm_to_double(y), text_getter);
-	return SCM_BOOL_F;
+	solid_object *getter = solid_pop_stack(vm);
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	spawn_dialog_box(x, y, getter);
 }
 
-SCM __api_spawn_meter(SCM x, SCM y, SCM text, SCM col, SCM full_getter)
+void __api_spawn_meter(solid_vm *vm)
 {
-	char *s = scm_to_locale_string(text);
-	color c = *((color *) SCM_SMOB_DATA(col));
-	spawn_meter(scm_to_double(x), scm_to_double(y), s, c, full_getter);
-	free(s);
-	return SCM_BOOL_F;
+	solid_object *getter = solid_pop_stack(vm);
+	color *c = solid_get_struct_value(solid_pop_stack(vm));
+	char *s = solid_get_str_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	spawn_meter(x, y, s, *c, getter);
 }
 
-SCM __api_spawn_dynamic_meter(SCM x, SCM y, SCM text_getter, SCM col, SCM full_getter)
+void __api_spawn_dynamic_meter(solid_vm *vm)
 {
-	color c = *((color *) SCM_SMOB_DATA(col));
-	spawn_dynamic_meter(scm_to_double(x), scm_to_double(y), text_getter, c, full_getter);
-	return SCM_BOOL_F;
+	solid_object *full_getter = solid_pop_stack(vm);
+	color *c = solid_get_struct_value(solid_pop_stack(vm));
+	solid_object *text_getter = solid_pop_stack(vm);
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	spawn_dynamic_meter(x, y, text_getter, *c, full_getter);
 }
 
 void initialize_gui()
@@ -93,14 +103,14 @@ void initialize_gui()
 	BITMAP_FONT = load_texture("fonts/font.png", 8, 8);
 	GUI_ELEMENTS = make_list();
 
-	scm_c_define_gsubr("reset-gui", 0, 0, 0, __api_reset_gui);
-	scm_c_define_gsubr("spawn-image", 3, 0, 0, __api_spawn_image);
-	scm_c_define_gsubr("spawn-label", 4, 0, 0, __api_spawn_label);
-	scm_c_define_gsubr("spawn-dynamic-label", 4, 0, 0, __api_spawn_dynamic_label);
-	scm_c_define_gsubr("spawn-button", 4, 0, 0, __api_spawn_button);
-	scm_c_define_gsubr("spawn-dialog-box", 3, 0, 0, __api_spawn_dialog_box);
-	scm_c_define_gsubr("spawn-meter", 5, 0, 0, __api_spawn_meter);
-	scm_c_define_gsubr("spawn-dynamic-meter", 5, 0, 0, __api_spawn_dynamic_meter);
+	defun("reset_gui", __api_reset_gui);
+	defun("spawn_image", __api_spawn_image);
+	defun("spawn_label", __api_spawn_label);
+	defun("spawn_dynamic_label", __api_spawn_dynamic_label);
+	defun("spawn_button", __api_spawn_button);
+	defun("spawn_dialog_box", __api_spawn_dialog_box);
+	defun("spawn_meter", __api_spawn_meter);
+	defun("spawn_dynamic_meter", __api_spawn_dynamic_meter);
 }
 
 void reset_gui()
@@ -191,12 +201,11 @@ void spawn_label(double x, double y, char *text, double size)
 	insert_list(GUI_ELEMENTS, (void *) ret);
 }
 
-void spawn_dynamic_label(double x, double y, SCM getter, double size)
+void spawn_dynamic_label(double x, double y, solid_object *getter, double size)
 {
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = DYNAMIC_LABEL;
 	ret->data.dynamic_label.text_getter = getter;
-	scm_gc_protect_object(ret->data.dynamic_label.text_getter);
 	ret->data.dynamic_label.size = size;
 	ret->x = x;
 	ret->y = y;
@@ -205,13 +214,12 @@ void spawn_dynamic_label(double x, double y, SCM getter, double size)
 	insert_list(GUI_ELEMENTS, (void *) ret);
 }
 
-void spawn_button(double x, double y, char *text, SCM click_callback)
+void spawn_button(double x, double y, char *text, solid_object *click_callback)
 {
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = BUTTON;
 	strncpy(ret->data.button.text, text, 256);
 	ret->data.button.click_callback = click_callback;
-	scm_gc_protect_object(ret->data.button.click_callback);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 200;
@@ -219,12 +227,11 @@ void spawn_button(double x, double y, char *text, SCM click_callback)
 	insert_list(GUI_ELEMENTS, (void *) ret);
 }
 
-void spawn_dialog_box(double x, double y, SCM text_getter)
+void spawn_dialog_box(double x, double y, solid_object *text_getter)
 {
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = DIALOG_BOX;
 	ret->data.dialog_box.text_getter = text_getter;
-	scm_gc_protect_object(text_getter);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 1000;
@@ -232,14 +239,13 @@ void spawn_dialog_box(double x, double y, SCM text_getter)
 	insert_list(GUI_ELEMENTS, (void *) ret);
 }
 
-void spawn_meter(double x, double y, char *text, color c, SCM full_getter)
+void spawn_meter(double x, double y, char *text, color c, solid_object *full_getter)
 {
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = METER;
 	strncpy(ret->data.meter.text, text, 256);
 	ret->data.meter.c = c;
 	ret->data.meter.full_getter = full_getter;
-	scm_gc_protect_object(ret->data.meter.full_getter);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 110;
@@ -247,15 +253,13 @@ void spawn_meter(double x, double y, char *text, color c, SCM full_getter)
 	insert_list(GUI_ELEMENTS, (void *) ret);
 }
 
-void spawn_dynamic_meter(double x, double y, SCM text_getter, color c, SCM full_getter)
+void spawn_dynamic_meter(double x, double y, solid_object *text_getter, color c, solid_object *full_getter)
 {
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = DYNAMIC_METER;
 	ret->data.dynamic_meter.text_getter = text_getter;
-	scm_gc_protect_object(ret->data.dynamic_meter.text_getter);
 	ret->data.dynamic_meter.c = c;
 	ret->data.dynamic_meter.full_getter = full_getter;
-	scm_gc_protect_object(ret->data.dynamic_meter.full_getter);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 110;
@@ -278,7 +282,7 @@ void mouse_clicked(double x, double y)
 				button.w = ge->w;
 				button.h = ge->h;
 				if (!check_collision(mousecursor, button)) {
-					scm_call_0(ge->data.button.click_callback);
+					solid_call_func(get_vm(), ge->data.button.click_callback);
 				}
 			}
 		}
@@ -323,9 +327,8 @@ void draw_label(gui_element *ge)
 
 void draw_dynamic_label(gui_element *ge)
 {
-	char *t = scm_to_locale_string(scm_call_0(ge->data.dynamic_label.text_getter));
-	render_text_bitmap(t, ge->x, ge->y, ge->data.dynamic_label.size);
-	free(t);
+	solid_call_func(get_vm(), ge->data.dynamic_label.text_getter);
+	render_text_bitmap(solid_get_str_value(get_vm()->regs[255]), ge->x, ge->y, ge->data.dynamic_label.size);
 }
 
 void draw_button(gui_element *ge)
@@ -337,12 +340,12 @@ void draw_button(gui_element *ge)
 
 void draw_dialog_box(gui_element *ge)
 {
-	char *t = scm_to_locale_string(scm_call_0(ge->data.dialog_box.text_getter));
+	solid_call_func(get_vm(), ge->data.dialog_box.text_getter);
+	char *t = solid_get_str_value(get_vm()->regs[255]);
 	if (strlen(t)) {
 		draw_texture(DIALOG_BOX_BACKGROUND, ge->x, ge->y);
 		render_text_bitmap(t, ge->x + 10, ge->y + 10, 2);
 	}
-	free(t);
 }
 
 void draw_meter(gui_element *ge)
@@ -352,7 +355,8 @@ void draw_meter(gui_element *ge)
 	glPushMatrix();
 
 	glTranslatef(ge->x + 4, ge->y + 4, 0);
-	glScalef(scm_to_double(scm_call_0(ge->data.meter.full_getter)) + 1, 24, 1);
+	solid_call_func(get_vm(), ge->data.meter.full_getter);
+	glScalef(solid_get_double_value(get_vm()->regs[255]) + 1, 24, 1);
 	glColor3f(ge->data.meter.c.r, ge->data.meter.c.g, ge->data.meter.c.b);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -381,7 +385,8 @@ void draw_dynamic_meter(gui_element *ge)
 	glPushMatrix();
 
 	glTranslatef(ge->x + 4, ge->y + 4, 0);
-	glScalef(scm_to_double(scm_call_0(ge->data.dynamic_meter.full_getter)) + 1, 24, 1);
+	solid_call_func(get_vm(), ge->data.dynamic_meter.full_getter);
+	glScalef(solid_get_double_value(get_vm()->regs[255]) + 1, 24, 1);
 	glColor3f(ge->data.dynamic_meter.c.r, ge->data.dynamic_meter.c.g, ge->data.dynamic_meter.c.b);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -399,9 +404,9 @@ void draw_dynamic_meter(gui_element *ge)
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glPopMatrix();
-	char *s = scm_to_locale_string(scm_call_0(ge->data.dynamic_meter.text_getter));
+	solid_call_func(get_vm(), ge->data.dynamic_meter.text_getter);
+	char *s = solid_get_str_value(get_vm()->regs[255]);
 	render_text_bitmap(s, ge->x + 55 - (16 * strlen(s))/2, ge->y + 8, 2);
-	free(s);
 }
 
 void draw_gui_element(gui_element *ge)

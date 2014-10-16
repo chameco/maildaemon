@@ -11,7 +11,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_mixer.h>
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -20,66 +20,59 @@
 
 static hash_map *TEXTURE_CACHE;
 
-static scm_t_bits __api_texture_tag;
-
-scm_t_bits get_texture_tag()
+void __api_load_texture(solid_vm *vm)
 {
-	return __api_texture_tag;
+	int h = solid_get_int_value(solid_pop_stack(vm));
+	int w = solid_get_int_value(solid_pop_stack(vm));
+	char *p = solid_get_str_value(solid_pop_stack(vm));
+	texture *r = load_texture(p, w, h);
+	vm->regs[255] = solid_struct(vm, r);
 }
 
-SCM __api_load_texture(SCM path, SCM w, SCM h)
+void __api_draw_texture(solid_vm *vm)
 {
-	char *p = scm_to_locale_string(path);
-	texture *r = load_texture(p, scm_to_int(w), scm_to_int(h));
-	free(p);
-	SCM ret = scm_new_smob(__api_texture_tag, (unsigned long) r);
-	return ret;
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	texture *t = solid_get_struct_value(solid_pop_stack(vm));
+	draw_texture(t, x, y);
 }
 
-SCM __api_draw_texture(SCM r, SCM x, SCM y)
+void __api_get_sheet_row(solid_vm *vm)
 {
-	texture *res = (texture *) SCM_SMOB_DATA(r);
-	draw_texture(res, scm_to_double(x), scm_to_double(y));
-	return SCM_BOOL_F;
+	texture *t = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_int(vm, get_sheet_row(t));
 }
 
-SCM __api_get_sheet_row(SCM r)
+void __api_set_sheet_row(solid_vm *vm)
 {
-	texture *res = (texture *) SCM_SMOB_DATA(r);
-	return scm_from_int(get_sheet_row(res));
+	int ay = solid_get_int_value(solid_pop_stack(vm));
+	texture *t = solid_get_struct_value(solid_pop_stack(vm));
+	set_sheet_row(t, ay);
 }
 
-SCM __api_set_sheet_row(SCM r, SCM ay)
+void __api_get_sheet_column(solid_vm *vm)
 {
-	texture *res = (texture *) SCM_SMOB_DATA(r);
-	set_sheet_row(res, scm_to_int(ay));
-	return SCM_BOOL_F;
+	texture *t = solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_int(vm, get_sheet_column(t));
 }
 
-SCM __api_get_sheet_column(SCM r)
+void __api_set_sheet_column(solid_vm *vm)
 {
-	texture *res = (texture *) SCM_SMOB_DATA(r);
-	return scm_from_int(get_sheet_column(res));
-}
-
-SCM __api_set_sheet_column(SCM r, SCM ax)
-{
-	texture *res = (texture *) SCM_SMOB_DATA(r);
-	set_sheet_column(res, scm_to_int(ax));
-	return SCM_BOOL_F;
+	int ax = solid_get_int_value(solid_pop_stack(vm));
+	texture *t = solid_get_struct_value(solid_pop_stack(vm));
+	set_sheet_column(t, ax);
 }
 
 void initialize_texture()
 {
 	TEXTURE_CACHE = make_hash_map();
 
-	__api_texture_tag = scm_make_smob_type("texture", sizeof(texture));
-	scm_c_define_gsubr("load-texture", 3, 0, 0, __api_load_texture);
-	scm_c_define_gsubr("draw-texture", 3, 0, 0, __api_draw_texture);
-	scm_c_define_gsubr("get-sheet-row", 1, 0, 0, __api_get_sheet_row);
-	scm_c_define_gsubr("set-sheet-row", 2, 0, 0, __api_set_sheet_row);
-	scm_c_define_gsubr("get-sheet-column", 1, 0, 0, __api_get_sheet_column);
-	scm_c_define_gsubr("set-sheet-column", 2, 0, 0, __api_set_sheet_column);
+	defun("load_texture", __api_load_texture);
+	defun("draw_texture", __api_draw_texture);
+	defun("get_sheet_row", __api_get_sheet_row);
+	defun("set_sheet_row", __api_set_sheet_row);
+	defun("get_sheet_column", __api_get_sheet_column);
+	defun("set_sheet_column", __api_set_sheet_column);
 }
 
 GLuint surface_to_texture(SDL_Surface *surface)

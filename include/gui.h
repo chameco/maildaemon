@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include "utils.h"
 #include "texture.h"
@@ -25,29 +25,29 @@ typedef struct gui_element_data_label {
 } gui_element_data_label;
 
 typedef struct gui_element_data_dynamic_label {
-	SCM text_getter;
+	solid_object *text_getter;
 	double size;
 } gui_element_data_dynamic_label;
 
 typedef struct gui_element_data_button {
 	char text[256];
-	SCM click_callback;
+	solid_object *click_callback;
 } gui_element_data_button;
 
 typedef struct gui_element_data_dialog_box {
-	SCM text_getter;
+	solid_object *text_getter;
 } gui_element_data_dialog_box;
 
 typedef struct gui_element_data_meter {
 	char text[256];
 	color c;
-	SCM full_getter;
+	solid_object *full_getter;
 } gui_element_data_meter;
 
 typedef struct gui_element_data_dynamic_meter {
-	SCM text_getter;
+	solid_object *text_getter;
 	color c;
-	SCM full_getter;
+	solid_object *full_getter;
 } gui_element_data_dynamic_meter;
 
 typedef union gui_element_data {
@@ -76,11 +76,11 @@ int bitmap_index(char c);
 
 void spawn_image(double x, double y, char *path);
 void spawn_label(double x, double y, char *text, double size);
-void spawn_dynamic_label(double x, double y, SCM getter, double size);
-void spawn_button(double x, double y, char *text, SCM click_callback);
-void spawn_dialog_box(double x, double y, SCM text_getter);
-void spawn_meter(double x, double y, char *text, color c, SCM full_getter);
-void spawn_dynamic_meter(double x, double y, SCM text_getter, color c, SCM full_getter);
+void spawn_dynamic_label(double x, double y, solid_object *getter, double size);
+void spawn_button(double x, double y, char *text, solid_object *click_callback);
+void spawn_dialog_box(double x, double y, solid_object *text_getter);
+void spawn_meter(double x, double y, char *text, color c, solid_object *full_getter);
+void spawn_dynamic_meter(double x, double y, solid_object *text_getter, color c, solid_object *full_getter);
 
 void mouse_clicked(double x, double y);
 

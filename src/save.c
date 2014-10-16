@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <libguile.h>
+#include <solid/solid.h>
 
 #include <cuttle/debug.h>
 #include <cuttle/utils.h>
@@ -16,21 +16,20 @@
 #include "player.h"
 #include "level.h"
 
-SCM __api_save_game(SCM slot)
+void __api_save_game(solid_vm *vm)
 {
-	save_game(scm_to_int(slot));
-	return SCM_BOOL_F;
+	save_game(solid_get_int_value(solid_pop_stack(vm)));
 }
 
-SCM __api_load_game(SCM slot)
+void __api_load_game(solid_vm *vm)
 {
-	return scm_from_bool(load_game(scm_to_int(slot)));
+	vm->regs[255] = solid_bool(vm, load_game(solid_get_int_value(solid_pop_stack(vm))));
 }
 
 void initialize_save()
 {
-	scm_c_define_gsubr("save-game", 1, 0, 0, __api_save_game);
-	scm_c_define_gsubr("load-game", 1, 0, 0, __api_load_game);
+	defun("save_game", __api_save_game);
+	defun("load_game", __api_load_game);
 }
 
 void save_game(int slot)
