@@ -1,5 +1,5 @@
 CC = gcc
-SRCS = $(filter-out main.c level_editor.c,$(foreach file,$(wildcard src/*),$(notdir $(file))))
+SRCS = $(filter-out main.c,$(foreach file,$(wildcard src/*),$(notdir $(file))))
 GAME = maildaemon
 BUILD_DIR = build_$(CC)
 LIB_DIR = lib_$(CC)

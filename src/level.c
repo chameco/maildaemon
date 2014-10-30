@@ -89,6 +89,11 @@ void reset_level()
 	switch_level(CURRENT_LEVEL->name);
 }
 
+void check_failure()
+{
+	debug("type: %d", solid_get_namespace(solid_get_current_namespace(get_vm()), solid_str(get_vm(), "make_stairs"))->type);
+}
+
 void switch_level(char *name)
 {
 	reset_entity();
