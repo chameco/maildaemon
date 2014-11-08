@@ -91,7 +91,9 @@ void reset_level()
 
 void check_failure()
 {
+	debug("check");
 	debug("type: %d", solid_get_namespace(solid_get_current_namespace(get_vm()), solid_str(get_vm(), "make_stairs"))->type);
+	debug("check succeed");
 }
 
 void switch_level(char *name)
