@@ -94,6 +94,5 @@ void draw_dialog_box(gui_element *ge);
 void draw_meter(gui_element *ge);
 void draw_dynamic_meter(gui_element *ge);
 
-void draw_gui_element(gui_element *ge);
-
+void draw_gui_element(gui_element *ge); 
 void draw_gui();

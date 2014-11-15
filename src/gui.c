@@ -206,6 +206,7 @@ void spawn_dynamic_label(double x, double y, solid_object *getter, double size)
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = DYNAMIC_LABEL;
 	ret->data.dynamic_label.text_getter = getter;
+	solid_mark_object(ret->data.dynamic_label.text_getter, 2);
 	ret->data.dynamic_label.size = size;
 	ret->x = x;
 	ret->y = y;
@@ -220,6 +221,7 @@ void spawn_button(double x, double y, char *text, solid_object *click_callback)
 	ret->type = BUTTON;
 	strncpy(ret->data.button.text, text, 256);
 	ret->data.button.click_callback = click_callback;
+	solid_mark_object(ret->data.button.click_callback, 2);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 200;
@@ -232,6 +234,7 @@ void spawn_dialog_box(double x, double y, solid_object *text_getter)
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = DIALOG_BOX;
 	ret->data.dialog_box.text_getter = text_getter;
+	solid_mark_object(ret->data.dialog_box.text_getter, 2);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 1000;
@@ -246,6 +249,7 @@ void spawn_meter(double x, double y, char *text, color c, solid_object *full_get
 	strncpy(ret->data.meter.text, text, 256);
 	ret->data.meter.c = c;
 	ret->data.meter.full_getter = full_getter;
+	solid_mark_object(ret->data.meter.full_getter, 2);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 110;
@@ -258,8 +262,10 @@ void spawn_dynamic_meter(double x, double y, solid_object *text_getter, color c,
 	gui_element *ret = (gui_element *) malloc(sizeof(gui_element));
 	ret->type = DYNAMIC_METER;
 	ret->data.dynamic_meter.text_getter = text_getter;
+	solid_mark_object(ret->data.dynamic_meter.text_getter, 2);
 	ret->data.dynamic_meter.c = c;
 	ret->data.dynamic_meter.full_getter = full_getter;
+	solid_mark_object(ret->data.dynamic_meter.full_getter, 2);
 	ret->x = x;
 	ret->y = y;
 	ret->w = 110;

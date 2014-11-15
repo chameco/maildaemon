@@ -1,39 +1,39 @@
 #pragma once
 
+#include <solid/solid.h>
+
 #include "utils.h"
 
-typedef enum etype {
-	EXPLOSION,
-	SMOKE_CONST,
-	SMOKE
-} etype;
-
 typedef struct effect {
+	double x, y;
+	int lifespan;
+	solid_object *update;
+} effect;
+
+typedef struct particle {
 	color c;
 	double x, y;
-	int dim;
-	int radius;
-	double speed;
-	int cur;
-	int statelen;
-	int state[30][5]; //x, y, xv, yv, exists? for each particle
-	etype type;
-} effect;
+	double w, h;
+	int lifespan;
+	solid_object *update;
+} particle;
 
 typedef struct global_effect {
 	void (*callback)();
-	int timer;
+	int lifespan;
 } global_effect;
 
 void initialize_fx();
 void reset_fx();
 
-effect *make_fx(etype type, color col,
-		double x, double y, int dim,
-		int radius, double speed);
-void spawn_fx(effect *e);
+effect *build_fx_prototype(char *name, int lifespan, solid_object *update);
 
-global_effect *make_global_fx(void (*callback)(), int timer);
+effect *make_fx(char *name, double x, double y);
+
+void spawn_fx(effect *e);
+void spawn_particle(color c, double x, double y, double w, double h, int lifespan, solid_object *update);
+
+global_effect *make_global_fx(void (*callback)(), int lifespan);
 
 void global_effect_shake();
 void spawn_global_fx(global_effect *e);
@@ -41,7 +41,4 @@ void spawn_global_fx(global_effect *e);
 void update_fx();
 void apply_global_fx();
 
-void draw_particle(effect *e, double xdiff, double ydiff);
-void draw_smoke_particle(effect *e, double xdiff, double ydiff);
-void draw_one_fx(effect *e);
 void draw_fx();

@@ -235,21 +235,25 @@ entity *build_entity_prototype(char *name, int w, int h,
 void set_entity_init(entity *e, solid_object *init)
 {
 	e->init_func = init;
+	solid_mark_object(e->init_func, 2);
 }
 
 void set_entity_hit(entity *e, solid_object *hit)
 {
 	e->hit_func = hit;
+	solid_mark_object(e->hit_func, 2);
 }
 
 void set_entity_collide(entity *e, solid_object *collide)
 {
 	e->collide_func = collide;
+	solid_mark_object(e->collide_func, 2);
 }
 
 void set_entity_update(entity *e, solid_object *update)
 {
 	e->update_func = update;
+	solid_mark_object(e->update_func, 2);
 }
 
 entity *make_entity(char *name, double x, double y)
@@ -298,7 +302,7 @@ void hit_entity(entity *e, int dmg)
 		if (e->health <= 0) {
 			remove_list(ENTITIES, (void *) e);
 			give_player_exp(e->expval);
-			spawn_fx(make_fx(EXPLOSION, COLOR_WHITE, e->x, e->y, 4, 100, 20));
+			spawn_fx(make_fx("explosion", e->x, e->y));
 			free_entity(e);
 		}
 	}

@@ -547,6 +547,7 @@ void main_game_loop()
 			LAST_TIME = CURRENT_TIME;
 		}
 		execute_thunk(m.draw);
+		solid_gc(get_vm());
 	}
 	SDL_Quit();
 }

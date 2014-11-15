@@ -132,6 +132,7 @@ item *build_item_prototype(char *name, solid_object *update_func)
 	ret->sound = NULL;
 	ret->charge = 100.0;
 	ret->update_func = update_func;
+	solid_mark_object(ret->update_func, 2);
 	set_hash(ITEM_PROTOTYPES, name, (void *) ret);
 	return ret;
 }

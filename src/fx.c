@@ -18,59 +18,154 @@
 
 #include "utils.h"
 
+static list_node *PARTICLES;
+
 static list_node *EFFECTS;
+static hash_map *EFFECT_PROTOTYPES;
+
 static list_node *GLOBAL_EFFECTS;
-static vertex EFFECT_VERTICES[4];
-static GLuint EFFECT_VERTEX_HANDLER = 0;
-static Mix_Chunk *EXPLOSION_SOUND;
+
+void __api_build_fx_prototype(solid_vm *vm) {
+	solid_object *update = solid_pop_stack(vm);
+	int lifespan = solid_get_int_value(solid_pop_stack(vm));
+	char *name = solid_get_str_value(solid_pop_stack(vm));
+	effect *ret = build_fx_prototype(name, lifespan, update);
+	vm->regs[255] = solid_struct(vm, (void *) ret);
+}
 
 void __api_make_fx(solid_vm *vm)
 {
-	double speed = solid_get_double_value(solid_pop_stack(vm));
-	int radius = solid_get_int_value(solid_pop_stack(vm));
-	int dim = solid_get_int_value(solid_pop_stack(vm));
 	double y = solid_get_double_value(solid_pop_stack(vm));
 	double x = solid_get_double_value(solid_pop_stack(vm));
-	color *c = solid_get_struct_value(solid_pop_stack(vm));
-	int type = solid_get_int_value(solid_pop_stack(vm));
-	vm->regs[255] = solid_struct(vm, make_fx(type, *c, x, y, dim, radius, speed));
+	char *name = solid_get_str_value(solid_pop_stack(vm));
+	effect *ret = make_fx(name, x, y);
+	vm->regs[255] = solid_struct(vm, (void *) ret);
 }
 
 void __api_spawn_fx(solid_vm *vm)
 {
-	effect *fx = solid_get_struct_value(solid_pop_stack(vm));
-	spawn_fx(fx);
+	effect *e = (effect *) solid_get_struct_value(solid_pop_stack(vm));
+	spawn_fx(e);
+}
+
+void __api_spawn_particle(solid_vm *vm)
+{
+	solid_object *update = solid_pop_stack(vm);
+	int lifespan = solid_get_int_value(solid_pop_stack(vm));
+	double h = solid_get_double_value(solid_pop_stack(vm));
+	double w = solid_get_double_value(solid_pop_stack(vm));
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	color c = *((color *) solid_get_struct_value(solid_pop_stack(vm)));
+	spawn_particle(c, x, y, w, h, lifespan, update);
+}
+
+void __api_get_effect_x(solid_vm *vm)
+{
+	effect *e = (effect *) solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, e->x);
+}
+
+void __api_get_effect_y(solid_vm *vm)
+{
+	effect *e = (effect *) solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, e->y);
+}
+
+void __api_set_particle_color(solid_vm *vm)
+{
+	color *c = (color *) solid_get_struct_value(solid_pop_stack(vm));
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	p->c = *c;
+}
+
+void __api_get_particle_x(solid_vm *vm)
+{
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, p->x);
+}
+
+void __api_set_particle_x(solid_vm *vm)
+{
+	double x = solid_get_double_value(solid_pop_stack(vm));
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	p->x = x;
+}
+
+void __api_get_particle_y(solid_vm *vm)
+{
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, p->y);
+}
+
+void __api_set_particle_y(solid_vm *vm)
+{
+	double y = solid_get_double_value(solid_pop_stack(vm));
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	p->y = y;
+}
+
+void __api_get_particle_w(solid_vm *vm)
+{
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, p->w);
+}
+
+void __api_set_particle_w(solid_vm *vm)
+{
+	double w = solid_get_double_value(solid_pop_stack(vm));
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	p->w = w;
+}
+
+void __api_get_particle_h(solid_vm *vm)
+{
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_double(vm, p->h);
+}
+
+void __api_set_particle_h(solid_vm *vm)
+{
+	double h = solid_get_double_value(solid_pop_stack(vm));
+	particle *p = (particle *) solid_get_struct_value(solid_pop_stack(vm));
+	p->h = h;
 }
 
 void initialize_fx()
 {
+	PARTICLES = make_list();
+
 	EFFECTS = make_list();
+	EFFECT_PROTOTYPES = make_hash_map();
 	GLOBAL_EFFECTS = make_list();
-	EXPLOSION_SOUND = Mix_LoadWAV("sfx/explode.wav");
 
-	EFFECT_VERTICES[0].x = 0;
-	EFFECT_VERTICES[0].y = 0;
-
-	EFFECT_VERTICES[1].x = 1;
-	EFFECT_VERTICES[1].y = 0;
-
-	EFFECT_VERTICES[2].x = 1;
-	EFFECT_VERTICES[2].y = 1;
-
-	EFFECT_VERTICES[3].x = 0;
-	EFFECT_VERTICES[3].y = 1;
-
-	glGenBuffers(1, &EFFECT_VERTEX_HANDLER);
-	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
-	glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(vertex), EFFECT_VERTICES, GL_STATIC_DRAW);
-
+	defun("build_fx_prototype", __api_build_fx_prototype);
 	defun("make_fx", __api_make_fx);
 	defun("spawn_fx", __api_spawn_fx);
+	defun("spawn_particle", __api_spawn_particle);
+	defun("set_particle_color", __api_set_particle_color);
+	defun("get_effect_x", __api_get_effect_x);
+	defun("get_effect_y", __api_get_effect_y);
+	defun("get_particle_x", __api_get_particle_x);
+	defun("set_particle_x", __api_set_particle_x);
+	defun("get_particle_y", __api_get_particle_y);
+	defun("set_particle_y", __api_set_particle_y);
+	defun("get_particle_w", __api_get_particle_w);
+	defun("set_particle_w", __api_set_particle_w);
+	defun("get_particle_h", __api_get_particle_h);
+	defun("set_particle_h", __api_set_particle_h);
+
+	load_all("script/fx");
 }
 
 void reset_fx()
 {
 	list_node *c;
+	for (c = PARTICLES->next; c->next != NULL; c = c->next, free(c->prev)) {
+		if (((particle *) c->data) != NULL) {
+			free((particle *) c->data);
+		}
+	}
 	for (c = EFFECTS->next; c->next != NULL; c = c->next, free(c->prev)) {
 		if (((effect *) c->data) != NULL) {
 			free((effect *) c->data);
@@ -81,57 +176,34 @@ void reset_fx()
 			free((global_effect *) c->data);
 		}
 	}
+	PARTICLES = make_list();
 	EFFECTS = make_list();
 	GLOBAL_EFFECTS = make_list();
 }
 
-effect *make_fx(etype type, color col,
-		double x, double y, int dim,
-		int radius, double speed)
+effect *build_fx_prototype(char *name, int lifespan, solid_object *update)
 {
-	effect *e = malloc(sizeof(effect));
-	e->type = type;
-	e->c = col; e->x = x;
-	e->y = y;
-	e->dim = dim;
-	e->radius = radius;
-	e->speed = speed;
-	e->cur = 0;
-	e->statelen = 30;
-	int c;
-	switch (e->type) {
-		case EXPLOSION:
-			for (c = 0; c < e->statelen; c++) {
-				if (rand() % 2) {
-					e->state[c][0] = rand() % e->radius/4;
-				} else {
-					e->state[c][0] = -(rand() % e->radius/4);
-				}
-				if (rand() % 2) {
-					e->state[c][1] = rand() % e->radius/4;
-				} else {
-					e->state[c][1] = -(rand() % e->radius/4);
-				}
-				e->state[c][2] = e->state[c][0];
-				e->state[c][3] = e->state[c][1];
-				e->state[c][4] = 1;
-				Mix_PlayChannel(-1, EXPLOSION_SOUND, 0);
-			}
-			break;
-		case SMOKE_CONST:
-		case SMOKE:
-			for (c = 0; c < e->statelen; c++) {
-				if (rand() % 2) {
-					e->state[c][0] = rand() % e->radius/4;
-				} else {
-					e->state[c][0] = -(rand() % e->radius/4);
-				}
-				e->state[c][1] = -(rand() % e->radius);
-				e->state[c][4] = 1;
-			}
-			break;
-	}
+	effect *e = (effect *) malloc(sizeof(effect));
+	e->x = e->y = 0;
+	e->lifespan = lifespan;
+	e->update = update;
+	solid_mark_object(e->update, 2);
+	set_hash(EFFECT_PROTOTYPES, name, e);
 	return e;
+}
+
+effect *make_fx(char *name, double x, double y)
+{
+	effect *proto = (effect *) get_hash(EFFECT_PROTOTYPES, name);
+	if (proto == NULL) {
+		log_err("Effect prototype \"%s\" does not exist", name);
+		exit(1);
+	}
+	effect *ret = malloc(sizeof(effect));
+	memcpy(ret, proto, sizeof(effect));
+	ret->x = x;
+	ret->y = y;
+	return ret;
 }
 
 void spawn_fx(effect *e)
@@ -139,11 +211,24 @@ void spawn_fx(effect *e)
 	insert_list(EFFECTS, (void *) e);
 }
 
-global_effect *make_global_fx(void (*callback)(), int timer)
+void spawn_particle(color c, double x, double y, double w, double h, int lifespan, solid_object *update)
+{
+	particle *p = (particle *) malloc(sizeof(particle));
+	p->c = c;
+	p->x = x;
+	p->y = y;
+	p->w = w;
+	p->h = h;
+	p->lifespan = lifespan;
+	p->update = update;
+	insert_list(PARTICLES, (void *) p);
+}
+
+global_effect *make_global_fx(void (*callback)(), int lifespan)
 {
 	global_effect *ge = malloc(sizeof(global_effect));
 	ge->callback = callback;
-	ge->timer = timer;
+	ge->lifespan = lifespan;
 	return ge;
 }
 
@@ -160,92 +245,52 @@ void spawn_global_fx(global_effect *e)
 void update_fx()
 {
 	list_node *c;
-	list_node *temp;
-	effect *e;
 	global_effect *ge;
-	int counter;
 	for (c = GLOBAL_EFFECTS->next; c->next != NULL; c = c->next) {
 		ge = (global_effect *) c->data;
 		if (ge != NULL) {
-			ge->timer -= 1;
-			if (ge->timer <= 0) {
+			if (ge->lifespan > 0) {
+				ge->lifespan -= 1;
+			}
+			if (ge->lifespan == 0) {
 				c->prev->next = c->next;
 				c->next->prev = c->prev;
 				free(c);
+				free(ge);
 			}
 		}
 	}
+	effect *e;
 	for (c = EFFECTS->next; c->next != NULL; c = c->next) {
 		e = (effect *) c->data;
 		if (e != NULL) {
-			switch (e->type) {
-				case EXPLOSION:
-					e->cur += e->speed;
-					if (e->cur >= e->radius) {
-						temp = c->prev;
-						c->prev->next = c->next;
-						c->next->prev = c->prev;
-						free(c);
-						c = temp;
-						free(e);
-					} else {
-						for (counter = 0; counter < e->statelen; counter++) {
-							if (!(e->state[counter][2] == 0 && e->state[counter][3] == 0)) {
-								if (e->state[counter][4]) {
-									e->state[counter][0] += e->state[counter][2];
-									e->state[counter][1] += e->state[counter][3];
-									e->state[counter][2] /= 2;
-									e->state[counter][3] /= 2;
-								}
-							}
-						}
-					}
-					break;
-				case SMOKE_CONST:
-					for (counter = 0; counter < e->statelen; counter++) {
-						if (rand() % 2) {
-							e->state[counter][0] += rand() % 3;
-						} else {
-							e->state[counter][0] -= rand() % 3;
-						}
-						if (e->state[counter][1] >= -(e->radius)) {
-							e->state[counter][1] -= rand() % 3;
-						} else {
-							e->state[counter][1] = 0;
-							if (rand() % 2) {
-								e->state[counter][0] = rand() % e->radius/4;
-							} else {
-								e->state[counter][0] = -(rand() % e->radius/4);
-							}
-						}
-					}
-					break;
-				case SMOKE:
-					e->cur += e->speed;
-					if (e->cur >= 100) {
-						temp = c->prev;
-						c->prev->next = c->next;
-						c->next->prev = c->prev;
-						free(c);
-						temp = c;
-						free(e);
-					} else {
-						for (counter = 0; counter < e->statelen; counter++) {
-							if (e->state[counter][4]) {
-								if (rand() % 2) {
-									e->state[counter][0] += rand() % 3;
-								} else {
-									e->state[counter][0] -= rand() % 3;
-								}
-								if (e->state[counter][1] >= -(e->radius)) {
-									e->state[counter][1] -= rand() % 5;
-								} else {
-									e->state[counter][2] = 0;
-								}
-							}
-						}
-					}
-					break;
+			solid_push_stack(get_vm(), solid_struct(get_vm(), (void *) e));
+			solid_call_func(get_vm(), e->update);
+			if (e->lifespan > 0) {
+				e->lifespan -= 1;
+			}
+			if (e->lifespan == 0) {
+				c->prev->next = c->next;
+				c->next->prev = c->prev;
+				free(c);
+				free(e);
+			}
+		}
+	}
+	particle *p;
+	for (c = PARTICLES->next; c->next != NULL; c = c->next) {
+		p = (particle *) c->data;
+		if (p != NULL) {
+			solid_push_stack(get_vm(), solid_struct(get_vm(), (void *) p));
+			solid_call_func(get_vm(), p->update);
+			if (p->lifespan > 0) {
+				p->lifespan -= 1;
+			}
+			if (p->lifespan == 0) {
+				c->prev->next = c->next;
+				c->next->prev = c->prev;
+				free(c);
+				free(p);
 			}
 		}
 	}
@@ -261,92 +306,38 @@ void apply_global_fx()
 	}
 }
 
-inline void draw_particle(effect *e, double xdiff, double ydiff)
+void draw_particle(particle *p)
 {
 	glPushMatrix();
-	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
-	glScalef(e->dim, e->dim, 1);
+	glTranslatef(p->x, p->y, 0);
+	glScalef(p->w, p->h, 1);
 
-	glColor4f(e->c.r, e->c.g, e->c.b, e->c.a);
+	glColor3f(p->c.r, p->c.g, p->c.b);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
-	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+	glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
+
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0x0);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
 
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	glPopMatrix();
-}
-
-inline void draw_smoke_particle(effect *e, double xdiff, double ydiff)
-{
-	GLfloat r, g, b;
-	GLfloat factor;
-	factor = (GLfloat) (((float) (rand() % 1000)) / 1000);
-	r = e->c.r * factor;
-	r = r > 1.0 ? 1.0 : r;
-	r = r < 0.0 ? 0.0 : r;
-
-	g = e->c.g * factor;
-	g = g > 1.0 ? 1.0 : g;
-	g = g < 0.0 ? 0.0 : g;
-	
-	b = e->c.b * factor;
-	b = b > 1.0 ? 1.0 : b;
-	b = b < 0.0 ? 0.0 : b;
-
-	glPushMatrix();
-	glTranslatef(e->x+xdiff, e->y+ydiff, 0);
-	glScalef(e->dim, e->dim, 1);
-
-	glColor4f(r, g, b, e->c.a);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-
-	glBindBuffer(GL_ARRAY_BUFFER, EFFECT_VERTEX_HANDLER);
-	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
-	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-
-	glPopMatrix();
-}
-
-void draw_one_fx(effect *e)
-{
-	int c;
-	switch (e->type) {
-		case EXPLOSION:
-			for (c = 0; c < e->statelen; c++) {
-				if (e->state[c][4]) {
-					draw_particle(e, e->state[c][0], e->state[c][1]);
-				}
-			}
-			break;
-		case SMOKE_CONST:
-		case SMOKE:
-			for (c = 0; c < e->statelen; c++) {
-				if (e->state[c][4]) {
-					draw_smoke_particle(e, e->state[c][0], e->state[c][1]);
-				}
-			}
-	}
 }
 
 void draw_fx()
 {
 	list_node *c;
-	for (c = EFFECTS->next; c->next != NULL; c = c->next) {
-		if (((effect *) c->data) != NULL) {
-			draw_one_fx((effect *) c->data);
+	for (c = PARTICLES->next; c->next != NULL; c = c->next) {
+		if (((particle *) c->data) != NULL) {
+			draw_particle((particle *) c->data);
 		}
 	}
 }

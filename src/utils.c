@@ -71,7 +71,8 @@ void __api_is_unbroken_line(solid_vm *vm)
 
 void __api_rand(solid_vm *vm)
 {
-	vm->regs[255] = solid_int(vm, rand());
+	int max = solid_get_int_value(solid_pop_stack(vm));
+	vm->regs[255] = solid_int(vm, rand() % max);
 }
 
 void initialize_utils()
@@ -101,7 +102,9 @@ solid_vm *get_vm()
 void defun(char *s, void (*function)(solid_vm *vm))
 {
 	solid_vm *vm = get_vm();
-	solid_set_namespace(solid_get_current_namespace(vm), solid_str(vm, s), solid_define_c_function(vm, function));
+	solid_object *cfunc = solid_define_c_function(vm, function);
+	solid_mark_object(cfunc, 2);
+	solid_set_namespace(solid_get_current_namespace(vm), solid_str(vm, s), cfunc);
 }
 
 GLuint get_standard_indices_handler()
@@ -117,7 +120,9 @@ GLuint get_standard_vertices_handler()
 solid_object *load(char *path)
 {
 	solid_call_func(get_vm(), solid_parse_tree(get_vm(), solid_parse_file(path)));
-	return get_vm()->regs[255];
+	solid_object *ret = get_vm()->regs[255];
+	solid_mark_object(ret, 2);
+	return ret;
 }
 
 void load_all(char *dir)
@@ -252,6 +257,7 @@ thunk make_thunk_solid(solid_object *o)
 	if (o->type == T_FUNC || o->type == T_CFUNC) {
 		ret.type = THUNK_SOLID;
 		ret.data.solfunc = o;
+		solid_mark_object(ret.data.solfunc, 2);
 	} else {
 		ret.type = THUNK_NULL;
 	}
