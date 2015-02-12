@@ -351,7 +351,7 @@ void update_player()
 	list_node *entities = get_entities();
 	list_node *c;
 	for (c = entities->next; c->next != NULL; c = c->next) {
-		if (((entity *) c->data) != NULL) {
+		if (((entity *) c->data) != NULL && ((entity *) c->data)->collideable) {
 			b.x = ((entity *) c->data)->x;
 			b.y = ((entity *) c->data)->y;
 			b.w = ((entity *) c->data)->w;

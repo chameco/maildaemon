@@ -177,7 +177,7 @@ void check_projectile_collisions(projectile *p)
 			b.y = e->y;
 			b.w = e->w;
 			b.h = e->h;
-			if (!check_collision(a, b)) {
+			if (e->collideable && !check_collision(a, b)) {
 				hit_entity(e, p->dmg);
 				destroy_projectile(p);
 				return;

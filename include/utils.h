@@ -6,6 +6,8 @@
 #include <SDL2/SDL.h>
 #include <libguile.h>
 
+#define PI 3.141592654
+
 #include "cuttle/utils.h"
 
 typedef enum direction {
@@ -66,3 +68,5 @@ bool is_unbroken_line(double x0, double y0, double x1, double y1);
 thunk make_thunk(void (*cfunc)());
 thunk make_thunk_scm(SCM scmfunc);
 void execute_thunk(thunk cb);
+
+int max(int x, int y);

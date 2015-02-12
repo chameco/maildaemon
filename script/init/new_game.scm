@@ -14,4 +14,15 @@
                           (schedule
                             (lambda ()
                               (set-mode "main"))
+                            0)))
+    (spawn-button
+      (- (/ (get-screen-width) 2) 100)
+      (- (/ (get-screen-height) 2) 25)
+      "temple" (lambda ()
+                          (set-dungeon "temple")
+                          (switch-level "entryway")
+                          (warp-player 64 64)
+                          (schedule
+                            (lambda ()
+                              (set-mode "main"))
                             0)))))

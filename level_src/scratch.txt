@@ -1,0 +1,11 @@
+DEBUG src/sight.c:127: r_px: 272.000000, r_py: 136.000000
+DEBUG src/sight.c:128: r_dx: 192.000000, r_dy: 168.000000
+DEBUG src/sight.c:129: s_px: 464.000000, s_py: 16.000000
+DEBUG src/sight.c:130: s_dx: 0.000000, s_dy: 288.000000
+DEBUG src/sight.c:131: T1: 1.000000, T2: 1.000000
+DEBUG src/sight.c:127: r_px: 272.000000, r_py: 136.000000
+DEBUG src/sight.c:128: r_dx: 192.000000, r_dy: 168.000000
+DEBUG src/sight.c:129: s_px: 816.000000, s_py: 16.000000
+DEBUG src/sight.c:130: s_dx: 0.000000, s_dy: 288.000000
+DEBUG src/sight.c:131: T1: 2.833333, T2: 2.069444
+DEBUG src/sight.c:172: 1, 0, 1.000000, 0.000000

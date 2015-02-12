@@ -20,6 +20,7 @@
 #include "projectile.h"
 #include "fx.h"
 #include "lightsource.h"
+#include "sight.h"
 #include "scheduler.h"
 
 static level *CURRENT_LEVEL = NULL;
@@ -100,6 +101,7 @@ void switch_level(char *name)
 	reset_fx();
 	reset_lightsource();
 	CURRENT_LEVEL = load_level(name);
+	reset_sight();
 	CURRENT_SPAWN_X = get_player_x();
 	CURRENT_SPAWN_Y = get_player_y();
 }
@@ -138,7 +140,7 @@ void save_level(level *l)
 	char buf[256] = "levels/";
 	strncat(buf, l->name, sizeof(buf) - strlen(buf) - 5);
 	strcat(buf, ".lvl");
-	FILE *f = fopen(buf, "w+");
+	FILE *f = dungeon_fopen(buf, "w+");
 	fwrite(l, sizeof(level), 1, f);
 	fclose(f);
 }
@@ -170,9 +172,11 @@ void draw_level()
 	int x, y;
 	for (x = 0; x < LEVEL_MAX_DIM; x++) {
 		for (y = 0; y < LEVEL_MAX_DIM; y++) {
-			set_sheet_row(TILE_SHEET, CURRENT_LEVEL->tiles[x][y]/8);
-			set_sheet_column(TILE_SHEET, CURRENT_LEVEL->tiles[x][y]%8);
-			draw_texture_scale(TILE_SHEET, x*TILE_DIM, y*TILE_DIM, TILE_DIM, TILE_DIM);
+			if (CURRENT_LEVEL->tiles[x][y] != VOID) {
+				set_sheet_row(TILE_SHEET, CURRENT_LEVEL->tiles[x][y]/8);
+				set_sheet_column(TILE_SHEET, CURRENT_LEVEL->tiles[x][y]%8);
+				draw_texture_scale(TILE_SHEET, x*TILE_DIM, y*TILE_DIM, TILE_DIM, TILE_DIM);
+			}
 		}
 	}
 }

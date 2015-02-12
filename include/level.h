@@ -5,7 +5,7 @@
 #include "utils.h"
 
 #define TILE_DIM 32
-#define LEVEL_MAX_DIM 20
+#define LEVEL_MAX_DIM 40
 
 typedef enum tile {
 	VOID=0,
@@ -14,10 +14,13 @@ typedef enum tile {
 	GRASS,
 	SNOW,
 	SAND,
+	CARPET,
 	STONE=8,
 	STONETOP,
 	STONETORCH,
-	SHRUB=16
+	STATUE,
+	SHRUB=16,
+	WATER
 } tile;
 
 typedef struct level {

@@ -15,7 +15,7 @@
 #include "utils.h"
 #include "texture.h"
 
-static char CURRENT_DUNGEON[256] = {0};
+static char CURRENT_DUNGEON[256] = "default";
 
 SCM __api_set_dungeon(SCM d)
 {
@@ -45,6 +45,11 @@ void set_dungeon(char *dungeon)
 char *get_dungeon()
 {
 	return CURRENT_DUNGEON;
+}
+
+void set_dungeon_noload(char *dungeon)
+{
+	strcpy(CURRENT_DUNGEON, dungeon);
 }
 
 texture *dungeon_load_texture(char *path, int w, int h)

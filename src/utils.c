@@ -165,7 +165,7 @@ line_point *bresenham_line(double x0, double y0, double x1, double y1)
 	if (xdiff >= ydiff) {
 		double error = 0;
 		double delta_error = fabs(ydiff/xdiff);
-		ret = (line_point *) calloc(abs(xdiff) + 1, sizeof(line_point));
+		ret = (line_point *) calloc(fabs(xdiff) + 1, sizeof(line_point));
 		double y = y0;
 		for (double x = x0; x <= x1; ++x, ++c) {
 			ret[c].x = x;
@@ -179,7 +179,7 @@ line_point *bresenham_line(double x0, double y0, double x1, double y1)
 	} else {
 		double error = 0;
 		double delta_error = fabs(xdiff/ydiff);
-		ret = (line_point *) calloc(abs(ydiff) + 1, sizeof(line_point));
+		ret = (line_point *) calloc(fabs(ydiff) + 1, sizeof(line_point));
 		double x = x0;
 		for (double y = y0; y <= y1; ++y, ++c) {
 			ret[c].x = x;
@@ -249,4 +249,9 @@ void execute_thunk(thunk cb)
 			exit(1);
 			break;
 	}
+}
+
+int max(int x, int y)
+{
+	return x > y ? x : y;
 }

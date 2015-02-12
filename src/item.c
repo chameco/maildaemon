@@ -141,7 +141,6 @@ item *build_item_prototype(char *name, SCM update_func)
 	ret->y = NULL;
 	ret->active = 0;
 	ret->rotation = 0;
-	//ret->sound = Mix_LoadWAV(sfx_path);
 	ret->sound = NULL;
 	ret->charge = 100.0;
 	ret->update_func = update_func;

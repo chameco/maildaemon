@@ -1,4 +1,5 @@
 (define STAIRS (build-entity-prototype "stairs" 32 32 0 0 0))
+(set-entity-collideable STAIRS #f)
 (set-entity-hit STAIRS (lambda (e dmg data) data))
 
 (define (make-stairs x y sr sc dest destx desty)

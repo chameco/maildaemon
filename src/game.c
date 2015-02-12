@@ -22,6 +22,7 @@
 #include "item.h"
 #include "level.h"
 #include "lightsource.h"
+#include "sight.h"
 #include "player.h"
 #include "projectile.h"
 #include "gui.h"
@@ -133,7 +134,7 @@ void mode_standard_gui_update()
 
 void mode_standard_gui_draw()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	draw_gui();
 
@@ -202,7 +203,7 @@ static void mode_text_entry_update()
 
 static void mode_text_entry_draw()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -229,7 +230,7 @@ static void mode_text_entry_draw()
 	draw_gui();
 
 	if (ENTERED_TEXT != NULL) {
-		render_text_bitmap(ENTERED_TEXT, (SCREEN_WIDTH - (4 * 8 * strlen(ENTERED_TEXT))) / 2, SCREEN_HEIGHT - 4 * 8, 4);
+		render_text_bitmap(ENTERED_TEXT, max((SCREEN_WIDTH - (4 * 8 * strlen(ENTERED_TEXT))) / 2, 0), SCREEN_HEIGHT - 4 * 8, 4);
 	}
 
 	SDL_GL_SwapWindow(SCREEN);
@@ -328,11 +329,13 @@ static void mode_main_update()
 	update_item();
 	update_projectile();
 	update_fx();
+	update_sight();
 }
 
 static void mode_main_draw()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -346,6 +349,39 @@ static void mode_main_draw()
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
+/*		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_ALWAYS, 1, 1);
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);*/
+	/*glPushMatrix();
+	glTranslatef(SCREEN_WIDTH/2 - 100, SCREEN_HEIGHT/2 - 100, 0);
+	glScalef(200, 200, 1);
+	glColor4f(0, 0, 0, get_current_level()->ambience);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glBindBuffer(GL_ARRAY_BUFFER, get_standard_vertices_handler());
+	glTexCoordPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)(sizeof(GLfloat)*2));
+	glVertexPointer(2, GL_FLOAT, sizeof(vertex), (GLvoid*)0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, get_standard_indices_handler());
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, NULL);*/
+	/*glBegin(GL_TRIANGLES);
+	glVertex2d(0, 0);
+	glVertex2d(200, 200);
+	glVertex2d(0, 200);
+	glEnd();
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+
+	glPopMatrix();
+		 glColorMask( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE ); 
+		 glStencilFunc( GL_EQUAL, 1, 1 );
+		 glStencilOp( GL_KEEP, GL_KEEP, GL_KEEP );*/
+
 	draw_level();
 	draw_entity();
 	draw_projectile();
@@ -353,11 +389,15 @@ static void mode_main_draw()
 	draw_level_top();
 	draw_fx();
 	draw_lightsource();
+	draw_sight();
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 
+		glDisable( GL_STENCIL_TEST );
+
 	draw_gui();
+
 
 	SDL_GL_SwapWindow(SCREEN);
 }
@@ -428,6 +468,7 @@ void initialize_game()
 	initialize_fx();
 	initialize_gui();
 	initialize_level();
+	initialize_sight();
 
 	define_mode("text_entry",
 			make_thunk(NULL),
@@ -471,6 +512,8 @@ void initGL()
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glClearStencil(0);
 }
 
 SDL_Window *get_screen()

@@ -11,5 +11,6 @@
 
 (set-player-item 1 (make-item "laser"))
 (set-player-item 2 (make-item "flamethrower"))
+(set-player-item 3 (make-item "sword"))
 
 (set-player-item-index 1)

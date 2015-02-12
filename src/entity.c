@@ -96,6 +96,13 @@ SCM __api_get_entity_speed(SCM e)
 	return scm_from_double(ent->speed);
 }
 
+SCM __api_set_entity_collideable(SCM e, SCM b)
+{
+	entity *ent = (entity *) SCM_SMOB_DATA(e);
+	ent->collideable = scm_to_bool(b);
+	return SCM_BOOL_F;
+}
+
 SCM __api_set_entity_init(SCM e, SCM init)
 {
 	entity *ent = (entity *) SCM_SMOB_DATA(e);
@@ -189,6 +196,7 @@ void initialize_entity()
 	scm_c_define_gsubr("set-entity-xv", 2, 0, 0, __api_set_entity_xv);
 	scm_c_define_gsubr("set-entity-yv", 2, 0, 0, __api_set_entity_yv);
 	scm_c_define_gsubr("get-entity-speed", 1, 0, 0, __api_get_entity_speed);
+	scm_c_define_gsubr("set-entity-collideable", 2, 0, 0, __api_set_entity_collideable);
 	scm_c_define_gsubr("set-entity-init", 2, 0, 0, __api_set_entity_init);
 	scm_c_define_gsubr("set-entity-hit", 2, 0, 0, __api_set_entity_hit);
 	scm_c_define_gsubr("set-entity-collide", 2, 0, 0, __api_set_entity_collide);
@@ -242,6 +250,7 @@ entity *build_entity_prototype(char *name, int w, int h,
 	e->health = health;
 	e->speed = speed;
 	e->expval = expval;
+	e->collideable = true;;
 	e->data = e->init_func = e->hit_func = e->collide_func = e->update_func = SCM_BOOL_F;
 	set_hash(ENTITY_PROTOTYPES, name, (void *) e);
 	return e;

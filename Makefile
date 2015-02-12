@@ -1,5 +1,5 @@
 CC = gcc
-SRCS = $(filter-out main.c level_editor.c,$(foreach file,$(wildcard src/*),$(notdir $(file))))
+SRCS = $(filter-out main.c level_comp.c,$(foreach file,$(wildcard src/*),$(notdir $(file))))
 GAME = maildaemon
 BUILD_DIR = build_$(CC)
 LIB_DIR = lib_$(CC)
@@ -30,7 +30,7 @@ vpath %.c src
 
 .PHONY: all directories install uninstall clean
 
-all: directories $(GAME)
+all: directories $(GAME) level_comp
 
 directories: $(BUILD_DIR)
 
@@ -41,6 +41,9 @@ $(BUILD_DIR)/%.o: %.c
 	$(CC) -o $@ -c $(CFLAGS) $<
 
 $(GAME): $(BUILD_DIR)/main.o $(OBJS)
+	$(CC) $^ $(LINKER_FLAGS) -o $@
+
+level_comp: $(BUILD_DIR)/level_comp.o $(OBJS)
 	$(CC) $^ $(LINKER_FLAGS) -o $@
 
 install:

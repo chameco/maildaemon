@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <cuttle/utils.h>
 #include <libguile.h>
 #include "utils.h"
@@ -15,6 +16,7 @@ typedef struct entity {
 	int health;
 	double speed;
 	double expval;
+	bool collideable;
 	SCM data;
 	SCM init_func;
 	SCM hit_func;
