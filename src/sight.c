@@ -84,10 +84,10 @@ void find_corners()
 	p->y = (9 + 0.5) * TILE_DIM;
 	insert_list(CORNERS, p);
 
-	p = (line_point *) malloc(sizeof(line_point));
+	/*p = (line_point *) malloc(sizeof(line_point));
 	p->x = (25 + 0.5) * TILE_DIM;
 	p->y = (0 + 0.5) * TILE_DIM;
-	insert_list(CORNERS, p);
+	insert_list(CORNERS, p);*/
 
 	p = (line_point *) malloc(sizeof(line_point));
 	p->x = (25 + 0.5) * TILE_DIM;
@@ -154,13 +154,18 @@ void cast_ray(double mag, double theta, double far)
 	segment.p2.y = (9 + 0.5) * TILE_DIM;
 	b1 = get_intersection(cast_ray, segment, &inter1, &param1);
 
-	segment.p1.x = (25 + 0.5) * TILE_DIM;
+	/*segment.p1.x = (25 + 0.5) * TILE_DIM;
 	segment.p1.y = (0 + 0.5) * TILE_DIM;
+	segment.p2.x = (25 + 0.5) * TILE_DIM;
+	segment.p2.y = (9 + 0.5) * TILE_DIM;
+	b2 = get_intersection(cast_ray, segment, &inter2, &param2);*/
+
+	segment.p1.x = (14 + 0.5) * TILE_DIM;
+	segment.p1.y = (9 + 0.5) * TILE_DIM;
 	segment.p2.x = (25 + 0.5) * TILE_DIM;
 	segment.p2.y = (9 + 0.5) * TILE_DIM;
 	b2 = get_intersection(cast_ray, segment, &inter2, &param2);
 	//TODO END
-	
 
 	if (b1 && param1 <= param2) {
 		RAYS[RAY_INDEX].l.p1 = cast_ray.p1;
@@ -206,9 +211,9 @@ void update_sight()
 			p = (line_point *) c->data;
 			dx = p->x - get_player_x();
 			dy = p->y - get_player_y();
-			cast_ray(sqrt(dy*dy + dx*dx), atan2(dy, dx) - 0.0001, true);
+			cast_ray(sqrt(dy*dy + dx*dx), atan2(dy, dx) - 0.01, false);
 			cast_ray(sqrt(dy*dy + dx*dx), atan2(dy, dx), false);
-			cast_ray(sqrt(dy*dy + dx*dx), atan2(dy, dx) + 0.0001, true);
+			cast_ray(sqrt(dy*dy + dx*dx), atan2(dy, dx) + 0.01, false);
 		}
 	}
 	qsort(RAYS, RAY_INDEX, sizeof(ray), thetacmp);
@@ -216,12 +221,11 @@ void update_sight()
 
 void draw_sight()
 {
-	glColor4f(0.0, 1.0, 0.0, 0.5);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glBegin(GL_POLYGON);
 	for (int i = 0; i < RAY_INDEX; ++i) {
+		glColor4f(1.0, 0.0, 0.0, 0.5);
+		glBegin(GL_LINES);
+		glVertex2f(get_player_x(), get_player_y());
 		glVertex2f(RAYS[i].l.p2.x, RAYS[i].l.p2.y);
+		glEnd();
 	}
-	glEnd();
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
